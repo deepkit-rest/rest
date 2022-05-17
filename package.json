@@ -20,12 +20,12 @@
     "@deepkit/core": "^1.0.1-alpha.65",
     "@deepkit/event": "^1.0.1-alpha.71",
     "@deepkit/framework": "^1.0.1-alpha.71",
+    "@deepkit/http": "^1.0.1-alpha.71",
     "@deepkit/logger": "^1.0.1-alpha.65",
     "@deepkit/orm": "^1.0.1-alpha.71",
     "@deepkit/sqlite": "^1.0.1-alpha.71",
     "@deepkit/type": "^1.0.1-alpha.71",
     "@deepkit/type-compiler": "^1.0.1-alpha.71",
-    "dotenv": "^16.0.1",
     "tslib": "^2.3.0"
   },
   "devDependencies": {
