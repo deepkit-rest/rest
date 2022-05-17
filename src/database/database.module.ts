@@ -4,15 +4,18 @@ import { ClassType } from "@deepkit/core";
 import { DatabaseEntitySet } from "./database.providers";
 import { AppDatabase, SQLiteDatabase } from "./database.service";
 
-export class DatabaseModuleConfig {
-  url?: string;
+export class DatabaseConfig {
+  url: string = ":memory:";
 }
 
-export class DatabaseModule extends createModule({
-  providers: [{ provide: AppDatabase, useClass: SQLiteDatabase }],
-  exports: [AppDatabase],
-  config: DatabaseModuleConfig,
-}) {
+export class DatabaseModule extends createModule(
+  {
+    providers: [{ provide: AppDatabase, useClass: SQLiteDatabase }],
+    exports: [AppDatabase],
+    config: DatabaseConfig,
+  },
+  "database",
+) {
   protected entities = new DatabaseEntitySet();
 
   withEntities(...entities: ClassType[]): this {

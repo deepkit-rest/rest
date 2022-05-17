@@ -1,7 +1,7 @@
 import { Database } from "@deepkit/orm";
 import { SQLiteDatabaseAdapter } from "@deepkit/sqlite";
 
-import { DatabaseModuleConfig } from "./database.module";
+import { DatabaseConfig } from "./database.module";
 import { DatabaseEntitySet } from "./database.providers";
 
 export abstract class AppDatabase extends Database {}
@@ -11,7 +11,7 @@ export abstract class AppDatabase extends Database {}
  */
 export class SQLiteDatabase extends AppDatabase {
   override name = "default";
-  constructor(url: DatabaseModuleConfig["url"], entities: DatabaseEntitySet) {
+  constructor(url: DatabaseConfig["url"], entities: DatabaseEntitySet) {
     super(new SQLiteDatabaseAdapter(url), [...entities]);
   }
 }
