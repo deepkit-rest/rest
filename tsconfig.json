@@ -20,5 +20,6 @@
     "skipLibCheck": true
   },
   "include": ["src/**/*.ts"],
-  "ts-node": { "files": true }
+  "ts-node": { "files": true },
+  "reflection": true // @deepkit/type
 }

@@ -7,12 +7,25 @@
   "scripts": {
     "prepare": "husky install",
     "release": "standard-version --no-verify",
+    "app": "ts-node src/app.ts",
+    "dev": "ts-node-dev --respawn src/app.ts server:start",
+    "build": "tsc",
     "lint": "eslint \"src/**/*.ts\" --cache --fix & prettier --write \"{src/**/*,*}.{html,css,less,scss,sass,js,json,md}\"",
     "test": "npm run test:unit && npm run test:e2e",
     "test:unit": "jest --config jest.config.unit.js",
     "test:e2e": "jest --config jest.config.e2e.js"
   },
   "dependencies": {
+    "@deepkit/app": "^1.0.1-alpha.71",
+    "@deepkit/core": "^1.0.1-alpha.65",
+    "@deepkit/event": "^1.0.1-alpha.71",
+    "@deepkit/framework": "^1.0.1-alpha.71",
+    "@deepkit/logger": "^1.0.1-alpha.65",
+    "@deepkit/orm": "^1.0.1-alpha.71",
+    "@deepkit/sqlite": "^1.0.1-alpha.71",
+    "@deepkit/type": "^1.0.1-alpha.71",
+    "@deepkit/type-compiler": "^1.0.1-alpha.71",
+    "dotenv": "^16.0.1",
     "tslib": "^2.3.0"
   },
   "devDependencies": {
@@ -34,6 +47,7 @@
     "ts-jest": "^27.0.3",
     "ts-loader": "^9.2.3",
     "ts-node": "^10.0.0",
+    "ts-node-dev": "^1.1.8",
     "tsconfig-paths": "^3.10.1",
     "typescript": "~4.5.2"
   }
