@@ -3,7 +3,6 @@
 /.env
 /.eslintcache
 /var
-/data
 
 # Compiled output
 /dist
