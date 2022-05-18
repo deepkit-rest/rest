@@ -27,9 +27,11 @@
     "@deepkit/sqlite": "^1.0.1-alpha.71",
     "@deepkit/type": "^1.0.1-alpha.71",
     "@deepkit/type-compiler": "^1.0.1-alpha.71",
+    "bcryptjs": "^2.4.3",
     "tslib": "^2.3.0"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.2",
     "@types/jest": "27.0.2",
     "@types/node": "^16.0.0",
     "@types/supertest": "^2.0.11",
