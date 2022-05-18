@@ -1,7 +1,6 @@
 import { createModule } from "@deepkit/app";
 import { ClassType } from "@deepkit/core";
 
-import { DatabaseEntitySet } from "./database.providers";
 import { AppDatabase, SQLiteDatabase } from "./database.service";
 
 export class DatabaseConfig {
@@ -27,3 +26,5 @@ export class DatabaseModule extends createModule(
     this.addProvider({ provide: DatabaseEntitySet, useValue: this.entities });
   }
 }
+
+export class DatabaseEntitySet extends Set<ClassType> {}

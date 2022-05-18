@@ -1,8 +1,7 @@
 import { Database } from "@deepkit/orm";
 import { SQLiteDatabaseAdapter } from "@deepkit/sqlite";
 
-import { DatabaseConfig } from "./database.module";
-import { DatabaseEntitySet } from "./database.providers";
+import { DatabaseConfig, DatabaseEntitySet } from "./database.module";
 
 /**
  * Application bootstrap fails when using {@link Database} as injection token
