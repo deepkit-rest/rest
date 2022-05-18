@@ -1,4 +1,4 @@
-import { http, HttpQueries, HttpQuery } from "@deepkit/http";
+import { http, HttpQueries } from "@deepkit/http";
 import { AppDatabase } from "src/database/database.service";
 import { ResourceService } from "src/resource/resource.service";
 import { ResourceCrud } from "src/resource/resource-crud.typings";
@@ -22,9 +22,8 @@ export class UserController implements Partial<ResourceCrud<User>> {
 
   @http.GET()
   async list(
-    pagination?: HttpQueries<ResourcePagination>,
-    filter?: HttpQuery<ResourceFilterMap<User>>,
-    order?: HttpQuery<ResourceOrderMap<User>>,
+    // HttpQueries and HttpQuery cannot exist at the same time, so this might be the best solution
+    { filter, order, ...pagination }: HttpQueries<UserListQuery>,
   ): Promise<ResourceList<User>> {
     return this.res.list(this.query, pagination, filter, order);
   }
@@ -34,3 +33,8 @@ export class UserController implements Partial<ResourceCrud<User>> {
     return this.res.retrieve(this.query, { uuid });
   }
 }
+
+type UserListQuery = {
+  filter?: ResourceFilterMap<User>;
+  order?: ResourceOrderMap<User>;
+} & ResourcePagination;

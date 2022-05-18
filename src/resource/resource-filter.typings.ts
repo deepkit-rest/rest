@@ -23,7 +23,7 @@ export type ResourceFilterMap<
   Entity,
   Field extends FieldName<Entity> = FieldName<Entity>,
 > = {
-  [Key in Field]: {
+  [Key in Field]?: {
     [Operator in ResourceFilterOperator]?: Operator extends ResourceFilterOperatorMultiValue
       ? Entity[Key][]
       : Entity[Key];
