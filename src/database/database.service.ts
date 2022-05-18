@@ -4,6 +4,10 @@ import { SQLiteDatabaseAdapter } from "@deepkit/sqlite";
 import { DatabaseConfig } from "./database.module";
 import { DatabaseEntitySet } from "./database.providers";
 
+/**
+ * Application bootstrap fails when using {@link Database} as injection token
+ * and enabling framework debug mode (bug). This is a temporary workaround.
+ */
 export abstract class AppDatabase extends Database {}
 
 /**
