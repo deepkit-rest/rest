@@ -17,7 +17,7 @@ export class AuthTokenService {
       const { uuid } = user;
       const callback: SignCallback = (err, token) =>
         token ? resolve(token) : reject(err);
-      sign({ uuid }, this.secret, callback);
+      sign({ uuid }, this.secret, { expiresIn: "7 days" }, callback);
     });
   }
 
