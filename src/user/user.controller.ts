@@ -1,6 +1,5 @@
 import { http, HttpQueries } from "@deepkit/http";
-import { Inject } from "@deepkit/injector";
-import * as orm from "@deepkit/orm"; // We have to use namespace import here as a temporary workaround, otherwise the application will not be able to bootstrap. This will be fixed in the next release.
+import { InjectDatabaseSession } from "src/database/database.module";
 import { ResourceService } from "src/resource/resource.service";
 import { ResourceCrud } from "src/resource/resource-crud.typings";
 import { ResourceFilterMap } from "src/resource/resource-filter.typings";
@@ -11,14 +10,6 @@ import {
 import { ResourceOrderMap } from "src/resource/resource-order.typings";
 
 import { User } from "./user.entity";
-import { DATABASE_SESSION } from "./user.module";
-
-// Temporary workaround due to a bug related to @deepkit/injector, will be
-// fixed in the next release.
-type InjectDatabaseSession = Inject<
-  orm.DatabaseSession<orm.DatabaseAdapter>,
-  typeof DATABASE_SESSION
->;
 
 @http.controller("users")
 export class UserController implements Partial<ResourceCrud<User>> {
