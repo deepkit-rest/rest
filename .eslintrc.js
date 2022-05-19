@@ -19,15 +19,13 @@ module.exports = {
     jest: true,
   },
   rules: {
-    "@typescript-eslint/interface-name-prefix": "off",
-    "@typescript-eslint/explicit-function-return-type": "off",
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/no-empty-function": "off",
     "@typescript-eslint/no-inferrable-types": "off",
     "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
     "@typescript-eslint/explicit-module-boundary-types": "error",
-    "simple-import-sort/imports": "error",
-    "simple-import-sort/exports": "error",
-    eqeqeq: ["error", "always"],
+    eqeqeq: "error",
+    "simple-import-sort/imports": "warn",
+    "simple-import-sort/exports": "warn",
   },
 };
