@@ -25,6 +25,7 @@ export class User extends Entity {
 export class UserEventListener {
   @eventDispatcher.listen(DatabasePreInsert)
   async preInsert(event: UnitOfWorkEvent<User>): Promise<void> {
+    if (event.classSchema.getClassType() !== User) return;
     await Promise.all(event.items.map((user) => user.hashPassword()));
   }
 }
