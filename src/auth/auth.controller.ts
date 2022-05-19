@@ -51,9 +51,9 @@ export interface AuthLoginPayload {
   password: string;
 }
 
-// We cannot use `User["name"]` here because the type decorators will not
-// be copied. (bug)
-export interface AuthRegisterPayload extends Pick<User, "name" | "email"> {
+export interface AuthRegisterPayload {
+  name: User["name"];
+  email: User["email"];
   password: UserPassword;
 }
 
