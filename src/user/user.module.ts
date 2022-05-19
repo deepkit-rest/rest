@@ -3,8 +3,11 @@ import { createModule } from "@deepkit/app";
 import { UserController } from "./user.controller";
 import { UserEventListener } from "./user.entity";
 
-export class UserModule extends createModule({
-  controllers: [UserController],
-  providers: [],
-  listeners: [UserEventListener],
-}) {}
+export class UserModule extends createModule(
+  {
+    controllers: [UserController],
+    providers: [],
+    listeners: [UserEventListener],
+  },
+  "user",
+) {}
