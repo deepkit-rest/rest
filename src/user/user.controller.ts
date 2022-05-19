@@ -1,5 +1,6 @@
 import { http, HttpQueries } from "@deepkit/http";
-import { AppDatabase } from "src/database/database.service";
+import { Inject } from "@deepkit/injector";
+import * as orm from "@deepkit/orm"; // We have to use namespace import here as a temporary workaround, otherwise the application will not be able to bootstrap. This will be fixed in the next release.
 import { ResourceService } from "src/resource/resource.service";
 import { ResourceCrud } from "src/resource/resource-crud.typings";
 import { ResourceFilterMap } from "src/resource/resource-filter.typings";
@@ -10,27 +11,32 @@ import {
 import { ResourceOrderMap } from "src/resource/resource-order.typings";
 
 import { User } from "./user.entity";
+import { DATABASE_SESSION } from "./user.module";
+
+// Temporary workaround due to a bug related to @deepkit/injector, will be
+// fixed in the next release.
+type InjectDatabaseSession = Inject<
+  orm.DatabaseSession<orm.DatabaseAdapter>,
+  typeof DATABASE_SESSION
+>;
 
 @http.controller("users")
 export class UserController implements Partial<ResourceCrud<User>> {
-  private query = this.database.query(User);
-
   constructor(
-    private database: AppDatabase,
+    private db: InjectDatabaseSession,
     private res: ResourceService<User>,
   ) {}
 
   @http.GET()
   async list(
-    // HttpQueries and HttpQuery cannot exist at the same time, so this might be the best solution
-    { filter, order, ...pagination }: HttpQueries<UserListQuery>,
+    { filter, order, ...pagination }: HttpQueries<UserListQuery>, // HttpQueries and HttpQuery cannot exist at the same time currently, but this feature might be available in a future release.
   ): Promise<ResourceList<User>> {
-    return this.res.list(this.query, pagination, filter, order);
+    return this.res.list(this.db.query(), pagination, filter, order);
   }
 
   @http.GET(":uuid")
   async retrieve(uuid: string): Promise<User> {
-    return this.res.retrieve(this.query, { uuid });
+    return this.res.retrieve(this.db.query(), { uuid });
   }
 }
 
