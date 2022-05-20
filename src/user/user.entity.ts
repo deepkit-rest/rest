@@ -9,7 +9,7 @@ import {
   Unique,
 } from "@deepkit/type";
 import { compare, hash } from "bcryptjs";
-import { DatabasePreInsert } from "src/database/database-event";
+import { DATABASE_PRE_INSERT } from "src/database/database-event";
 import { Entity } from "src/shared/entity";
 
 @entity.name("user")
@@ -33,7 +33,7 @@ export class User extends Entity {
 export type UserPassword = string & MinLength<6> & MaxLength<50>;
 
 export class UserEventListener {
-  @eventDispatcher.listen(DatabasePreInsert)
+  @eventDispatcher.listen(DATABASE_PRE_INSERT)
   async preInsert(event: UnitOfWorkEvent<User>): Promise<void> {
     if (event.classSchema.getClassType() !== User) return;
     await Promise.all(event.items.map((user) => user.hashPassword()));
