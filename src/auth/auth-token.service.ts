@@ -14,10 +14,10 @@ export class AuthTokenService {
 
   async sign(user: User): Promise<string> {
     return new Promise((resolve, reject) => {
-      const { uuid } = user;
+      const { id } = user;
       const callback: SignCallback = (err, token) =>
         token ? resolve(token) : reject(err);
-      sign({ uuid }, this.secret, { expiresIn: "7 days" }, callback);
+      sign({ id }, this.secret, { expiresIn: "7 days" }, callback);
     });
   }
 
@@ -31,5 +31,5 @@ export class AuthTokenService {
 }
 
 export interface AuthTokenPayload extends JwtPayload {
-  user: Pick<User, "uuid">; // TODO: determine user fields to store
+  user: Pick<User, "id">; // TODO: determine user fields to store
 }

@@ -25,14 +25,14 @@ export class UserController implements Partial<ResourceCrud<User>> {
     return this.res.list(this.db.query(), pagination, filter, order);
   }
 
-  @http.GET(":uuid")
-  async retrieve(uuid: string): Promise<User> {
-    return this.res.retrieve(this.db.query(), { uuid });
+  @http.GET(":id")
+  async retrieve(id: string): Promise<User> {
+    return this.res.retrieve(this.db.query(), { id });
   }
 }
 
 // TODO: use type decorators and extract fields using a type func
-type UserOutputField = "uuid" | "name" | "email" | "createdAt";
+type UserOutputField = "id" | "name" | "email" | "createdAt";
 
 type UserListQuery = {
   filter?: ResourceFilterMap<User, UserOutputField>;
