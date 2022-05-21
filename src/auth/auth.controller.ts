@@ -26,17 +26,24 @@ export class AuthController {
     const verified = await user?.verify(payload.password);
     if (!user || !verified)
       throw new HttpUnauthorizedError("Invalid credentials");
-    const token = await this.tokenService.sign(user);
-    return { user, token };
+    const refreshToken = await this.tokenService.signRefresh(user);
+    const accessToken = await this.tokenService.signAccess(refreshToken);
+    return { user, refreshToken, accessToken };
   }
 
   @http.POST("register").serialization({ groupsExclude: ["hidden"] })
   async register(payload: HttpBody<AuthRegisterPayload>): Promise<AuthResult> {
     const user = new User().assign(payload);
     this.db.add(user);
-    const token = await this.tokenService.sign(user);
+    const refreshToken = await this.tokenService.signRefresh(user);
+    const accessToken = await this.tokenService.signAccess(refreshToken);
     await this.db.commit();
-    return { user, token };
+    return { user, refreshToken, accessToken };
+  }
+
+  @http.POST("refresh").serialization({ groupsExclude: ["hidden"] })
+  async refresh(payload: HttpBody<AuthRefreshPayload>): Promise<string> {
+    return this.tokenService.signAccess(payload.refreshToken);
   }
 
   @http
@@ -60,7 +67,12 @@ export interface AuthRegisterPayload {
   password: User["password"];
 }
 
+export interface AuthRefreshPayload {
+  refreshToken: string;
+}
+
 export interface AuthResult {
   user: User;
-  token: string;
+  refreshToken: string;
+  accessToken: string;
 }

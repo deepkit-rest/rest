@@ -1,36 +1,32 @@
-import {
-  JwtPayload,
-  sign,
-  SignCallback,
-  verify,
-  VerifyCallback,
-} from "jsonwebtoken";
+import { JwtPayload } from "jsonwebtoken";
+import { JwtService } from "src/jwt/jwt.service";
 import { RequestSessionUser } from "src/shared/request-session";
 import { User } from "src/user/user.entity";
 
-import { AuthConfig } from "./auth.module";
-
 export class AuthTokenService {
-  constructor(private secret: AuthConfig["secret"]) {}
+  constructor(private jwtService: JwtService) {}
 
-  async sign(user: User): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const { id } = user;
-      const callback: SignCallback = (err, token) =>
-        token ? resolve(token) : reject(err);
-      sign({ id }, this.secret, { expiresIn: "7 days" }, callback);
-    });
+  async signRefresh(user: User): Promise<string> {
+    return this.jwtService.sign<AuthTokenPayload>(
+      { user: { id: user.id }, type: "refresh" },
+      { expiresIn: "60 days" },
+    );
+  }
+
+  async signAccess(refreshToken: string): Promise<string> {
+    const { user } = await this.decodeAndVerify(refreshToken);
+    return this.jwtService.sign<AuthTokenPayload>(
+      { user, type: "access" },
+      { expiresIn: "60 minutes" },
+    );
   }
 
   async decodeAndVerify(token: string): Promise<AuthTokenPayload> {
-    return new Promise((resolve, reject) => {
-      const callback: VerifyCallback = (err, payload) =>
-        payload ? resolve(payload as AuthTokenPayload) : reject(err);
-      verify(token, this.secret, callback);
-    });
+    return this.jwtService.decodeAndVerify<AuthTokenPayload>(token);
   }
 }
 
 export interface AuthTokenPayload extends JwtPayload {
   user: RequestSessionUser;
+  type: "access" | "refresh";
 }

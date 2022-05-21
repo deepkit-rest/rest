@@ -19,6 +19,7 @@ export class AuthListener {
     const token = match?.groups?.["token"];
     if (!token) return event.accessDenied();
     const payload = await this.tokenService.decodeAndVerify(token);
+    if (payload.type !== "access") return event.accessDenied();
     const session = event.injectorContext.get(RequestSession);
     session.user = payload.user;
   }
