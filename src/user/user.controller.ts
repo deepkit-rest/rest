@@ -22,12 +22,12 @@ export class UserController implements Partial<ResourceCrud<User>> {
   async list(
     { filter, order, ...pagination }: HttpQueries<UserListQuery>, // HttpQueries and HttpQuery cannot exist at the same time currently, but this feature might be available in a future release.
   ): Promise<ResourceList<User>> {
-    return this.res.list(this.db.query(), pagination, filter, order);
+    return this.res.list(this.db.query(User), pagination, filter, order);
   }
 
   @http.GET(":id")
   async retrieve(id: string): Promise<User> {
-    return this.res.retrieve(this.db.query(), { id });
+    return this.res.retrieve(this.db.query(User), { id });
   }
 }
 
