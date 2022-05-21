@@ -1,4 +1,9 @@
-import { http, HttpAccessDeniedError, HttpBody } from "@deepkit/http";
+import {
+  http,
+  HttpAccessDeniedError,
+  HttpBadRequestError,
+  HttpBody,
+} from "@deepkit/http";
 import { InjectDatabaseSession } from "src/database/database.module";
 import { HttpUnauthorizedError } from "src/shared/http-error";
 import { User } from "src/user/user.entity";
@@ -7,6 +12,7 @@ import { AuthTokenService } from "./auth-token.service";
 
 // TODO: determine whether to use alternative:
 // - login: POST /sessions
+// - refresh: PATCH /sessions/current
 // - logout: DELETE /sessions/current
 // - register: POST /users
 
@@ -43,15 +49,17 @@ export class AuthController {
 
   @http.POST("refresh").serialization({ groupsExclude: ["hidden"] })
   async refresh(payload: HttpBody<AuthRefreshPayload>): Promise<string> {
-    return this.tokenService.signAccess(payload.refreshToken);
+    return this.tokenService.signAccess(payload.refreshToken).catch(() => {
+      throw new HttpBadRequestError();
+    });
   }
 
   @http
     .POST("logout")
     .serialization({ groupsExclude: ["hidden"] })
     .group("protected")
+  // TODO: implement token revoking
   async logout(): Promise<void> {
-    // TODO: implement user token revoking
     throw new HttpAccessDeniedError("Not implemented");
   }
 }
