@@ -61,7 +61,6 @@ module.exports = {
     "no-template-curly-in-string": "error",
     "no-unreachable-loop": "error",
     "arrow-body-style": "error",
-    "consistent-return": "error",
     "curly": ["error", "multi", "consistent"],
     "default-case-last": "error",
     "grouped-accessor-pairs": "error",
