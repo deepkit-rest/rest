@@ -1,7 +1,7 @@
 import { http, HttpAccessDeniedError, HttpBody } from "@deepkit/http";
 import { InjectDatabaseSession } from "src/database/database.module";
 import { HttpUnauthorizedError } from "src/shared/http-error";
-import { User, UserPassword } from "src/user/user.entity";
+import { User } from "src/user/user.entity";
 
 import { AuthTokenService } from "./auth-token.service";
 
@@ -17,7 +17,7 @@ export class AuthController {
     private tokenService: AuthTokenService,
   ) {}
 
-  @http.POST("login")
+  @http.POST("login").serialization({ groupsExclude: ["hidden"] })
   async login(payload: HttpBody<AuthLoginPayload>): Promise<AuthResult> {
     const user = await this.db
       .query(User)
@@ -30,7 +30,7 @@ export class AuthController {
     return { user, token };
   }
 
-  @http.POST("register")
+  @http.POST("register").serialization({ groupsExclude: ["hidden"] })
   async register(payload: HttpBody<AuthRegisterPayload>): Promise<AuthResult> {
     const user = new User().assign(payload);
     this.db.add(user);
@@ -39,7 +39,7 @@ export class AuthController {
     return { user, token };
   }
 
-  @http.POST("logout")
+  @http.POST("logout").serialization({ groupsExclude: ["hidden"] })
   async logout(): Promise<void> {
     // TODO: implement user token revoking
     throw new HttpAccessDeniedError("Not implemented");
@@ -54,7 +54,7 @@ export interface AuthLoginPayload {
 export interface AuthRegisterPayload {
   name: User["name"];
   email: User["email"];
-  password: UserPassword;
+  password: User["password"];
 }
 
 export interface AuthResult {

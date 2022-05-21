@@ -3,7 +3,7 @@ import { UnitOfWorkEvent } from "@deepkit/orm";
 import {
   Email,
   entity,
-  Excluded,
+  Group,
   MaxLength,
   MinLength,
   Unique,
@@ -16,7 +16,7 @@ import { Entity } from "src/shared/entity";
 export class User extends Entity {
   name!: string & MinLength<1> & MaxLength<20>;
   email!: Email & Unique;
-  password!: UserPassword & Excluded<"json">;
+  password!: string & MinLength<6> & MaxLength<50> & Group<"hidden">;
 
   async hashPassword(): Promise<void> {
     const hashed = this.password.length === 60;
@@ -28,9 +28,6 @@ export class User extends Entity {
     return compare(password, this.password);
   }
 }
-
-// Temporary workaround for the upcoming `ResetDecorator` type decorator.
-export type UserPassword = string & MinLength<6> & MaxLength<50>;
 
 export class UserEventListener {
   @eventDispatcher.listen(DATABASE_PRE_INSERT)

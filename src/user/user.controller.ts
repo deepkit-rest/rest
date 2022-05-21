@@ -18,14 +18,14 @@ export class UserController implements Partial<ResourceCrud<User>> {
     private res: ResourceService<User>,
   ) {}
 
-  @http.GET()
+  @http.GET().serialization({ groupsExclude: ["hidden"] })
   async list(
     { filter, order, ...pagination }: HttpQueries<UserListQuery>, // HttpQueries and HttpQuery cannot exist at the same time currently, but this feature might be available in a future release.
   ): Promise<ResourceList<User>> {
     return this.res.list(this.db.query(User), pagination, filter, order);
   }
 
-  @http.GET(":id")
+  @http.GET(":id").serialization({ groupsExclude: ["hidden"] })
   async retrieve(id: string): Promise<User> {
     return this.res.retrieve(this.db.query(User), { id });
   }
