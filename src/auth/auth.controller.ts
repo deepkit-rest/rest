@@ -39,7 +39,10 @@ export class AuthController {
     return { user, token };
   }
 
-  @http.POST("logout").serialization({ groupsExclude: ["hidden"] })
+  @http
+    .POST("logout")
+    .serialization({ groupsExclude: ["hidden"] })
+    .group("protected")
   async logout(): Promise<void> {
     // TODO: implement user token revoking
     throw new HttpAccessDeniedError("Not implemented");

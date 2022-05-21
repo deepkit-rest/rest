@@ -18,20 +18,25 @@ export class UserController implements Partial<ResourceCrud<User>> {
     private res: ResourceService<User>,
   ) {}
 
-  @http.GET().serialization({ groupsExclude: ["hidden"] })
+  @http
+    .GET()
+    .serialization({ groupsExclude: ["hidden"] })
+    .group("protected")
   async list(
     { filter, order, ...pagination }: HttpQueries<UserListQuery>, // HttpQueries and HttpQuery cannot exist at the same time currently, but this feature might be available in a future release.
   ): Promise<ResourceList<User>> {
     return this.res.list(this.db.query(User), pagination, filter, order);
   }
 
-  @http.GET(":id").serialization({ groupsExclude: ["hidden"] })
+  @http
+    .GET(":id")
+    .serialization({ groupsExclude: ["hidden"] })
+    .group("protected")
   async retrieve(id: string): Promise<User> {
     return this.res.retrieve(this.db.query(User), { id });
   }
 }
 
-// TODO: use type decorators and extract fields using a type func
 type UserOutputField = "id" | "name" | "email" | "createdAt";
 
 type UserListQuery = {

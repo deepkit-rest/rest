@@ -1,6 +1,7 @@
 import { createModule } from "@deepkit/app";
 
 import { AuthController } from "./auth.controller";
+import { AuthListener } from "./auth.listener";
 import { AuthTokenService } from "./auth-token.service";
 
 export class AuthConfig {
@@ -11,6 +12,7 @@ export class AuthModule extends createModule(
   {
     controllers: [AuthController],
     providers: [AuthTokenService],
+    listeners: [AuthListener],
     config: AuthConfig,
   },
   "auth",

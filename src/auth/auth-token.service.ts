@@ -1,3 +1,4 @@
+import { HttpRequest } from "@deepkit/http";
 import {
   JwtPayload,
   sign,
@@ -31,5 +32,5 @@ export class AuthTokenService {
 }
 
 export interface AuthTokenPayload extends JwtPayload {
-  user: Pick<User, "id">; // TODO: determine user fields to store
+  user: HttpRequest["user"];
 }
