@@ -1,5 +1,6 @@
 import { eventDispatcher } from "@deepkit/event";
 import { httpWorkflow } from "@deepkit/http";
+import { RequestSession } from "src/shared/request-session";
 
 import { AuthTokenService } from "./auth-token.service";
 
@@ -18,6 +19,7 @@ export class AuthListener {
     const token = match?.groups?.["token"];
     if (!token) return event.accessDenied();
     const payload = await this.tokenService.decodeAndVerify(token);
-    event.request.user = payload.user;
+    const session = event.injectorContext.get(RequestSession);
+    session.user = payload.user;
   }
 }

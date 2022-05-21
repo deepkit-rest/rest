@@ -1,4 +1,3 @@
-import { HttpRequest } from "@deepkit/http";
 import {
   JwtPayload,
   sign,
@@ -6,6 +5,7 @@ import {
   verify,
   VerifyCallback,
 } from "jsonwebtoken";
+import { RequestSessionUser } from "src/shared/request-session";
 import { User } from "src/user/user.entity";
 
 import { AuthConfig } from "./auth.module";
@@ -32,5 +32,5 @@ export class AuthTokenService {
 }
 
 export interface AuthTokenPayload extends JwtPayload {
-  user: HttpRequest["user"];
+  user: RequestSessionUser;
 }
