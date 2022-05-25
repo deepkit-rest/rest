@@ -20,8 +20,10 @@ export class AuthListener {
     const match = authorization.match(/^Bearer (?<token>.*)$/u);
     const token = match?.groups?.["token"];
     if (!token) return deny();
-    const payload = await this.tokenService.decodeAndVerify(token);
-    if (payload.type !== "access") return deny();
+    const payload = await this.tokenService
+      .decodeAndVerify(token)
+      .catch(() => null);
+    if (payload?.type !== "access") return deny();
 
     const context = event.injectorContext.get(RequestContext);
     context.user = payload.user;
