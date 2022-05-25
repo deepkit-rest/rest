@@ -7,6 +7,7 @@ import {
   MaxLength,
   MinLength,
   Unique,
+  uuid,
 } from "@deepkit/type";
 import { compare, hash } from "bcryptjs";
 import { DATABASE_PRE_INSERT } from "src/database/database-event";
@@ -14,6 +15,7 @@ import { Entity } from "src/shared/entity";
 
 @entity.name("user")
 export class User extends Entity {
+  override id: Entity["id"] = uuid(); // type info is lost during class inheritances (https://github.com/deepkit/deepkit-framework/issues/238), should be removed once fixed
   name!: string & MinLength<1> & MaxLength<20>;
   email!: Email & Unique;
   password!: string & MinLength<6> & MaxLength<50> & Group<"hidden">;
