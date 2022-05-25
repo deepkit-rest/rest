@@ -24,7 +24,7 @@ export class UserController {
   async list(
     { filter, order, ...pagination }: HttpQueries<UserListQuery>, // HttpQueries and HttpQuery cannot exist at the same time currently, but this feature might be available in a future release.
   ): Promise<ResourceList<User>> {
-    return this.res.list(this.db.query(User), pagination, filter, order);
+    return this.res.list(this.db.query(User), { pagination, filter, order });
   }
 
   @http

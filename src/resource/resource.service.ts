@@ -13,9 +13,7 @@ export class ResourceService<Entity> {
 
   async list(
     query: orm.Query<Entity>,
-    pagination?: ResourcePagination,
-    filter?: ResourceFilterMap<Entity>,
-    order?: ResourceOrderMap<Entity>,
+    { pagination, filter, order }: ResourceListingOptions<Entity>,
   ): Promise<ResourceList<Entity>> {
     await this.filter(query);
     if (pagination) this.applyPagination(query, pagination);
@@ -68,4 +66,10 @@ export class ResourceService<Entity> {
     });
     return query;
   }
+}
+
+export interface ResourceListingOptions<Entity> {
+  pagination?: ResourcePagination;
+  filter?: ResourceFilterMap<Entity>;
+  order?: ResourceOrderMap<Entity>;
 }
