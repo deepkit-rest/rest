@@ -7,7 +7,7 @@ import {
   VerifyCallback,
 } from "jsonwebtoken";
 
-import { JwtConfig } from "./jwt.module";
+import { JwtConfig } from "./jwt.config";
 
 export class JwtService {
   constructor(private secret: JwtConfig["secret"]) {}

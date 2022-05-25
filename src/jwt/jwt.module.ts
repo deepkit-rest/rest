@@ -1,10 +1,7 @@
 import { createModule } from "@deepkit/app";
 
+import { JwtConfig } from "./jwt.config";
 import { JwtService } from "./jwt.service";
-
-export class JwtConfig {
-  secret!: string;
-}
 
 export class JwtModule extends createModule(
   {

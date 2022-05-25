@@ -2,7 +2,8 @@ import { EventDispatcher } from "@deepkit/event";
 import { Database } from "@deepkit/orm";
 import { SQLiteDatabaseAdapter } from "@deepkit/sqlite";
 
-import { DatabaseConfig, DatabaseEntitySet } from "./database.module";
+import { DatabaseConfig } from "./database.config";
+import { DatabaseEntitySet } from "./database.module";
 import { forwardDatabaseEvents } from "./database-event";
 
 /**

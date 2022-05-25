@@ -3,6 +3,7 @@ import { ClassType } from "@deepkit/core";
 import { Inject } from "@deepkit/injector";
 import * as orm from "@deepkit/orm"; // We have to use namespace import here as a temporary workaround, otherwise the application will not be able to bootstrap. This will be fixed in the next release.
 
+import { DatabaseConfig } from "./database.config";
 import { DatabaseListener } from "./database.listener";
 import { AppDatabase, SQLiteDatabase } from "./database.provider";
 
@@ -13,10 +14,6 @@ export type InjectDatabaseSession = Inject<
   orm.DatabaseSession<orm.DatabaseAdapter>,
   typeof DATABASE_SESSION
 >;
-
-export class DatabaseConfig {
-  url: string = ":memory:";
-}
 
 export class DatabaseModule extends createModule(
   {
