@@ -3,7 +3,8 @@ import { ClassType } from "@deepkit/core";
 import { Inject } from "@deepkit/injector";
 import * as orm from "@deepkit/orm"; // We have to use namespace import here as a temporary workaround, otherwise the application will not be able to bootstrap. This will be fixed in the next release.
 
-import { AppDatabase, SQLiteDatabase } from "./database.service";
+import { DatabaseListener } from "./database.listener";
+import { AppDatabase, SQLiteDatabase } from "./database.provider";
 
 // Temporary workaround due to a bug related to @deepkit/injector, will be
 // fixed in the next release.
@@ -27,13 +28,13 @@ export class DatabaseModule extends createModule(
         scope: "http",
       },
     ],
+    listeners: [DatabaseListener],
     exports: [AppDatabase, DATABASE_SESSION],
     config: DatabaseConfig,
   },
   "database",
 ) {
   protected entities = new DatabaseEntitySet();
-
   withEntities(...entities: ClassType[]): this {
     entities.forEach((entity) => this.entities.add(entity));
     return this;

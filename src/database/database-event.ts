@@ -1,7 +1,7 @@
 import { EventDispatcher, EventToken } from "@deepkit/event";
 import { UnitOfWorkEvent } from "@deepkit/orm";
 
-import { AppDatabase } from "./database.service";
+import { AppDatabase } from "./database.provider";
 
 export function forwardDatabaseEvents(
   database: AppDatabase,

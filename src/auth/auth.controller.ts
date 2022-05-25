@@ -43,7 +43,6 @@ export class AuthController {
     this.db.add(user);
     const refreshToken = await this.tokenService.signRefresh(user);
     const accessToken = await this.tokenService.signAccess(refreshToken);
-    await this.db.commit();
     return { user, refreshToken, accessToken };
   }
 
