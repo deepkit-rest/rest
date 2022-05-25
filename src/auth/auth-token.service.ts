@@ -1,14 +1,15 @@
 import { JwtPayload } from "jsonwebtoken";
+import { RequestUser } from "src/core/request-context";
 import { JwtService } from "src/jwt/jwt.service";
-import { RequestSessionUser } from "src/shared/request-session";
 import { User } from "src/user/user.entity";
 
 export class AuthTokenService {
   constructor(private jwtService: JwtService) {}
 
   async signRefresh(user: User): Promise<string> {
+    const { id, name, email } = user;
     return this.jwtService.sign<AuthTokenPayload>(
-      { user: { id: user.id }, type: "refresh" },
+      { user: { id, name, email }, type: "refresh" },
       { expiresIn: "60 days" },
     );
   }
@@ -27,6 +28,6 @@ export class AuthTokenService {
 }
 
 export interface AuthTokenPayload extends JwtPayload {
-  user: RequestSessionUser;
+  user: RequestUser;
   type: "access" | "refresh";
 }

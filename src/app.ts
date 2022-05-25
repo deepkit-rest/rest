@@ -3,9 +3,9 @@ import { ClassType } from "@deepkit/core";
 import { FrameworkModule } from "@deepkit/framework";
 
 import { AuthModule } from "./auth/auth.module";
+import { RequestContext } from "./core/request-context";
 import { DatabaseModule } from "./database/database.module";
 import { ResourceModule } from "./resource/resource.module";
-import { RequestSession } from "./shared/request-session";
 import { User } from "./user/user.entity";
 import { UserModule } from "./user/user.module";
 
@@ -19,7 +19,7 @@ new App({
     new AuthModule(),
     new UserModule(),
   ],
-  providers: [{ provide: RequestSession, scope: "http" }],
+  providers: [{ provide: RequestContext, scope: "http" }],
 })
   .loadConfigFromEnv()
   .run();
