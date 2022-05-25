@@ -1,7 +1,6 @@
 import { http, HttpQueries } from "@deepkit/http";
 import { InjectDatabaseSession } from "src/database/database.module";
 import { ResourceService } from "src/resource/resource.service";
-import { ResourceCrud } from "src/resource/resource-crud.typings";
 import { ResourceFilterMap } from "src/resource/resource-filter.typings";
 import {
   ResourceList,
@@ -12,7 +11,7 @@ import { ResourceOrderMap } from "src/resource/resource-order.typings";
 import { User } from "./user.entity";
 
 @http.controller("users")
-export class UserController implements Partial<ResourceCrud<User>> {
+export class UserController {
   constructor(
     private db: InjectDatabaseSession,
     private res: ResourceService<User>,
