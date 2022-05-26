@@ -1,21 +1,20 @@
-import { EventDispatcher } from "@deepkit/event";
 import { HttpNotFoundError } from "@deepkit/http";
 import * as orm from "@deepkit/orm"; // we have to use namespace import for `Query` here, otherwise the application will stuck and cannot bootstrap (bug)
 import { FieldName, FilterQuery } from "@deepkit/orm";
 
-import { ResourceFilterEvent } from "./resource.events";
+import { ResourceAdapter } from "./resource.adapter";
 import { ResourceFilterMap } from "./resource-filter.typings";
 import { ResourceList, ResourcePagination } from "./resource-listing.typings";
 import { ResourceOrderMap } from "./resource-order.typings";
 
 export class ResourceService<Entity> {
-  constructor(private eventDispatcher: EventDispatcher) {}
+  constructor(private adapter?: ResourceAdapter<Entity>) {}
 
   async list(
     query: orm.Query<Entity>,
     { pagination, filter, order }: ResourceListingOptions<Entity>,
   ): Promise<ResourceList<Entity>> {
-    await this.filter(query);
+    query = this.adapter?.filter?.(query) ?? query;
     if (pagination) this.applyPagination(query, pagination);
     if (filter) query = this.applyFilterMap(query, filter);
     if (order) query = this.applyOrderMap(query, order);
@@ -28,16 +27,10 @@ export class ResourceService<Entity> {
     query: orm.Query<Entity>,
     condition: FilterQuery<Entity>,
   ): Promise<Entity> {
-    await this.filter(query);
+    query = this.adapter?.filter?.(query) ?? query;
     const entity = await query.filter(condition).findOneOrUndefined();
     if (!entity) throw new HttpNotFoundError();
     return entity;
-  }
-
-  async filter(query: orm.Query<Entity>): Promise<orm.Query<Entity>> {
-    const event = new ResourceFilterEvent({ query });
-    await this.eventDispatcher.dispatch(ResourceFilterEvent.token, event);
-    return event.query;
   }
 
   applyPagination(

@@ -5,7 +5,6 @@ import { FrameworkModule } from "@deepkit/framework";
 import { AuthModule } from "./auth/auth.module";
 import { RequestContext } from "./core/request-context";
 import { DatabaseModule } from "./database/database.module";
-import { ResourceModule } from "./resource/resource.module";
 import { User } from "./user/user.entity";
 import { UserModule } from "./user/user.module";
 
@@ -15,7 +14,6 @@ new App({
   imports: [
     new FrameworkModule(),
     new DatabaseModule().withEntities(...entities),
-    new ResourceModule(),
     new AuthModule(),
     new UserModule(),
   ],
