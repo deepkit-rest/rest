@@ -39,7 +39,7 @@ export class AuthController {
 
   @http.POST("register").serialization({ groupsExclude: ["hidden"] })
   async register(payload: HttpBody<AuthRegisterPayload>): Promise<AuthResult> {
-    const user = new User().assign(payload);
+    const user = new User(payload);
     this.db.add(user);
     const refreshToken = await this.tokenService.signRefresh(user);
     const accessToken = await this.tokenService.signAccess(refreshToken);
