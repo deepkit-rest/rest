@@ -4,7 +4,7 @@ import {
   HttpBadRequestError,
   HttpBody,
 } from "@deepkit/http";
-import { InjectDatabaseSession } from "src/database/database.module";
+import { InjectDatabaseSession } from "src/database/database.tokens";
 import { HttpUnauthorizedError } from "src/shared/http-error";
 import { User } from "src/user/user.entity";
 

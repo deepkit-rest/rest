@@ -1,10 +1,19 @@
 import { eventDispatcher } from "@deepkit/event";
+import { onServerBootstrap } from "@deepkit/framework";
 import { httpWorkflow } from "@deepkit/http";
 import { DatabaseSession } from "@deepkit/orm";
 
-import { DATABASE_SESSION } from "./database.module";
+import { DATABASE_SESSION } from "./database.tokens";
+import { DatabaseInitializer } from "./database-initializer.service";
 
 export class DatabaseListener {
+  constructor(private databaseInitializer: DatabaseInitializer) {}
+
+  @eventDispatcher.listen(onServerBootstrap)
+  async onServerBootstrap(): Promise<void> {
+    await this.databaseInitializer.initialize();
+  }
+
   @eventDispatcher.listen(httpWorkflow.onController, 1000)
   async afterHttpController(
     event: typeof httpWorkflow.onController.event,

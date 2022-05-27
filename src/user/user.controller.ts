@@ -1,5 +1,5 @@
 import { http, HttpQueries } from "@deepkit/http";
-import { InjectDatabaseSession } from "src/database/database.module";
+import { InjectDatabaseSession } from "src/database/database.tokens";
 import { ResourceService } from "src/resource/resource.service";
 import { ResourceFilterMap } from "src/resource/resource-filter.typings";
 import {
