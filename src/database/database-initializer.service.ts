@@ -1,4 +1,5 @@
 import { EventDispatcher } from "@deepkit/event";
+import { Database } from "@deepkit/orm";
 import { SQLiteDatabaseAdapter } from "@deepkit/sqlite";
 
 import { DatabaseConfig } from "./database.config";
@@ -12,10 +13,11 @@ export class DatabaseInitializer {
     private eventDispatcher: EventDispatcher,
   ) {}
 
-  async initialize(): Promise<void> {
+  async initialize(): Promise<Database> {
     await this.fixConnectionLogger();
     if (this.config.logging) this.database.logger.enableLogging();
     forwardDatabaseEvents(this.database, this.eventDispatcher);
+    return this.database;
   }
 
   /**
