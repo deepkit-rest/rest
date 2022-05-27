@@ -22,6 +22,10 @@ export class AuthTokenService {
     );
   }
 
+  decode(token: string): AuthTokenPayload {
+    return this.jwtService.decode<AuthTokenPayload>(token);
+  }
+
   async decodeAndVerify(token: string): Promise<AuthTokenPayload> {
     return this.jwtService.decodeAndVerify<AuthTokenPayload>(token);
   }

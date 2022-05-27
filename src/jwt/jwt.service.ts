@@ -1,4 +1,6 @@
 import {
+  decode,
+  JsonWebTokenError,
   JwtPayload,
   sign,
   SignCallback,
@@ -21,6 +23,12 @@ export class JwtService {
         token ? resolve(token) : reject(err);
       sign(payload, this.secret, options, callback);
     });
+  }
+
+  decode<Payload extends JwtPayload>(token: string): Payload {
+    const payload = decode(token) as Payload;
+    if (!payload) throw new JsonWebTokenError("Invalid token");
+    return payload;
   }
 
   async decodeAndVerify<Payload extends JwtPayload>(
