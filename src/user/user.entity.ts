@@ -1,5 +1,3 @@
-import { eventDispatcher } from "@deepkit/event";
-import { UnitOfWorkEvent } from "@deepkit/orm";
 import {
   Email,
   entity,
@@ -10,7 +8,6 @@ import {
   uuid,
 } from "@deepkit/type";
 import { compare, hash } from "bcryptjs";
-import { DATABASE_PRE_INSERT } from "src/database/database-event";
 import { Entity } from "src/shared/entity";
 
 const HASH_LENGTH = 60;
@@ -33,13 +30,5 @@ export class User extends Entity<User, "name" | "email" | "password"> {
 
   async verify(password: string): Promise<boolean> {
     return compare(password, this.password);
-  }
-}
-
-export class UserEventListener {
-  @eventDispatcher.listen(DATABASE_PRE_INSERT)
-  async preInsert(event: UnitOfWorkEvent<User>): Promise<void> {
-    if (event.classSchema.getClassType() !== User) return;
-    await Promise.all(event.items.map((user) => user.hashPassword()));
   }
 }
