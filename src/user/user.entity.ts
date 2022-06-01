@@ -1,4 +1,5 @@
 import {
+  BackReference,
   Email,
   entity,
   Group,
@@ -8,19 +9,22 @@ import {
   uuid,
 } from "@deepkit/type";
 import { compare, hash } from "bcryptjs";
+import { FileRecord } from "src/file/file-record.entity";
 import { Entity } from "src/shared/entity";
 
 const HASH_LENGTH = 60;
 
 @entity.name("user")
 export class User extends Entity<User, "name" | "email" | "password"> {
-  override id: Entity["id"] = uuid(); // type info is lost during class inheritances (https://github.com/deepkit/deepkit-framework/issues/238), should be removed once fixed
+  override id: Entity["id"] = uuid(); // temporary workaround: type info is lost during class inheritances (https://github.com/deepkit/deepkit-framework/issues/238)
   name!: string & MinLength<1> & MaxLength<20>;
   email!: Email & Unique;
   password!: string &
     MinLength<6> &
     MaxLength<typeof HASH_LENGTH> &
     Group<"hidden">;
+  files: FileRecord[] & BackReference = [];
+  override createdAt: Date = new Date(); // temporary workaround: type info is lost during class inheritances (https://github.com/deepkit/deepkit-framework/issues/238)
 
   async hashPassword(): Promise<void> {
     const hashed = this.password.length === HASH_LENGTH;
