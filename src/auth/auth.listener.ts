@@ -1,6 +1,6 @@
 import { eventDispatcher } from "@deepkit/event";
 import { httpWorkflow } from "@deepkit/http";
-import { useGuard } from "src/shared/guard";
+import { useGuard } from "src/common/guard";
 
 import { AuthGuard } from "./auth.guard";
 

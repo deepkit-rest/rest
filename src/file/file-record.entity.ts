@@ -7,7 +7,7 @@ import {
   UUID,
   uuid,
 } from "@deepkit/type";
-import { Entity } from "src/shared/entity";
+import { Entity } from "src/common/entity";
 import { User } from "src/user/user.entity";
 
 @entity.name("file-record")

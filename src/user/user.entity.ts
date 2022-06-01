@@ -9,8 +9,8 @@ import {
   uuid,
 } from "@deepkit/type";
 import { compare, hash } from "bcryptjs";
+import { Entity } from "src/common/entity";
 import { FileRecord } from "src/file/file-record.entity";
-import { Entity } from "src/shared/entity";
 
 const HASH_LENGTH = 60;
 

@@ -4,8 +4,8 @@ import {
   HttpBadRequestError,
   HttpBody,
 } from "@deepkit/http";
+import { HttpUnauthorizedError } from "src/common/http";
 import { InjectDatabaseSession } from "src/database/database.tokens";
-import { HttpUnauthorizedError } from "src/shared/http";
 import { User } from "src/user/user.entity";
 
 import { AuthTokenService } from "./auth-token.service";

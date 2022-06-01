@@ -1,4 +1,5 @@
 import { http, HttpBody, HttpQueries, HttpRequest } from "@deepkit/http";
+import { HtmlNoContentResponse } from "src/common/http";
 import { RequestContext } from "src/core/request-context";
 import { InjectDatabaseSession } from "src/database/database.tokens";
 import { ResourceService } from "src/resource/resource.service";
@@ -8,7 +9,6 @@ import {
   ResourcePagination,
 } from "src/resource/resource-listing.typings";
 import { ResourceOrderMap } from "src/resource/resource-order.typings";
-import { HtmlNoContentResponse } from "src/shared/http";
 import { User } from "src/user/user.entity";
 
 import { FileEngine } from "./file-engine";
