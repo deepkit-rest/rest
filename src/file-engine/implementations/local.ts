@@ -25,8 +25,8 @@ export class LocalFileEngine implements FileEngine {
     return key;
   }
 
-  async retrieve(ref: string): Promise<Readable> {
-    const stream = createReadStream(join(this.root, ref));
+  async retrieve(key: string): Promise<Readable> {
+    const stream = createReadStream(join(this.root, key));
     await new Promise((resolve, reject) => {
       stream.once("readable", resolve).once("error", reject);
     });
