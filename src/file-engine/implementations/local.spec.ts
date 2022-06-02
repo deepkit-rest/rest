@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from "fs";
 import { mkdir, rm, writeFile } from "fs/promises";
 import { Readable } from "stream";
 
-import { LocalFileEngine } from "./local.file-engine";
+import { LocalFileEngine } from "./local";
 
 describe("LocalFileEngine", () => {
   describe("bootstrapping", () => {
@@ -20,7 +20,7 @@ describe("LocalFileEngine", () => {
     let engine: LocalFileEngine;
 
     beforeEach(async () => {
-      root = `data/test-${uuid()}`;
+      root = `test-${uuid()}`;
       await mkdir(root);
       engine = new LocalFileEngine();
       await engine.bootstrap({ root });

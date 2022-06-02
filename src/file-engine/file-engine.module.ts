@@ -3,6 +3,7 @@ import { createModule } from "@deepkit/app";
 import { FileEngineConfig } from "./file-engine.config";
 import { FileEngine, FileEngineClass } from "./file-engine.interface";
 import { FileEngineListener } from "./file-engine.listener";
+import { LocalFileEngine } from "./implementations/local";
 
 export class FileEngineModule extends createModule(
   {
@@ -15,6 +16,7 @@ export class FileEngineModule extends createModule(
   registry: FileEngineRegistry = {};
 
   override process(): void {
+    this.registry = { local: LocalFileEngine, ...this.registry };
     Object.entries(this.registry).forEach(([name, engine]) => {
       this.manager.register(name, engine);
     });
