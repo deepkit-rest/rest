@@ -101,6 +101,7 @@ type FileRecordListParameters = {
 } & ResourcePagination;
 
 interface FileRecordCreationPayload {
+  name: FileRecord["name"];
   path: FileRecord["path"];
   size: FileRecord["size"];
 }
