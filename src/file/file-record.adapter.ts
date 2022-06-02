@@ -8,9 +8,15 @@ export class FileRecordAdapter implements ResourceAdapter<FileRecord> {
   constructor(private context: RequestContext) {}
 
   filter(query: orm.Query<FileRecord>): orm.Query<FileRecord> {
-    return query
+    query = query
       .useInnerJoin("owner")
       .filter({ id: this.context.user.id })
       .end();
+    // temporary workaround: SQL formatter fails to properly handle unpopulated
+    // relations and causes validation errors at runtime
+    query.model.joins = query.model.joins.filter(
+      (model) => model.propertySchema.getName() !== "owner",
+    );
+    return query;
   }
 }
