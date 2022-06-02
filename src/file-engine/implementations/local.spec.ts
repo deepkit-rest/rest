@@ -1,7 +1,7 @@
-import { uuid } from "@deepkit/type";
 import { existsSync, readFileSync } from "fs";
 import { mkdir, rm, writeFile } from "fs/promises";
 import { Readable } from "stream";
+import * as uuid from "uuid";
 
 import { LocalFileEngine } from "./local";
 
@@ -20,7 +20,7 @@ describe("LocalFileEngine", () => {
     let engine: LocalFileEngine;
 
     beforeEach(async () => {
-      root = `test-${uuid()}`;
+      root = `test-${uuid.v4()}`;
       await mkdir(root);
       engine = new LocalFileEngine();
       await engine.bootstrap({ root });
