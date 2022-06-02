@@ -2,6 +2,7 @@ import { createModule } from "@deepkit/app";
 import { ResourceModule } from "src/resource/resource.module";
 
 import { FileController } from "./file.controller";
+import { LocalFileEngine } from "./file-engine";
 import { FileRecordAdapter } from "./file-record.adapter";
 import { FileRecord } from "./file-record.entity";
 
@@ -11,6 +12,7 @@ import { FileRecord } from "./file-record.entity";
 export class FileModule extends createModule(
   {
     controllers: [FileController],
+    providers: [LocalFileEngine],
   },
   "file",
 ) {
