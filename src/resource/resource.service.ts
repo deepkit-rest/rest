@@ -14,7 +14,7 @@ export class ResourceService<Entity> {
     query: orm.Query<Entity>,
     { pagination, filter, order }: ResourceListingOptions<Entity>,
   ): Promise<ResourceList<Entity>> {
-    query = this.adapter?.filter?.(query) ?? query;
+    query = this.adapter?.prepareQuery?.(query) ?? query;
     if (pagination) this.applyPagination(query, pagination);
     if (filter) query = this.applyFilterMap(query, filter);
     if (order) query = this.applyOrderMap(query, order);
@@ -27,7 +27,7 @@ export class ResourceService<Entity> {
     query: orm.Query<Entity>,
     condition: FilterQuery<Entity>,
   ): Promise<Entity> {
-    query = this.adapter?.filter?.(query) ?? query;
+    query = this.adapter?.prepareQuery?.(query) ?? query;
     const entity = await query.filter(condition).findOneOrUndefined();
     if (!entity) throw new HttpNotFoundError();
     return entity;

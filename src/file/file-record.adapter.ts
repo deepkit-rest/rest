@@ -7,7 +7,7 @@ import { FileRecord } from "./file-record.entity";
 export class FileRecordAdapter implements ResourceAdapter<FileRecord> {
   constructor(private context: RequestContext) {}
 
-  filter(query: orm.Query<FileRecord>): orm.Query<FileRecord> {
+  prepareQuery(query: orm.Query<FileRecord>): orm.Query<FileRecord> {
     query = query
       .useInnerJoin("owner")
       .filter({ id: this.context.user.id })
