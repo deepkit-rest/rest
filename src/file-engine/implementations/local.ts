@@ -1,6 +1,6 @@
 import { is, uuid } from "@deepkit/type";
 import { createReadStream } from "fs";
-import { stat, writeFile } from "fs/promises";
+import { rm, stat, writeFile } from "fs/promises";
 import { join } from "path";
 import {
   FileEngine,
@@ -31,6 +31,10 @@ export class LocalFileEngine implements FileEngine {
       stream.once("readable", resolve).once("error", reject);
     });
     return stream;
+  }
+
+  async remove(key: string): Promise<void> {
+    await rm(join(this.root, key));
   }
 }
 

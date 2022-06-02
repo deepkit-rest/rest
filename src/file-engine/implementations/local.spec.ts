@@ -44,6 +44,22 @@ describe("LocalFileEngine", () => {
         const stream = await engine.retrieve("key");
         expect(stream.read().toString()).toBe("hello");
       });
+
+      it("should fail when key not found", async () => {
+        await expect(engine.retrieve("key")).rejects.toThrow();
+      });
+    });
+
+    describe("remove", () => {
+      it("should work when target exists", async () => {
+        await writeFile(`${root}/key`, "hello");
+        await engine.remove("key");
+        expect(existsSync(`${root}/key`)).toBe(false);
+      });
+
+      it("should fail when target not found", async () => {
+        await expect(engine.remove("key")).rejects.toThrow();
+      });
     });
   });
 });

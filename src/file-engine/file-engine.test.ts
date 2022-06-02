@@ -34,6 +34,7 @@ describe("FileEngineModule", () => {
       async retrieve(): Promise<Readable> {
         return Readable.from(["hello"]);
       }
+      async remove(): Promise<void> {}
     }
     const facade = createTestingApp({
       imports: [

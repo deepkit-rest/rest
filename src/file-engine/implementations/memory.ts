@@ -20,6 +20,10 @@ export class MemoryFileEngine implements FileEngine {
     if (!buffer) throw new Error("File not found");
     return buffer2stream(buffer);
   }
+
+  async remove(key: string): Promise<void> {
+    if (!this.storage.delete(key)) throw new Error("File not found");
+  }
 }
 
 /**

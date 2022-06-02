@@ -31,4 +31,19 @@ describe("MemoryFileEngine", () => {
       expect(stream.read().toString()).toBe("hello");
     });
   });
+
+  describe("remove", () => {
+    it("should work when target exists", async () => {
+      const mapDeleteSpy = jest
+        .spyOn(Map.prototype, "delete")
+        .mockReturnValue(true);
+      await engine.remove("key");
+      expect(mapDeleteSpy).toHaveBeenCalledTimes(1);
+      expect(mapDeleteSpy).toHaveBeenCalledWith("key");
+    });
+
+    it("should fail when target not found", async () => {
+      await expect(engine.remove("key")).rejects.toThrow();
+    });
+  });
 });
