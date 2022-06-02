@@ -3,23 +3,27 @@ import { existsSync, readFileSync } from "fs";
 import { mkdir, rm, writeFile } from "fs/promises";
 import { Readable } from "stream";
 
-import { LocalFileEngine } from "./file-engine";
+import { LocalFileEngine } from "./local.file-engine";
 
 describe("LocalFileEngine", () => {
-  describe("constructor", () => {
-    it("should throw if root does not exist", () => {
-      expect(() => new LocalFileEngine("does-not-exist")).toThrow();
+  describe("bootstrapping", () => {
+    it("should work", async () => {
+      const engine = new LocalFileEngine();
+      await expect(engine.bootstrap({})).rejects.toThrow();
+      await expect(engine.bootstrap({ root: "not-exists" })).rejects.toThrow();
+      await expect(engine.bootstrap({ root: "data" })).resolves.toBeUndefined();
     });
   });
 
-  describe("methods", () => {
+  describe("bootstrapped", () => {
     let root: string;
     let engine: LocalFileEngine;
 
     beforeEach(async () => {
       root = `data/test-${uuid()}`;
       await mkdir(root);
-      engine = new LocalFileEngine(root);
+      engine = new LocalFileEngine();
+      await engine.bootstrap({ root });
     });
 
     afterEach(async () => {

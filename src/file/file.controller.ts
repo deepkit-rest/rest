@@ -2,6 +2,7 @@ import { http, HttpBody, HttpQueries, HttpRequest } from "@deepkit/http";
 import { HtmlNoContentResponse } from "src/common/http";
 import { RequestContext } from "src/core/request-context";
 import { InjectDatabaseSession } from "src/database/database.tokens";
+import { FileEngine } from "src/file-engine/file-engine.interface";
 import { ResourceService } from "src/resource/resource.service";
 import { ResourceFilterMap } from "src/resource/resource-filter.typings";
 import {
@@ -11,7 +12,6 @@ import {
 import { ResourceOrderMap } from "src/resource/resource-order.typings";
 import { User } from "src/user/user.entity";
 
-import { FileEngine } from "./file-engine";
 import { FileRecord } from "./file-record.entity";
 
 @http.controller("files")
