@@ -12,4 +12,6 @@ export class RequestContext {
   user!: RequestUser;
 }
 
-export interface RequestUser extends Pick<User, "id" | "name" | "email"> {}
+export interface RequestUser {
+  id: User["id"];
+}

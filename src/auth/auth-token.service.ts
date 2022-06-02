@@ -7,9 +7,8 @@ export class AuthTokenService {
   constructor(private jwtService: JwtService) {}
 
   async signRefresh(user: User): Promise<string> {
-    const { id, name, email } = user;
     return this.jwtService.sign<AuthTokenPayload>(
-      { user: { id, name, email }, type: "refresh" },
+      { user: { id: user.id }, type: "refresh" },
       { expiresIn: "60 days" },
     );
   }
