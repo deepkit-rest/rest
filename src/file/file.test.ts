@@ -2,6 +2,7 @@ import { App } from "@deepkit/app";
 import { createTestingApp, TestingFacade } from "@deepkit/framework";
 import { HttpKernel, HttpRequest } from "@deepkit/http";
 import { InjectorContext } from "@deepkit/injector";
+import { Logger, MemoryLoggerTransport } from "@deepkit/logger";
 import { Database } from "@deepkit/orm";
 import { entities } from "src/core/entities";
 import { RequestContext } from "src/core/request-context";
@@ -42,6 +43,12 @@ describe("File", () => {
       password: "password",
     });
     await database.persist(user);
+    // temporary workaround: transport setup is not working, so we have to
+    // manually set it up
+    facade.app
+      .get(InjectorContext)
+      .get<Logger>()
+      .setTransport([new MemoryLoggerTransport()]);
     await facade.startServer();
   });
 
