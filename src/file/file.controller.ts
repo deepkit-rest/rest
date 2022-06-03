@@ -43,7 +43,11 @@ export class FileController {
     const owner = this.db.getReference(User, this.context.user.id);
     const record = new FileRecord({ owner, ...payload });
     this.db.add(record);
-    return record;
+    // temporary workaround: serialization result is different between manually
+    // instantiated entities and queried entities, so we have to retrieve it
+    // again from the database
+    await this.db.flush();
+    return this.handler.retrieve({ id: record.id });
   }
 
   @http
