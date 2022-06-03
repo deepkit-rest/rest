@@ -1,6 +1,6 @@
 import { http, HttpQueries } from "@deepkit/http";
 import { InjectDatabaseSession } from "src/database/database.tokens";
-import { ResourceService } from "src/resource/resource.service";
+import { ResourceCrudHandler } from "src/resource/resource-crud-handler.service";
 import { ResourceFilterMap } from "src/resource/resource-filter.typings";
 import {
   ResourceList,
@@ -14,7 +14,7 @@ import { User } from "./user.entity";
 export class UserController {
   constructor(
     private db: InjectDatabaseSession,
-    private res: ResourceService<User>,
+    private handler: ResourceCrudHandler<User>,
   ) {}
 
   @http
@@ -24,7 +24,10 @@ export class UserController {
   async list(
     { filter, order, ...pagination }: HttpQueries<UserListQuery>, // HttpQueries and HttpQuery cannot exist at the same time currently, but this feature might be available in a future release.
   ): Promise<ResourceList<User>> {
-    return this.res.list(this.db.query(User), { pagination, filter, order });
+    return this.handler.list(
+      this.db.query(User),
+      { pagination, filter, order }, //
+    );
   }
 
   @http
@@ -32,7 +35,7 @@ export class UserController {
     .serialization({ groupsExclude: ["hidden"] })
     .group("protected")
   async retrieve(id: string): Promise<User> {
-    return this.res.retrieve(this.db.query(User), { id });
+    return this.handler.retrieve(this.db.query(User), { id });
   }
 }
 

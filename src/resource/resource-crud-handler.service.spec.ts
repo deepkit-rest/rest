@@ -1,10 +1,10 @@
-import { ResourceService } from "./resource.service";
+import { ResourceCrudHandler } from "./resource-crud-handler.service";
 
 describe("ResourceService", () => {
-  let service: ResourceService<any>;
+  let service: ResourceCrudHandler<any>;
 
   beforeEach(() => {
-    service = new ResourceService();
+    service = new ResourceCrudHandler();
   });
 
   describe("applyPagination", () => {

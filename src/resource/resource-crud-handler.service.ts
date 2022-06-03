@@ -7,7 +7,7 @@ import { ResourceFilterMap } from "./resource-filter.typings";
 import { ResourceList, ResourcePagination } from "./resource-listing.typings";
 import { ResourceOrderMap } from "./resource-order.typings";
 
-export class ResourceService<Entity> {
+export class ResourceCrudHandler<Entity> {
   constructor(private adapter?: ResourceAdapter<Entity>) {}
 
   async list(
