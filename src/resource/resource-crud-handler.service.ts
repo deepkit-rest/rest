@@ -8,13 +8,12 @@ import { ResourceList, ResourcePagination } from "./resource-listing.typings";
 import { ResourceOrderMap } from "./resource-order.typings";
 
 export class ResourceCrudHandler<Entity> {
-  constructor(private adapter?: ResourceAdapter<Entity>) {}
+  constructor(private adapter: ResourceAdapter<Entity>) {}
 
   async list(
-    query: orm.Query<Entity>,
-    { pagination, filter, order }: ResourceListingOptions<Entity>,
+    { pagination, filter, order }: ResourceListingOptions<Entity>, //
   ): Promise<ResourceList<Entity>> {
-    query = this.adapter?.prepareQuery?.(query) ?? query;
+    let query = this.adapter.query();
     if (pagination) this.applyPagination(query, pagination);
     if (filter) query = this.applyFilterMap(query, filter);
     if (order) query = this.applyOrderMap(query, order);
@@ -23,11 +22,8 @@ export class ResourceCrudHandler<Entity> {
     return { total, items };
   }
 
-  async retrieve(
-    query: orm.Query<Entity>,
-    condition: FilterQuery<Entity>,
-  ): Promise<Entity> {
-    query = this.adapter?.prepareQuery?.(query) ?? query;
+  async retrieve(condition: FilterQuery<Entity>): Promise<Entity> {
+    const query = this.adapter.query();
     const entity = await query.filter(condition).findOneOrUndefined();
     if (!entity) throw new HttpNotFoundError();
     return entity;

@@ -30,10 +30,7 @@ export class FileController {
   async list(
     { filter, order, ...pagination }: HttpQueries<FileRecordListParameters>, //
   ): Promise<ResourceList<FileRecord>> {
-    return this.handler.list(
-      this.db.query(FileRecord), //
-      { filter, order, pagination },
-    );
+    return this.handler.list({ filter, order, pagination });
   }
 
   @http
@@ -54,7 +51,7 @@ export class FileController {
     .serialization({ groupsExclude: ["hidden"] })
     .group("protected")
   async retrieve(id: FileRecord["id"]): Promise<FileRecord> {
-    return this.handler.retrieve(this.db.query(FileRecord), { id });
+    return this.handler.retrieve({ id });
   }
 
   @http
@@ -65,9 +62,7 @@ export class FileController {
     id: FileRecord["id"],
     payload: HttpBody<FileRecordUpdatePayload>,
   ): Promise<FileRecord> {
-    const record = await this.handler.retrieve(this.db.query(FileRecord), {
-      id,
-    });
+    const record = await this.handler.retrieve({ id });
     record.assign(payload);
     return record;
   }
@@ -77,9 +72,7 @@ export class FileController {
     .serialization({ groupsExclude: ["hidden"] })
     .group("protected")
   async delete(id: FileRecord["id"]): Promise<HtmlNoContentResponse> {
-    const record = await this.handler.retrieve(this.db.query(FileRecord), {
-      id,
-    });
+    const record = await this.handler.retrieve({ id });
     this.db.remove(record);
     return new HtmlNoContentResponse();
   }
@@ -92,9 +85,7 @@ export class FileController {
     id: FileRecord["id"],
     request: HttpRequest,
   ): Promise<HtmlNoContentResponse> {
-    const record = await this.handler.retrieve(this.db.query(FileRecord), {
-      id,
-    });
+    const record = await this.handler.retrieve({ id });
     const ref = await this.engine.store(request);
     record.contentRef = ref;
     return new HtmlNoContentResponse();

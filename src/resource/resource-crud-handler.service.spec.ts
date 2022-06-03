@@ -4,7 +4,7 @@ describe("ResourceService", () => {
   let service: ResourceCrudHandler<any>;
 
   beforeEach(() => {
-    service = new ResourceCrudHandler();
+    service = new ResourceCrudHandler({} as any);
   });
 
   describe("applyPagination", () => {
