@@ -1,11 +1,11 @@
 import * as orm from "@deepkit/orm"; // temporary workaround: we have to use namespace import here as a temporary workaround, otherwise the application will not be able to bootstrap
 import { RequestContext } from "src/core/request-context";
 import { InjectDatabaseSession } from "src/database/database.tokens";
-import { ResourceAdapter } from "src/resource/resource.adapter";
+import { ResourceCrudAdapter } from "src/resource/resource-crud-adapter.interface";
 
 import { FileRecord } from "./file-record.entity";
 
-export class FileRecordAdapter implements ResourceAdapter<FileRecord> {
+export class FileRecordAdapter implements ResourceCrudAdapter<FileRecord> {
   constructor(
     private db: InjectDatabaseSession,
     private context: RequestContext,

@@ -1,14 +1,14 @@
 import { createModule } from "@deepkit/app";
 import { ClassType } from "@deepkit/core";
 
-import { ResourceAdapter } from "./resource.adapter";
+import { ResourceCrudAdapter } from "./resource-crud-adapter.interface";
 import { ResourceCrudHandler } from "./resource-crud-handler.service";
 
 export class ResourceModule<Entity> extends createModule({
   providers: [{ provide: ResourceCrudHandler, scope: "http" }],
   exports: [ResourceCrudHandler],
 }) {
-  adapter?: ClassType<ResourceAdapter<Entity>>;
+  adapter?: ClassType<ResourceCrudAdapter<Entity>>;
 
   withAdapter(adapter: this["adapter"]): this {
     this.adapter = adapter;

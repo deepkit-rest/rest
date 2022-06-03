@@ -2,13 +2,13 @@ import { HttpNotFoundError } from "@deepkit/http";
 import * as orm from "@deepkit/orm"; // we have to use namespace import for `Query` here, otherwise the application will stuck and cannot bootstrap (bug)
 import { FieldName, FilterQuery } from "@deepkit/orm";
 
-import { ResourceAdapter } from "./resource.adapter";
+import { ResourceCrudAdapter } from "./resource-crud-adapter.interface";
 import { ResourceFilterMap } from "./resource-filter.typings";
 import { ResourceList, ResourcePagination } from "./resource-listing.typings";
 import { ResourceOrderMap } from "./resource-order.typings";
 
 export class ResourceCrudHandler<Entity> {
-  constructor(private adapter: ResourceAdapter<Entity>) {}
+  constructor(private adapter: ResourceCrudAdapter<Entity>) {}
 
   async list(
     { pagination, filter, order }: ResourceListingOptions<Entity>, //

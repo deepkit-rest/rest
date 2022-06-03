@@ -1,10 +1,10 @@
 import { Query } from "@deepkit/orm";
 import { InjectDatabaseSession } from "src/database/database.tokens";
-import { ResourceAdapter } from "src/resource/resource.adapter";
+import { ResourceCrudAdapter } from "src/resource/resource-crud-adapter.interface";
 
 import { User } from "./user.entity";
 
-export class UserAdapter implements ResourceAdapter<User> {
+export class UserAdapter implements ResourceCrudAdapter<User> {
   constructor(private db: InjectDatabaseSession) {}
 
   query(): Query<User> {
