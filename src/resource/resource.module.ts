@@ -17,6 +17,10 @@ export class ResourceModule<Entity> extends createModule({
 
   override process(): void {
     if (!this.adapter) throw new Error("Adapter not specified");
-    this.addProvider({ provide: this.adapter, scope: "http" });
+    this.addProvider({
+      provide: ResourceCrudAdapter,
+      useClass: this.adapter,
+      scope: "http",
+    });
   }
 }

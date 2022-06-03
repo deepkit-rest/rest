@@ -14,10 +14,10 @@ export class ResourceCrudHandler<Entity> {
     { pagination, filter, order }: ResourceListingOptions<Entity>, //
   ): Promise<ResourceList<Entity>> {
     let query = this.adapter.query();
-    if (pagination) this.applyPagination(query, pagination);
     if (filter) query = this.applyFilterMap(query, filter);
-    if (order) query = this.applyOrderMap(query, order);
     const total = await query.count();
+    if (pagination) query = this.applyPagination(query, pagination);
+    if (order) query = this.applyOrderMap(query, order);
     const items = await query.find();
     return { total, items };
   }
@@ -31,9 +31,14 @@ export class ResourceCrudHandler<Entity> {
 
   applyPagination(
     query: orm.Query<Entity>,
-    { limit, offset }: ResourcePagination,
+    {
+      limit = this.adapter.limit,
+      offset = this.adapter.offset,
+    }: ResourcePagination,
   ): orm.Query<Entity> {
-    return query.limit(limit).skip(offset);
+    if (limit) query = query.limit(limit);
+    if (offset) query = query.skip(offset);
+    return query;
   }
 
   applyFilterMap(

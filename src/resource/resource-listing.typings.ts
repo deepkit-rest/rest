@@ -1,4 +1,4 @@
-import { Positive } from "@deepkit/type";
+import { PositiveNoZero } from "@deepkit/type";
 
 export interface ResourceList<Entity> {
   total: number;
@@ -6,6 +6,6 @@ export interface ResourceList<Entity> {
 }
 
 export interface ResourcePagination {
-  limit?: number & Positive;
-  offset?: number & Positive;
+  limit?: number & PositiveNoZero;
+  offset?: number & PositiveNoZero;
 }
