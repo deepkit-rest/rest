@@ -1,5 +1,5 @@
-import { http, HttpQueries } from "@deepkit/http";
-import { InjectDatabaseSession } from "src/database/database.tokens";
+import { http, HttpBody, HttpQueries } from "@deepkit/http";
+import { RequestContext } from "src/core/request-context";
 import { ResourceCrudHandler } from "src/resource/resource-crud-handler.service";
 import { ResourceFilterMap } from "src/resource/resource-filter.typings";
 import {
@@ -13,7 +13,7 @@ import { User } from "./user.entity";
 @http.controller("users")
 export class UserController {
   constructor(
-    private db: InjectDatabaseSession,
+    private context: RequestContext,
     private handler: ResourceCrudHandler<User>,
   ) {}
 
@@ -28,11 +28,31 @@ export class UserController {
   }
 
   @http
+    .GET("me")
+    .serialization({ groupsExclude: ["hidden"] })
+    .group("protected")
+  async retrieveMe(): Promise<User> {
+    return this.handler.retrieve({ id: this.context.user.id });
+  }
+
+  @http
     .GET(":id")
     .serialization({ groupsExclude: ["hidden"] })
     .group("protected")
   async retrieve(id: string): Promise<User> {
     return this.handler.retrieve({ id });
+  }
+
+  @http
+    .PATCH("me")
+    .serialization({ groupsExclude: ["hidden"] })
+    .group("protected")
+  async updateMe(
+    payload: HttpBody<Partial<Pick<User, "name" | "email" | "password">>>,
+  ): Promise<User> {
+    const user = await this.handler.retrieve({ id: this.context.user.id });
+    user.assign(payload);
+    return user;
   }
 }
 
