@@ -1,12 +1,4 @@
-import {
-  entity,
-  integer,
-  Positive,
-  PrimaryKey,
-  Reference,
-  UUID,
-  uuid,
-} from "@deepkit/type";
+import { entity, integer, Positive, Reference, uuid } from "@deepkit/type";
 import { Entity } from "src/common/entity";
 import { User } from "src/user/user.entity";
 
@@ -15,11 +7,11 @@ export class FileRecord extends Entity<
   FileRecord,
   "owner" | "name" | "path" | "size"
 > {
-  override id: PrimaryKey & UUID = uuid(); // temporary workaround: type info is lost during class inheritances (https://github.com/deepkit/deepkit-framework/issues/238)
+  override id: Entity["id"] = uuid(); // temporary workaround: type info is lost during class inheritances (https://github.com/deepkit/deepkit-framework/issues/238)
   owner!: User & Reference;
   name!: string;
   path!: string;
   size!: integer & Positive;
   contentRef?: string;
-  override createdAt: Date = new Date(); // temporary workaround: type info is lost during class inheritances (https://github.com/deepkit/deepkit-framework/issues/238)
+  override createdAt: Entity["createdAt"] = new Date(); // temporary workaround: type info is lost during class inheritances (https://github.com/deepkit/deepkit-framework/issues/238)
 }

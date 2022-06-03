@@ -24,7 +24,7 @@ export class User extends Entity<User, "name" | "email" | "password"> {
     MaxLength<typeof HASH_LENGTH> &
     Group<"hidden">;
   files: FileRecord[] & BackReference = [];
-  override createdAt: Date = new Date(); // temporary workaround: type info is lost during class inheritances (https://github.com/deepkit/deepkit-framework/issues/238)
+  override createdAt: Entity["createdAt"] = new Date(); // temporary workaround: type info is lost during class inheritances (https://github.com/deepkit/deepkit-framework/issues/238)
 
   async hashPassword(): Promise<void> {
     const hashed = this.password.length === HASH_LENGTH;
