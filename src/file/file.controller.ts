@@ -1,4 +1,11 @@
-import { http, HttpBody, HttpQueries, HttpRequest } from "@deepkit/http";
+import {
+  http,
+  HttpBadRequestError,
+  HttpBody,
+  HttpQueries,
+  HttpRequest,
+  HttpResponse,
+} from "@deepkit/http";
 import { Maximum } from "@deepkit/type";
 import { createHash } from "crypto";
 import { HtmlNoContentResponse } from "src/common/http";
@@ -101,6 +108,22 @@ export class FileController {
     record.contentKey = key;
     record.contentIntegrity = integrity;
     return new HtmlNoContentResponse();
+  }
+
+  @http
+    .GET(":id/content")
+    .serialization({ groupsExclude: ["hidden"] })
+    .group("protected")
+  async download(
+    id: FileRecord["id"],
+    response: HttpResponse,
+  ): Promise<HttpResponse> {
+    const record = await this.handler.retrieve({ id });
+    if (!record.isContentDefined())
+      throw new HttpBadRequestError("File content not uploaded"); // TODO: better status code
+    const stream = await this.engine.retrieve(record.contentKey);
+    // TODO: implement content verification
+    return stream.pipe(response);
   }
 }
 

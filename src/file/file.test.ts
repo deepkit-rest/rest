@@ -217,4 +217,30 @@ describe("File", () => {
       expect(fileEngineStoreSpy).toHaveBeenCalledWith(expect.any(Readable));
     });
   });
+
+  describe("GET /files/:id/content", () => {
+    it("should work", async () => {
+      const record = new FileRecord({
+        owner: user,
+        name: "test.txt",
+        path: "/dir",
+        size: 100,
+      });
+      record.contentKey = "ref";
+      record.contentIntegrity = "integrity";
+      await database.persist(record);
+      const fileEngine = facade.app.get(FileEngine);
+      const fileEngineRetrieveSpy = jest
+        .spyOn(fileEngine, "retrieve")
+        .mockReturnValue(Promise.resolve(Readable.from(Buffer.from("v"))));
+      const response = await requester.request(
+        HttpRequest.GET(`/files/${record.id}/content`),
+      );
+      expect(response.statusCode).toBe(200);
+      expect(fileEngineRetrieveSpy).toHaveBeenCalledTimes(1);
+      expect(fileEngineRetrieveSpy).toHaveBeenCalledWith("ref");
+      await new Promise((r) => response.once("finish", r));
+      expect(response.body.toString()).toBe("v");
+    });
+  });
 });
