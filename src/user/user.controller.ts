@@ -1,4 +1,5 @@
 import { http, HttpBody, HttpQueries } from "@deepkit/http";
+import { Maximum } from "@deepkit/type";
 import { RequestContext } from "src/core/request-context";
 import { ResourceCrudHandler } from "src/resource/resource-crud-handler.service";
 import { ResourceFilterMap } from "src/resource/resource-filter.typings";
@@ -58,7 +59,9 @@ export class UserController {
 
 type UserOutputField = "id" | "name" | "email" | "createdAt";
 
-type UserListQuery = {
+interface UserListQuery {
+  limit?: ResourcePagination["limit"] & Maximum<500>;
+  offset?: ResourcePagination["offset"] & Maximum<500>;
   filter?: ResourceFilterMap<User, UserOutputField>;
   order?: ResourceOrderMap<User, UserOutputField>;
-} & ResourcePagination;
+}

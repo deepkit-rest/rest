@@ -1,4 +1,5 @@
 import { http, HttpBody, HttpQueries, HttpRequest } from "@deepkit/http";
+import { Maximum } from "@deepkit/type";
 import { createHash } from "crypto";
 import { HtmlNoContentResponse } from "src/common/http";
 import { RequestContext } from "src/core/request-context";
@@ -103,10 +104,12 @@ export class FileController {
   }
 }
 
-type FileRecordListParameters = {
+interface FileRecordListParameters {
+  limit?: ResourcePagination["limit"] & Maximum<500>;
+  offset?: ResourcePagination["offset"] & Maximum<500>;
   filter?: ResourceFilterMap<FileRecord>;
   order?: ResourceOrderMap<FileRecord>;
-} & ResourcePagination;
+}
 
 interface FileRecordCreationPayload {
   name: FileRecord["name"];
