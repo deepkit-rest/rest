@@ -11,6 +11,7 @@ import { DATABASE } from "src/database/database.tokens";
 import { FileEngine } from "src/file-engine/file-engine.interface";
 import { FileEngineModule } from "src/file-engine/file-engine.module";
 import { User } from "src/user/user.entity";
+import { Readable } from "stream";
 
 import { FileModule } from "./file.module";
 import { FileRecord } from "./file-record.entity";
@@ -68,7 +69,8 @@ describe("File", () => {
         name: "test.txt",
         path: "/dir",
         size: 100,
-        contentRef: null,
+        contentKey: null,
+        contentIntegrity: null,
         createdAt: expect.any(String),
       });
     });
@@ -94,7 +96,8 @@ describe("File", () => {
             name: "test.txt",
             path: "/dir",
             size: 100,
-            contentRef: null,
+            contentKey: null,
+            contentIntegrity: null,
             createdAt: expect.any(String),
           },
         ],
@@ -137,7 +140,8 @@ describe("File", () => {
         name: record.name,
         path: record.path,
         size: record.size,
-        contentRef: null,
+        contentKey: null,
+        contentIntegrity: null,
         createdAt: record.createdAt.toISOString(),
       });
     });
@@ -161,7 +165,8 @@ describe("File", () => {
         name: "updated",
         path: record.path,
         size: record.size,
-        contentRef: null,
+        contentKey: null,
+        contentIntegrity: null,
         createdAt: record.createdAt.toISOString(),
       });
       const recordNew = await database.query(FileRecord).findOne();
@@ -205,10 +210,11 @@ describe("File", () => {
       );
       expect(response.statusCode).toBe(204);
       expect(response.bodyString).toBe("");
-      const recordNew = await database.query(FileRecord).findOne();
-      expect(recordNew.contentRef).toBeDefined();
+      await expect(database.query(FileRecord).findOne()).resolves.toMatchObject(
+        { contentKey: "ref", contentIntegrity: expect.any(String) },
+      );
       expect(fileEngineStoreSpy).toHaveBeenCalledTimes(1);
-      expect(fileEngineStoreSpy.mock.calls[0][0].read().toString()).toBe("v");
+      expect(fileEngineStoreSpy).toHaveBeenCalledWith(expect.any(Readable));
     });
   });
 });

@@ -1,4 +1,5 @@
 import { http, HttpBody, HttpQueries, HttpRequest } from "@deepkit/http";
+import { createHash } from "crypto";
 import { HtmlNoContentResponse } from "src/common/http";
 import { RequestContext } from "src/core/request-context";
 import { InjectDatabaseSession } from "src/database/database.tokens";
@@ -11,6 +12,7 @@ import {
 } from "src/resource/resource-listing.typings";
 import { ResourceOrderMap } from "src/resource/resource-order.typings";
 import { User } from "src/user/user.entity";
+import { Readable } from "stream";
 
 import { FileRecord } from "./file-record.entity";
 
@@ -91,8 +93,12 @@ export class FileController {
     request: HttpRequest,
   ): Promise<HtmlNoContentResponse> {
     const record = await this.handler.retrieve({ id });
-    const ref = await this.engine.store(request);
-    record.contentRef = ref;
+    const [key, integrity] = await Promise.all([
+      this.engine.store(request),
+      hash(request),
+    ]);
+    record.contentKey = key;
+    record.contentIntegrity = integrity;
     return new HtmlNoContentResponse();
   }
 }
@@ -109,3 +115,11 @@ interface FileRecordCreationPayload {
 }
 
 interface FileRecordUpdatePayload extends Partial<FileRecordCreationPayload> {}
+
+async function hash(source: Readable): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const stream = source.pipe(createHash("md5"));
+    stream.once("finish", () => resolve(stream.read().toString("hex")));
+    stream.once("error", (err) => reject(err));
+  });
+}
