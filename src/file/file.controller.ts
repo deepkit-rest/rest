@@ -47,6 +47,7 @@ export class FileController {
     // instantiated entities and queried entities, so we have to retrieve it
     // again from the database
     await this.db.flush();
+    this.db.identityMap.clear();
     return this.handler.retrieve({ id: record.id });
   }
 
