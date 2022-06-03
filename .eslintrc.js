@@ -57,7 +57,6 @@ module.exports = {
       { selector: "enumMember", format: ["PascalCase"] },
     ],
     "eqeqeq": "error",
-    "no-promise-executor-return": "error",
     "no-self-compare": "error",
     "no-template-curly-in-string": "error",
     "no-unreachable-loop": "error",
