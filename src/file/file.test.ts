@@ -100,6 +100,23 @@ describe("File", () => {
         ],
       });
     });
+
+    it("should filter query", async () => {
+      const user2 = new User({
+        name: "name",
+        email: "email@email.com",
+        password: "password",
+      });
+      const record = new FileRecord({
+        owner: user2,
+        name: "test.txt",
+        path: "/dir",
+        size: 100,
+      });
+      await database.persist(user2, record);
+      const response = await requester.request(HttpRequest.GET("/files"));
+      expect(response.json).toEqual({ total: 0, items: [] });
+    });
   });
 
   describe("GET /files/:id", () => {
