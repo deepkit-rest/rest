@@ -2,6 +2,7 @@ import {
   http,
   HttpBadRequestError,
   HttpBody,
+  HttpNotFoundError,
   HttpQueries,
   HttpRequest,
   HttpResponse,
@@ -122,8 +123,21 @@ export class FileController {
     if (!record.isContentDefined())
       throw new HttpBadRequestError("File content not uploaded"); // TODO: better status code
     const stream = await this.engine.retrieve(record.contentKey);
-    // TODO: implement content verification
     return stream.pipe(response);
+  }
+
+  @http
+    .GET(":id/integrity")
+    .group("protected")
+    .response(204, "File integrity verified")
+    .response(404, "File broken or not uploaded")
+  async verify(id: FileRecord["id"]): Promise<HtmlNoContentResponse> {
+    const record = await this.handler.retrieve({ id });
+    if (!record.isContentDefined()) throw new HttpNotFoundError();
+    const stream = await this.engine.retrieve(record.contentKey);
+    const integrity = await hash(stream);
+    if (integrity !== record.contentIntegrity) throw new HttpNotFoundError();
+    return new HtmlNoContentResponse();
   }
 }
 
@@ -142,7 +156,8 @@ interface FileRecordCreationPayload {
 
 interface FileRecordUpdatePayload extends Partial<FileRecordCreationPayload> {}
 
-async function hash(source: Readable): Promise<string> {
+// TODO: move to a proper module
+export async function hash(source: Readable): Promise<string> {
   return new Promise((resolve, reject) => {
     const stream = source.pipe(createHash("md5"));
     stream.once("finish", () => resolve(stream.read().toString("hex")));

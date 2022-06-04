@@ -13,6 +13,7 @@ import { FileEngineModule } from "src/file-engine/file-engine.module";
 import { User } from "src/user/user.entity";
 import { Readable } from "stream";
 
+import { hash } from "./file.controller";
 import { FileModule } from "./file.module";
 import { FileRecord } from "./file-record.entity";
 
@@ -252,15 +253,79 @@ describe("File", () => {
       });
       await database.persist(record);
       const fileEngine = facade.app.get(FileEngine);
-      const fileEngineRetrieveSpy = jest
-        .spyOn(fileEngine, "retrieve")
-        .mockReturnValue(Promise.resolve(Readable.from(Buffer.from("v"))));
+      const fileEngineRetrieveSpy = jest.spyOn(fileEngine, "retrieve");
       const response = await requester.request(
         HttpRequest.GET(`/files/${record.id}/content`),
       );
       expect(response.statusCode).toBe(400);
-      expect(fileEngineRetrieveSpy).toHaveBeenCalledTimes(1);
-      expect(fileEngineRetrieveSpy).toHaveBeenCalledWith("ref");
+      expect(fileEngineRetrieveSpy).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("GET /files/:id/integrity", () => {
+    it("should return 204 if content is uploaded and complete", async () => {
+      const record = new FileRecord({
+        owner: user,
+        name: "test.txt",
+        path: "/dir",
+        size: 100,
+      });
+      const recordContent = Buffer.from("v");
+      record.contentKey = "ref";
+      record.contentIntegrity = await hash(Readable.from(recordContent));
+      await database.persist(record);
+
+      const fileEngine = facade.app.get(FileEngine);
+      jest
+        .spyOn(fileEngine, "retrieve")
+        .mockReturnValue(Promise.resolve(Readable.from(recordContent)));
+
+      const response = await requester.request(
+        HttpRequest.GET(`/files/${record.id}/integrity`),
+      );
+      expect(response.statusCode).toBe(204);
+    });
+
+    it("should return 404 if content is not uploaded", async () => {
+      const record = new FileRecord({
+        owner: user,
+        name: "test.txt",
+        path: "/dir",
+        size: 100,
+      });
+      await database.persist(record);
+
+      const fileEngine = facade.app.get(FileEngine);
+      const fileEngineRetrieveSpy = jest.spyOn(fileEngine, "retrieve");
+
+      const response = await requester.request(
+        HttpRequest.GET(`/files/${record.id}/integrity`),
+      );
+      expect(response.statusCode).toBe(404);
+      expect(fileEngineRetrieveSpy).not.toHaveBeenCalled();
+    });
+
+    it("should return 404 if content is broken", async () => {
+      const record = new FileRecord({
+        owner: user,
+        name: "test.txt",
+        path: "/dir",
+        size: 100,
+      });
+      const recordContent = Buffer.from("v");
+      record.contentKey = "ref";
+      record.contentIntegrity = "not-matching";
+      await database.persist(record);
+
+      const fileEngine = facade.app.get(FileEngine);
+      jest
+        .spyOn(fileEngine, "retrieve")
+        .mockReturnValue(Promise.resolve(Readable.from(recordContent)));
+
+      const response = await requester.request(
+        HttpRequest.GET(`/files/${record.id}/integrity`),
+      );
+      expect(response.statusCode).toBe(404);
     });
   });
 });
