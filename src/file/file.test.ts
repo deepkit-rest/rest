@@ -242,5 +242,25 @@ describe("File", () => {
       await new Promise((r) => response.once("finish", r));
       expect(response.body.toString()).toBe("v");
     });
+
+    it("should fail when content not uploaded", async () => {
+      const record = new FileRecord({
+        owner: user,
+        name: "test.txt",
+        path: "/dir",
+        size: 100,
+      });
+      await database.persist(record);
+      const fileEngine = facade.app.get(FileEngine);
+      const fileEngineRetrieveSpy = jest
+        .spyOn(fileEngine, "retrieve")
+        .mockReturnValue(Promise.resolve(Readable.from(Buffer.from("v"))));
+      const response = await requester.request(
+        HttpRequest.GET(`/files/${record.id}/content`),
+      );
+      expect(response.statusCode).toBe(400);
+      expect(fileEngineRetrieveSpy).toHaveBeenCalledTimes(1);
+      expect(fileEngineRetrieveSpy).toHaveBeenCalledWith("ref");
+    });
   });
 });
