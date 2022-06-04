@@ -1,6 +1,6 @@
 import { createHttpError, HtmlResponse } from "@deepkit/http";
 
-export class HtmlNoContentResponse extends HtmlResponse {
+export class NoContentResponse extends HtmlResponse {
   constructor() {
     super("", 204);
   }

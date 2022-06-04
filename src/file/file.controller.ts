@@ -8,7 +8,7 @@ import {
 } from "@deepkit/http";
 import { Maximum } from "@deepkit/type";
 import { createHash } from "crypto";
-import { HtmlNoContentResponse } from "src/common/http";
+import { NoContentResponse } from "src/common/http";
 import { RequestContext } from "src/core/request-context";
 import { InjectDatabaseSession } from "src/database/database.tokens";
 import { FileEngine } from "src/file-engine/file-engine.interface";
@@ -86,10 +86,10 @@ export class FileController {
     .DELETE(":id")
     .serialization({ groupsExclude: ["hidden"] })
     .group("protected")
-  async delete(id: FileRecord["id"]): Promise<HtmlNoContentResponse> {
+  async delete(id: FileRecord["id"]): Promise<NoContentResponse> {
     const record = await this.handler.retrieve({ id });
     this.db.remove(record);
-    return new HtmlNoContentResponse();
+    return new NoContentResponse();
   }
 
   @http
@@ -99,7 +99,7 @@ export class FileController {
   async upload(
     id: FileRecord["id"],
     request: HttpRequest,
-  ): Promise<HtmlNoContentResponse> {
+  ): Promise<NoContentResponse> {
     const record = await this.handler.retrieve({ id });
     const [key, integrity] = await Promise.all([
       this.engine.store(request),
@@ -107,7 +107,7 @@ export class FileController {
     ]);
     record.contentKey = key;
     record.contentIntegrity = integrity;
-    return new HtmlNoContentResponse();
+    return new NoContentResponse();
   }
 
   @http
@@ -129,13 +129,13 @@ export class FileController {
     .group("protected")
     .response(204, "File integrity verified")
     .response(404, "File broken or not uploaded")
-  async verify(id: FileRecord["id"]): Promise<HtmlNoContentResponse> {
+  async verify(id: FileRecord["id"]): Promise<NoContentResponse> {
     const record = await this.handler.retrieve({ id });
     if (!record.isContentDefined()) throw new HttpNotFoundError();
     const stream = await this.engine.retrieve(record.contentKey);
     const integrity = await hash(stream);
     if (integrity !== record.contentIntegrity) throw new HttpNotFoundError();
-    return new HtmlNoContentResponse();
+    return new NoContentResponse();
   }
 }
 
