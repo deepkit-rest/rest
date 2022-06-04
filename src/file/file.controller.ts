@@ -8,7 +8,11 @@ import {
 } from "@deepkit/http";
 import { Maximum } from "@deepkit/type";
 import { createHash } from "crypto";
-import { NoContentResponse } from "src/common/http";
+import {
+  HttpRangeNotSatisfiableError,
+  NoContentResponse,
+} from "src/common/http";
+import { HttpRangeService } from "src/common/http-range.service";
 import { RequestContext } from "src/core/request-context";
 import { InjectDatabaseSession } from "src/database/database.tokens";
 import { FileEngine } from "src/file-engine/file-engine.interface";
@@ -31,6 +35,7 @@ export class FileController {
     private context: RequestContext,
     private handler: ResourceCrudHandler<FileRecord>,
     private engine: FileEngine,
+    private httpRangeService: HttpRangeService,
   ) {}
 
   @http
@@ -117,9 +122,27 @@ export class FileController {
   async download(
     id: FileRecord["id"],
     response: HttpResponse,
+    request: HttpRequest,
   ): Promise<HttpResponse> {
     const record = await this.handler.retrieve({ id });
     if (!record.isContentDefined()) throw new HttpNotFoundError();
+
+    if (request.headers["range"]) {
+      const ranges = this.httpRangeService.parse(
+        request.headers["range"],
+        record.size,
+      );
+
+      // TODO: implement multiple chunks downloading
+      if (ranges.length !== 1) throw new HttpRangeNotSatisfiableError();
+
+      const stream = await this.engine.retrieve(record.contentKey, {
+        start: ranges[0][0],
+        end: ranges[0][1],
+      });
+      response.status(206);
+      return stream.pipe(response);
+    }
     const stream = await this.engine.retrieve(record.contentKey);
     return stream.pipe(response);
   }
