@@ -15,8 +15,3 @@ export class HttpRangeNotSatisfiableError extends createHttpError(
   416,
   "Range Not Satisfiable",
 ) {}
-
-export class HttpPartialContent extends createHttpError(
-  206,
-  "Partial Content",
-) {}
