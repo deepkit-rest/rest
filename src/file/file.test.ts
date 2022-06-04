@@ -244,7 +244,7 @@ describe("File", () => {
       expect(response.body.toString()).toBe("v");
     });
 
-    it("should fail when content not uploaded", async () => {
+    it("should return 404 when content not uploaded", async () => {
       const record = new FileRecord({
         owner: user,
         name: "test.txt",
@@ -257,7 +257,7 @@ describe("File", () => {
       const response = await requester.request(
         HttpRequest.GET(`/files/${record.id}/content`),
       );
-      expect(response.statusCode).toBe(400);
+      expect(response.statusCode).toBe(404);
       expect(fileEngineRetrieveSpy).not.toHaveBeenCalled();
     });
   });

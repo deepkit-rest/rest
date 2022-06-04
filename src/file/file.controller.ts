@@ -1,6 +1,5 @@
 import {
   http,
-  HttpBadRequestError,
   HttpBody,
   HttpNotFoundError,
   HttpQueries,
@@ -120,8 +119,7 @@ export class FileController {
     response: HttpResponse,
   ): Promise<HttpResponse> {
     const record = await this.handler.retrieve({ id });
-    if (!record.isContentDefined())
-      throw new HttpBadRequestError("File content not uploaded"); // TODO: better status code
+    if (!record.isContentDefined()) throw new HttpNotFoundError();
     const stream = await this.engine.retrieve(record.contentKey);
     return stream.pipe(response);
   }
