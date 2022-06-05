@@ -6,7 +6,7 @@ import {
   HttpRequest,
   HttpResponse,
 } from "@deepkit/http";
-import { Maximum } from "@deepkit/type";
+import { InlineRuntimeType, Maximum } from "@deepkit/type";
 import {
   HttpRangeNotSatisfiableError,
   NoContentResponse,
@@ -16,7 +16,7 @@ import { RequestContext } from "src/core/request-context";
 import { InjectDatabaseSession } from "src/database/database.tokens";
 import { FileEngine } from "src/file-engine/file-engine.interface";
 import { ResourceCrudHandler } from "src/resource/resource-crud-handler.service";
-import { ResourceFilterMap } from "src/resource/resource-filter.typings";
+import { ResourceFilterMapFactory } from "src/resource/resource-filter-map-factory";
 import {
   ResourceList,
   ResourcePagination,
@@ -165,10 +165,14 @@ export class FileController {
   }
 }
 
+const models = {
+  filter: ResourceFilterMapFactory.build<FileRecord>([]),
+};
+
 interface FileRecordListParameters {
   limit?: ResourcePagination["limit"] & Maximum<100>;
   offset?: ResourcePagination["offset"] & Maximum<500>;
-  filter?: ResourceFilterMap<FileRecord>;
+  filter?: InlineRuntimeType<typeof models.filter>;
   order?: ResourceOrderMap<FileRecord>;
 }
 

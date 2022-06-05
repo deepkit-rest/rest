@@ -1,8 +1,8 @@
 import { http, HttpBody, HttpQueries } from "@deepkit/http";
-import { Maximum } from "@deepkit/type";
+import { InlineRuntimeType, Maximum } from "@deepkit/type";
 import { RequestContext } from "src/core/request-context";
 import { ResourceCrudHandler } from "src/resource/resource-crud-handler.service";
-import { ResourceFilterMap } from "src/resource/resource-filter.typings";
+import { ResourceFilterMapFactory } from "src/resource/resource-filter-map-factory";
 import {
   ResourceList,
   ResourcePagination,
@@ -60,11 +60,15 @@ export class UserController {
   }
 }
 
-type UserOutputField = "id" | "name" | "email" | "createdAt";
+const models = {
+  filter: ResourceFilterMapFactory.build<User>(
+    ["id", "name", "email", "createdAt"], //
+  ),
+};
 
 interface UserListQuery {
   limit?: ResourcePagination["limit"] & Maximum<500>;
   offset?: ResourcePagination["offset"] & Maximum<500>;
-  filter?: ResourceFilterMap<User, UserOutputField>;
-  order?: ResourceOrderMap<User, UserOutputField>;
+  filter?: InlineRuntimeType<typeof models.filter>;
+  order?: ResourceOrderMap<User, "id" | "name" | "email" | "createdAt">;
 }
