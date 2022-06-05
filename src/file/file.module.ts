@@ -1,4 +1,5 @@
 import { createModule } from "@deepkit/app";
+import { HttpRangeService } from "src/common/http-range.service";
 import { ResourceModule } from "src/resource/resource.module";
 
 import { FileController } from "./file.controller";
@@ -11,6 +12,7 @@ import { FileRecord } from "./file-record.entity";
 export class FileModule extends createModule(
   {
     controllers: [FileController],
+    providers: [HttpRangeService],
   },
   "file",
 ) {
