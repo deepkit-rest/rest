@@ -108,12 +108,14 @@ export class FileController {
     request: HttpRequest,
   ): Promise<NoContentResponse> {
     const record = await this.handler.retrieve({ id });
+    const size = getContentLength(request);
     const [key, integrity] = await Promise.all([
       this.engine.store(request),
       FileStreamUtils.hash(request),
     ]);
     record.contentKey = key;
     record.contentIntegrity = integrity;
+    record.contentSize = size;
     return new NoContentResponse();
   }
 
@@ -132,7 +134,7 @@ export class FileController {
     if (request.headers["range"]) {
       const ranges = this.rangeParser.parse(
         request.headers["range"],
-        record.size,
+        record.contentSize,
       );
 
       // TODO: implement multiple chunks downloading
@@ -179,7 +181,11 @@ interface FileRecordListParameters {
 interface FileRecordCreationPayload {
   name: FileRecord["name"];
   path: FileRecord["path"];
-  size: FileRecord["size"];
 }
 
 interface FileRecordUpdatePayload extends Partial<FileRecordCreationPayload> {}
+
+function getContentLength(request: HttpRequest): number {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  return +request.headers["content-length"]!;
+}

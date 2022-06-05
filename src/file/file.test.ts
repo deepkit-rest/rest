@@ -61,7 +61,6 @@ describe("File", () => {
         HttpRequest.POST("/files").json({
           name: "test.txt",
           path: "/dir",
-          size: 100,
         }),
       );
       expect(response.json).toEqual({
@@ -69,7 +68,7 @@ describe("File", () => {
         owner: user.id,
         name: "test.txt",
         path: "/dir",
-        size: 100,
+        contentSize: null,
         contentKey: null,
         contentIntegrity: null,
         createdAt: expect.any(String),
@@ -84,7 +83,6 @@ describe("File", () => {
           owner: user,
           name: "test.txt",
           path: "/dir",
-          size: 100,
         }),
       );
       const response = await requester.request(HttpRequest.GET("/files"));
@@ -96,9 +94,9 @@ describe("File", () => {
             owner: user.id,
             name: "test.txt",
             path: "/dir",
-            size: 100,
             contentKey: null,
             contentIntegrity: null,
+            contentSize: null,
             createdAt: expect.any(String),
           },
         ],
@@ -115,7 +113,6 @@ describe("File", () => {
         owner: user2,
         name: "test.txt",
         path: "/dir",
-        size: 100,
       });
       await database.persist(user2, record);
       const response = await requester.request(HttpRequest.GET("/files"));
@@ -129,7 +126,6 @@ describe("File", () => {
         owner: user,
         name: "test.txt",
         path: "/dir",
-        size: 100,
       });
       await database.persist(record);
       const response = await requester.request(
@@ -140,9 +136,9 @@ describe("File", () => {
         owner: user.id,
         name: record.name,
         path: record.path,
-        size: record.size,
         contentKey: null,
         contentIntegrity: null,
+        contentSize: null,
         createdAt: record.createdAt.toISOString(),
       });
     });
@@ -154,7 +150,6 @@ describe("File", () => {
         owner: user,
         name: "test.txt",
         path: "/dir",
-        size: 100,
       });
       await database.persist(record);
       const response = await requester.request(
@@ -165,9 +160,9 @@ describe("File", () => {
         owner: user.id,
         name: "updated",
         path: record.path,
-        size: record.size,
         contentKey: null,
         contentIntegrity: null,
+        contentSize: null,
         createdAt: record.createdAt.toISOString(),
       });
       const recordNew = await database.query(FileRecord).findOne();
@@ -181,7 +176,6 @@ describe("File", () => {
         owner: user,
         name: "test.txt",
         path: "/dir",
-        size: 100,
       });
       await database.persist(record);
       const response = await requester.request(
@@ -199,7 +193,6 @@ describe("File", () => {
         owner: user,
         name: "test.txt",
         path: "/dir",
-        size: 100,
       });
       await database.persist(record);
       const fileEngine = facade.app.get(FileEngine);
@@ -212,7 +205,11 @@ describe("File", () => {
       expect(response.statusCode).toBe(204);
       expect(response.bodyString).toBe("");
       await expect(database.query(FileRecord).findOne()).resolves.toMatchObject(
-        { contentKey: "ref", contentIntegrity: expect.any(String) },
+        {
+          contentKey: "ref",
+          contentIntegrity: expect.any(String),
+          contentSize: 1,
+        },
       );
       expect(fileEngineStoreSpy).toHaveBeenCalledTimes(1);
       expect(fileEngineStoreSpy).toHaveBeenCalledWith(expect.any(Readable));
@@ -225,7 +222,6 @@ describe("File", () => {
         owner: user,
         name: "test.txt",
         path: "/dir",
-        size: 100,
       });
       record.contentKey = "ref";
       record.contentIntegrity = "integrity";
@@ -249,7 +245,6 @@ describe("File", () => {
         owner: user,
         name: "test.txt",
         path: "/dir",
-        size: 100,
       });
       record.contentKey = "ref";
       record.contentIntegrity = "integrity";
@@ -273,7 +268,6 @@ describe("File", () => {
         owner: user,
         name: "test.txt",
         path: "/dir",
-        size: 100,
       });
       await database.persist(record);
       const fileEngine = facade.app.get(FileEngine);
@@ -292,7 +286,6 @@ describe("File", () => {
         owner: user,
         name: "test.txt",
         path: "/dir",
-        size: 100,
       });
       const recordContent = Buffer.from("v");
       record.contentKey = "ref";
@@ -317,7 +310,6 @@ describe("File", () => {
         owner: user,
         name: "test.txt",
         path: "/dir",
-        size: 100,
       });
       await database.persist(record);
 
@@ -336,7 +328,6 @@ describe("File", () => {
         owner: user,
         name: "test.txt",
         path: "/dir",
-        size: 100,
       });
       const recordContent = Buffer.from("v");
       record.contentKey = "ref";
