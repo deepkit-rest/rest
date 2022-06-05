@@ -1,7 +1,10 @@
 import { Readable } from "stream";
 import * as uuid from "uuid";
 
-import { FileEngine } from "../file-engine.interface";
+import {
+  FileEngine,
+  FileEngineRetrieveOptions,
+} from "../file-engine.interface";
 
 export class MemoryFileEngine implements FileEngine {
   protected storage = new Map<string, Buffer>();
@@ -15,8 +18,12 @@ export class MemoryFileEngine implements FileEngine {
     return key;
   }
 
-  async retrieve(key: string): Promise<Readable> {
-    const buffer = this.storage.get(key);
+  async retrieve(
+    key: string,
+    { start, end }: FileEngineRetrieveOptions = {},
+  ): Promise<Readable> {
+    if (end) end += 1;
+    const buffer = this.storage.get(key)?.slice(start, end);
     if (!buffer) throw new Error("File not found");
     return buffer2stream(buffer);
   }

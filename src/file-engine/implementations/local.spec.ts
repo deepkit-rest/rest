@@ -39,11 +39,19 @@ describe("LocalFileEngine", () => {
     });
 
     describe("retrieve", () => {
-      it("should work when key exists", async () => {
-        await writeFile(`${root}/key`, "hello");
-        const stream = await engine.retrieve("key");
-        expect(stream.read().toString()).toBe("hello");
-      });
+      it.each`
+        start        | end          | expected
+        ${undefined} | ${undefined} | ${"hello"}
+        ${0}         | ${Infinity}  | ${"hello"}
+        ${1}         | ${3}         | ${"ell"}
+      `(
+        "should work when key exists (start: $start, end: $end)",
+        async ({ start, end, expected }) => {
+          await writeFile(`${root}/key`, "hello");
+          const stream = await engine.retrieve("key", { start, end });
+          expect(stream.read().toString()).toBe(expected);
+        },
+      );
 
       it("should fail when key not found", async () => {
         await expect(engine.retrieve("key")).rejects.toThrow();

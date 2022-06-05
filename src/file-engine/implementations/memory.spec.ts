@@ -21,15 +21,23 @@ describe("MemoryFileEngine", () => {
   });
 
   describe("retrieve", () => {
-    it("should work", async () => {
-      const mapGetSpy = jest
-        .spyOn(Map.prototype, "get")
-        .mockReturnValue(Buffer.from("hello"));
-      const stream = await engine.retrieve("key");
-      expect(mapGetSpy).toHaveBeenCalledTimes(1);
-      expect(mapGetSpy).toHaveBeenCalledWith("key");
-      expect(stream.read().toString()).toBe("hello");
-    });
+    it.each`
+      start        | end          | expected
+      ${undefined} | ${undefined} | ${"hello"}
+      ${0}         | ${Infinity}  | ${"hello"}
+      ${1}         | ${3}         | ${"ell"}
+    `(
+      "should work with start: $start; end: $end",
+      async ({ start, end, expected }) => {
+        const mapGetSpy = jest
+          .spyOn(Map.prototype, "get")
+          .mockReturnValue(Buffer.from("hello"));
+        const stream = await engine.retrieve("key", { start, end });
+        expect(mapGetSpy).toHaveBeenCalledTimes(1);
+        expect(mapGetSpy).toHaveBeenCalledWith("key");
+        expect(stream.read().toString()).toBe(expected);
+      },
+    );
   });
 
   describe("remove", () => {

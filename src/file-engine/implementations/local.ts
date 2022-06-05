@@ -5,7 +5,7 @@ import { join } from "path";
 import {
   FileEngine,
   FileEngineOptions,
-  FineEngineRetrieveOptions,
+  FileEngineRetrieveOptions,
 } from "src/file-engine/file-engine.interface";
 import { Readable } from "stream";
 
@@ -28,7 +28,7 @@ export class LocalFileEngine implements FileEngine {
 
   async retrieve(
     key: string,
-    options?: FineEngineRetrieveOptions,
+    options?: FileEngineRetrieveOptions,
   ): Promise<Readable> {
     const stream = createReadStream(join(this.root, key), options);
     await new Promise((resolve, reject) => {
