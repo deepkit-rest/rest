@@ -12,7 +12,7 @@ import {
   HttpRangeNotSatisfiableError,
   NoContentResponse,
 } from "src/common/http";
-import { HttpRangeService } from "src/common/http-range.service";
+import { HttpRangeParser } from "src/common/http-range-parser.service";
 import { RequestContext } from "src/core/request-context";
 import { InjectDatabaseSession } from "src/database/database.tokens";
 import { FileEngine } from "src/file-engine/file-engine.interface";
@@ -35,7 +35,7 @@ export class FileController {
     private context: RequestContext,
     private handler: ResourceCrudHandler<FileRecord>,
     private engine: FileEngine,
-    private httpRangeService: HttpRangeService,
+    private rangeParser: HttpRangeParser,
   ) {}
 
   @http
@@ -128,7 +128,7 @@ export class FileController {
     if (!record.isContentDefined()) throw new HttpNotFoundError();
 
     if (request.headers["range"]) {
-      const ranges = this.httpRangeService.parse(
+      const ranges = this.rangeParser.parse(
         request.headers["range"],
         record.size,
       );

@@ -1,11 +1,11 @@
 import { HttpRangeNotSatisfiableError } from "./http";
-import { HttpRangeService } from "./http-range.service";
+import { HttpRangeParser } from "./http-range-parser.service";
 
-describe("HttpRangeService", () => {
-  let service: HttpRangeService;
+describe("HttpRangeParser", () => {
+  let parser: HttpRangeParser;
 
   beforeEach(() => {
-    service = new HttpRangeService();
+    parser = new HttpRangeParser();
   });
 
   describe("parse", () => {
@@ -18,18 +18,19 @@ describe("HttpRangeService", () => {
     `(
       "should work with input: $input; max: $max",
       async ({ input, max, expected }) => {
-        expect(service.parse(input, max)).toEqual(expected);
+        expect(parser.parse(input, max)).toEqual(expected);
       },
     );
 
     it.each`
-      input          | max
-      ${"bytes=1-2"} | ${1}
-      ${"bytes=2-1"} | ${undefined}
-      ${"bytes=1"}   | ${undefined}
-      ${"bytes=-1"}  | ${undefined}
+      input              | max
+      ${"bytes=1-2"}     | ${1}
+      ${"bytes=2-1"}     | ${undefined}
+      ${"bytes=1"}       | ${undefined}
+      ${"bytes=-1"}      | ${undefined}
+      ${"__bytes=1-2__"} | ${undefined}
     `("should fail with input: $input; max: $max", async ({ input, max }) => {
-      const fn = () => service.parse(input, max);
+      const fn = () => parser.parse(input, max);
       expect(fn).toThrow(HttpRangeNotSatisfiableError);
     });
   });
