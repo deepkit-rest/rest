@@ -4,9 +4,10 @@ services:
     build:
       context: .
       dockerfile: dockerfile.dev
-    ports:
-      - 8080:8080
     volumes:
-      - data:/app/data/
-volumes:
-  data:
+      - .:/app
+    command: npm run dev
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
