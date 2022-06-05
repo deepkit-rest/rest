@@ -244,6 +244,30 @@ describe("File", () => {
       expect(response.body.toString()).toBe("v");
     });
 
+    it("should work in partial mode", async () => {
+      const record = new FileRecord({
+        owner: user,
+        name: "test.txt",
+        path: "/dir",
+        size: 100,
+      });
+      record.contentKey = "ref";
+      record.contentIntegrity = "integrity";
+      await database.persist(record);
+      const fileEngine = facade.app.get(FileEngine);
+      const spy = jest
+        .spyOn(fileEngine, "retrieve")
+        .mockReturnValue(Promise.resolve(Readable.from(Buffer.from("v"))));
+      const request = HttpRequest.GET(`/files/${record.id}/content`);
+      request.header("range", "bytes=0-1");
+      const response = await requester.request(request);
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(spy).toHaveBeenCalledWith("ref", { start: 0, end: 1 });
+      await new Promise((r) => response.once("finish", r));
+      expect(response.statusCode).toBe(206);
+      expect(response.body.toString()).toBe("v");
+    });
+
     it("should return 404 when content not uploaded", async () => {
       const record = new FileRecord({
         owner: user,

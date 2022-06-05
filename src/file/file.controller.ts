@@ -140,8 +140,9 @@ export class FileController {
         start: ranges[0][0],
         end: ranges[0][1],
       });
-      response.status(206);
-      return stream.pipe(response);
+      stream.pipe(response);
+      response.writeHead(206); // `.status()` would accidentally `.end()` the response, and will be removed in the future, so we call writeHead() here.
+      return response;
     }
     const stream = await this.engine.retrieve(record.contentKey);
     return stream.pipe(response);
