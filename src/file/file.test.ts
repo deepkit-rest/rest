@@ -13,9 +13,9 @@ import { FileEngineModule } from "src/file-engine/file-engine.module";
 import { User } from "src/user/user.entity";
 import { Readable } from "stream";
 
-import { hash } from "./file.controller";
 import { FileModule } from "./file.module";
 import { FileRecord } from "./file-record.entity";
+import { FileStreamUtils } from "./file-stream.utils";
 
 describe("File", () => {
   let facade: TestingFacade<App<any>>;
@@ -296,7 +296,9 @@ describe("File", () => {
       });
       const recordContent = Buffer.from("v");
       record.contentKey = "ref";
-      record.contentIntegrity = await hash(Readable.from(recordContent));
+      record.contentIntegrity = await FileStreamUtils.hash(
+        Readable.from(recordContent),
+      );
       await database.persist(record);
 
       const fileEngine = facade.app.get(FileEngine);

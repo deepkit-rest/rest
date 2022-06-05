@@ -7,7 +7,6 @@ import {
   HttpResponse,
 } from "@deepkit/http";
 import { Maximum } from "@deepkit/type";
-import { createHash } from "crypto";
 import {
   HttpRangeNotSatisfiableError,
   NoContentResponse,
@@ -24,9 +23,9 @@ import {
 } from "src/resource/resource-listing.typings";
 import { ResourceOrderMap } from "src/resource/resource-order.typings";
 import { User } from "src/user/user.entity";
-import { Readable } from "stream";
 
 import { FileRecord } from "./file-record.entity";
+import { FileStreamUtils } from "./file-stream.utils";
 
 @http.controller("files")
 export class FileController {
@@ -108,7 +107,7 @@ export class FileController {
     const record = await this.handler.retrieve({ id });
     const [key, integrity] = await Promise.all([
       this.engine.store(request),
-      hash(request),
+      FileStreamUtils.hash(request),
     ]);
     record.contentKey = key;
     record.contentIntegrity = integrity;
@@ -157,7 +156,7 @@ export class FileController {
     const record = await this.handler.retrieve({ id });
     if (!record.isContentDefined()) throw new HttpNotFoundError();
     const stream = await this.engine.retrieve(record.contentKey);
-    const integrity = await hash(stream);
+    const integrity = await FileStreamUtils.hash(stream);
     if (integrity !== record.contentIntegrity) throw new HttpNotFoundError();
     return new NoContentResponse();
   }
@@ -177,12 +176,3 @@ interface FileRecordCreationPayload {
 }
 
 interface FileRecordUpdatePayload extends Partial<FileRecordCreationPayload> {}
-
-// TODO: move to a proper module
-export async function hash(source: Readable): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const stream = source.pipe(createHash("md5"));
-    stream.once("finish", () => resolve(stream.read().toString("hex")));
-    stream.once("error", (err) => reject(err));
-  });
-}
