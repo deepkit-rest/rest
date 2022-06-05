@@ -1,0 +1,12 @@
+version: "3"
+services:
+  server:
+    build:
+      context: .
+      dockerfile: dockerfile.dev
+    ports:
+      - 8080:8080
+    volumes:
+      - data:/app/data/
+volumes:
+  data:
