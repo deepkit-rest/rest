@@ -3,15 +3,15 @@ import { mkdir, rm, writeFile } from "fs/promises";
 import { Readable } from "stream";
 import * as uuid from "uuid";
 
-import { LocalFileEngine } from "./local";
+import { LocalFileEngine, LocalFileEngineOptions } from "./local";
 
 describe("LocalFileEngine", () => {
   describe("bootstrapping", () => {
     it("should work", async () => {
-      const engine = new LocalFileEngine();
-      await expect(engine.bootstrap({})).rejects.toThrow();
-      await expect(engine.bootstrap({ root: "not-exists" })).rejects.toThrow();
-      await expect(engine.bootstrap({ root: "data" })).resolves.toBeUndefined();
+      const bootstrap = async (options: LocalFileEngineOptions) =>
+        new LocalFileEngine(options).bootstrap();
+      await expect(bootstrap({ root: "not-exists" })).rejects.toThrow();
+      await expect(bootstrap({ root: "data" })).resolves.toBeUndefined();
     });
   });
 
@@ -22,8 +22,8 @@ describe("LocalFileEngine", () => {
     beforeEach(async () => {
       root = `test-${uuid.v4()}`;
       await mkdir(root);
-      engine = new LocalFileEngine();
-      await engine.bootstrap({ root });
+      engine = new LocalFileEngine({ root });
+      await engine.bootstrap();
     });
 
     afterEach(async () => {

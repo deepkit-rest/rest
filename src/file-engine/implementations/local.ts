@@ -1,23 +1,22 @@
-import { is, uuid } from "@deepkit/type";
+import { uuid } from "@deepkit/type";
 import { createReadStream } from "fs";
 import { rm, stat, writeFile } from "fs/promises";
 import { join } from "path";
 import {
   FileEngine,
-  FileEngineOptions,
   FileEngineRetrieveOptions,
 } from "src/file-engine/file-engine.interface";
 import { Readable } from "stream";
 
-export class LocalFileEngine implements FileEngine {
+export class LocalFileEngine implements FileEngine<LocalFileEngineOptions> {
   protected root!: string;
 
-  async bootstrap(options: FileEngineOptions): Promise<void> {
-    if (!is<LocalFileEngineOptions>(options))
-      throw new Error("Invalid options");
-    const stats = await stat(options.root);
+  constructor(public options: LocalFileEngineOptions) {}
+
+  async bootstrap(): Promise<void> {
+    const stats = await stat(this.options.root);
     if (!stats.isDirectory()) throw new Error("Invalid root");
-    this.root = options.root;
+    this.root = this.options.root;
   }
 
   async store(source: Readable): Promise<string> {

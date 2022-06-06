@@ -6,8 +6,10 @@ import {
   FileEngineRetrieveOptions,
 } from "../file-engine.interface";
 
-export class MemoryFileEngine implements FileEngine {
+export class MemoryFileEngine implements FileEngine<object> {
   protected storage = new Map<string, Buffer>();
+
+  constructor(public options: object) {}
 
   async bootstrap(): Promise<void> {}
 

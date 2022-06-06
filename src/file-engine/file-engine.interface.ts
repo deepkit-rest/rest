@@ -1,22 +1,16 @@
 import { Readable } from "stream";
 
-export abstract class FileEngine {
-  abstract bootstrap(options: FileEngineOptions): Promise<void>;
-
+// prettier-ignore
+export abstract class FileEngine<Options extends object = object> {
+  abstract options: Options;
+  abstract bootstrap(): Promise<void>;
   abstract store(source: Readable): Promise<string>;
-
-  abstract retrieve(
-    key: string,
-    options?: FileEngineRetrieveOptions,
-  ): Promise<Readable>;
-
+  abstract retrieve(key: string, options?: FileEngineRetrieveOptions): Promise<Readable>;
   abstract remove(key: string): Promise<void>;
 }
 
-export interface FileEngineOptions extends Record<string, unknown> {}
-
-export interface FileEngineClass {
-  new (): FileEngine;
+export interface FileEngineClass<Options extends object> {
+  new (options: Options): FileEngine<Options>;
 }
 
 export interface FileEngineRetrieveOptions {

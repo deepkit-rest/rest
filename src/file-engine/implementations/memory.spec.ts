@@ -6,7 +6,7 @@ describe("MemoryFileEngine", () => {
   let engine: MemoryFileEngine;
 
   beforeEach(() => {
-    engine = new MemoryFileEngine();
+    engine = new MemoryFileEngine({});
   });
 
   describe("store", () => {
