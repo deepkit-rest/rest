@@ -83,6 +83,7 @@ describe("Resource", () => {
 
       it.each`
         limit | offset | items
+        ${1}  | ${0}   | ${[{ id: 1 }]}
         ${1}  | ${1}   | ${[{ id: 2 }]}
         ${2}  | ${1}   | ${[{ id: 2 }, { id: 3 }]}
         ${1}  | ${2}   | ${[{ id: 3 }]}
@@ -103,8 +104,9 @@ describe("Resource", () => {
 
       it.each`
         limit  | offset
-        ${1}   | ${0}
-        ${0}   | ${-1}
+        ${0}   | ${1}
+        ${-1}  | ${1}
+        ${1}   | ${-1}
         ${"a"} | ${"b"}
       `(
         "should fail when limit is $limit and offset is $offset",
