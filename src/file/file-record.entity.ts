@@ -15,7 +15,7 @@ export class FileRecord extends Entity<FileRecord, "owner" | "name" | "path"> {
   override createdAt: Entity["createdAt"] = new Date(); // temporary workaround: type info is lost during class inheritances (https://github.com/deepkit/deepkit-framework/issues/238)
 
   isContentDefined(): this is FileRecordContentDefined {
-    return !!this.contentKey && !!this.contentIntegrity;
+    return !!this.contentKey && !!this.contentIntegrity && !!this.contentSize;
   }
 }
 

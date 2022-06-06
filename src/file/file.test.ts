@@ -225,6 +225,7 @@ describe("File", () => {
       });
       record.contentKey = "ref";
       record.contentIntegrity = "integrity";
+      record.contentSize = 1;
       await database.persist(record);
       const fileEngine = facade.app.get(FileEngine);
       const fileEngineRetrieveSpy = jest
@@ -248,6 +249,7 @@ describe("File", () => {
       });
       record.contentKey = "ref";
       record.contentIntegrity = "integrity";
+      record.contentSize = 1;
       await database.persist(record);
       const fileEngine = facade.app.get(FileEngine);
       const spy = jest
@@ -292,6 +294,7 @@ describe("File", () => {
       record.contentIntegrity = await FileStreamUtils.hash(
         Readable.from(recordContent),
       );
+      record.contentSize = 1;
       await database.persist(record);
 
       const fileEngine = facade.app.get(FileEngine);
