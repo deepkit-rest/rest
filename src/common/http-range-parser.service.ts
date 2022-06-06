@@ -29,7 +29,7 @@ export class HttpRangeParser {
     unit: string,
     max?: number,
   ): HttpParsedRange {
-    const regexp = /(?<start>\d+)-(?<end>\d*)/u;
+    const regexp = /^(?<start>\d+)-(?<end>\d*)$/u;
     const regexpMatchGroups = input.match(regexp)?.groups;
     if (!regexpMatchGroups) throw new HttpRangeNotSatisfiableError();
 

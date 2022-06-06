@@ -25,10 +25,11 @@ describe("HttpRangeParser", () => {
     it.each`
       input              | max
       ${"bytes=1-2"}     | ${1}
+      ${"bytes=__1-2__"} | ${undefined}
+      ${"__bytes=1-2__"} | ${undefined}
       ${"bytes=2-1"}     | ${undefined}
       ${"bytes=1"}       | ${undefined}
       ${"bytes=-1"}      | ${undefined}
-      ${"__bytes=1-2__"} | ${undefined}
     `("should fail with input: $input; max: $max", async ({ input, max }) => {
       const fn = () => parser.parse(input, max);
       expect(fn).toThrow(HttpRangeNotSatisfiableError);
