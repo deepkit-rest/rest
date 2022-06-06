@@ -6,6 +6,6 @@ export interface ResourceList<Entity> {
 }
 
 export interface ResourcePagination {
-  limit?: number & PositiveNoZero;
-  offset?: number & PositiveNoZero;
+  limit: number & PositiveNoZero;
+  offset: number & PositiveNoZero;
 }

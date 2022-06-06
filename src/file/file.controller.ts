@@ -41,10 +41,13 @@ export class FileController {
     .GET()
     .serialization({ groupsExclude: ["hidden"] })
     .group("protected")
-  async list(
-    { filter, order, ...pagination }: HttpQueries<FileRecordListParameters>, //
-  ): Promise<ResourceList<FileRecord>> {
-    return this.handler.list({ filter, order, pagination });
+  async list({
+    limit = 30,
+    offset = 0,
+    filter,
+    order,
+  }: HttpQueries<FileRecordListParameters>): Promise<ResourceList<FileRecord>> {
+    return this.handler.list({ pagination: { limit, offset }, filter, order });
   }
 
   @http
@@ -163,7 +166,7 @@ export class FileController {
 }
 
 interface FileRecordListParameters {
-  limit?: ResourcePagination["limit"] & Maximum<500>;
+  limit?: ResourcePagination["limit"] & Maximum<100>;
   offset?: ResourcePagination["offset"] & Maximum<500>;
   filter?: ResourceFilterMap<FileRecord>;
   order?: ResourceOrderMap<FileRecord>;

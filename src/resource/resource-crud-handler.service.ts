@@ -16,7 +16,7 @@ export class ResourceCrudHandler<Entity> {
     let query = this.adapter.query();
     if (filter) query = this.applyFilterMap(query, filter);
     const total = await query.count();
-    if (pagination) query = this.applyPagination(query, pagination);
+    query = this.applyPagination(query, pagination);
     if (order) query = this.applyOrderMap(query, order);
     const items = await query.find();
     return { total, items };
@@ -31,10 +31,7 @@ export class ResourceCrudHandler<Entity> {
 
   applyPagination(
     query: orm.Query<Entity>,
-    {
-      limit = this.adapter.limit,
-      offset = this.adapter.offset,
-    }: ResourcePagination,
+    { limit, offset }: ResourcePagination,
   ): orm.Query<Entity> {
     if (limit) query = query.limit(limit);
     if (offset) query = query.skip(offset);
@@ -63,7 +60,7 @@ export class ResourceCrudHandler<Entity> {
 }
 
 export interface ResourceListingOptions<Entity> {
-  pagination?: ResourcePagination;
+  pagination: ResourcePagination;
   filter?: ResourceFilterMap<Entity>;
   order?: ResourceOrderMap<Entity>;
 }

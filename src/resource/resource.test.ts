@@ -81,12 +81,6 @@ describe("Resource", () => {
         await prepare(MyEntity, MyAdapter, MyController);
       });
 
-      it("should work when query params not specified", async () => {
-        await database.persist(new MyEntity(), new MyEntity());
-        const response = await requester.request(HttpRequest.GET("/"));
-        expect(response.json).toEqual({ total: 2, items: [{ id: 2 }] });
-      });
-
       it.each`
         limit | offset | items
         ${1}  | ${1}   | ${[{ id: 2 }]}
@@ -147,7 +141,10 @@ describe("Resource", () => {
         constructor(private handler: ResourceCrudHandler<User>) {}
         @http.GET()
         handle(filter: HttpQueries<ResourceFilterMap<User>>) {
-          return this.handler.list({ filter });
+          return this.handler.list({
+            pagination: { limit: 10, offset: 0 },
+            filter,
+          });
         }
       }
 
@@ -193,7 +190,10 @@ describe("Resource", () => {
         constructor(private handler: ResourceCrudHandler<User>) {}
         @http.GET()
         handle(order: HttpQueries<ResourceOrderMap<User>>) {
-          return this.handler.list({ order });
+          return this.handler.list({
+            pagination: { limit: 10, offset: 0 },
+            order,
+          });
         }
       }
 

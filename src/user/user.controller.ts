@@ -22,10 +22,13 @@ export class UserController {
     .GET()
     .serialization({ groupsExclude: ["hidden"] })
     .group("protected")
-  async list(
-    { filter, order, ...pagination }: HttpQueries<UserListQuery>, //
-  ): Promise<ResourceList<User>> {
-    return this.handler.list({ pagination, filter, order });
+  async list({
+    limit = 30,
+    offset = 0,
+    filter,
+    order,
+  }: HttpQueries<UserListQuery>): Promise<ResourceList<User>> {
+    return this.handler.list({ pagination: { limit, offset }, filter, order });
   }
 
   @http
