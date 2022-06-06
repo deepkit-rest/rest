@@ -7,6 +7,7 @@ import { RequestContext } from "./core/request-context";
 import { DatabaseModule } from "./database/database.module";
 import { FileModule } from "./file/file.module";
 import { FileEngineModule } from "./file-engine/file-engine.module";
+import { MailerModule } from "./mailer/mailer.module";
 import { UserModule } from "./user/user.module";
 
 new App({
@@ -14,6 +15,7 @@ new App({
     new FrameworkModule(),
     new DatabaseModule().withEntities(...entities),
     new FileEngineModule(),
+    new MailerModule(),
     new AuthModule(),
     new UserModule(),
     new FileModule(),
