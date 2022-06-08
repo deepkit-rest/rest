@@ -5,11 +5,12 @@ import { UserAdapter } from "./user.adapter";
 import { UserController } from "./user.controller";
 import { User } from "./user.entity";
 import { UserListener } from "./user.listener";
+import { UserVerificationService } from "./user-verification.service";
 
 export class UserModule extends createModule(
   {
     controllers: [UserController],
-    providers: [],
+    providers: [UserVerificationService],
     listeners: [UserListener],
   },
   "user",
