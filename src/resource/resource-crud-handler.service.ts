@@ -5,9 +5,9 @@ import { FieldName, FilterQuery } from "@deepkit/orm";
 import { ReflectionClass, TypeClass } from "@deepkit/type";
 import { appendFilter } from "src/common/orm";
 
+import { ResourceList, ResourcePagination } from "./models/resource-list";
+import { ResourceOrderMap } from "./models/resource-order-map";
 import { ResourceCrudAdapter } from "./resource-crud-adapter.interface";
-import { ResourceList, ResourcePagination } from "./resource-listing.typings";
-import { ResourceOrderMap } from "./resource-order.typings";
 
 export class ResourceCrudHandler<Entity> {
   private adapterSchema;

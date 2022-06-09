@@ -15,13 +15,13 @@ import { HttpRangeParser } from "src/common/http-range-parser.service";
 import { RequestContext } from "src/core/request-context";
 import { InjectDatabaseSession } from "src/database/database.tokens";
 import { FileEngine } from "src/file-engine/file-engine.interface";
-import { ResourceCrudHandler } from "src/resource/resource-crud-handler.service";
-import { ResourceFilterMapFactory } from "src/resource/resource-filter-map-factory";
+import { ResourceFilterMapFactory } from "src/resource/models/resource-filter-map-factory";
 import {
   ResourceList,
   ResourcePagination,
-} from "src/resource/resource-listing.typings";
-import { ResourceOrderMap } from "src/resource/resource-order.typings";
+} from "src/resource/models/resource-list";
+import { ResourceOrderMap } from "src/resource/models/resource-order-map";
+import { ResourceCrudHandler } from "src/resource/resource-crud-handler.service";
 import { User } from "src/user/user.entity";
 
 import { FileRecord } from "./file-record.entity";

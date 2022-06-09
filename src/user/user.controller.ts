@@ -10,13 +10,13 @@ import { InlineRuntimeType, Maximum } from "@deepkit/type";
 import { NoContentResponse } from "src/common/http";
 import { RequestContext } from "src/core/request-context";
 import { InjectDatabaseSession } from "src/database/database.tokens";
-import { ResourceCrudHandler } from "src/resource/resource-crud-handler.service";
-import { ResourceFilterMapFactory } from "src/resource/resource-filter-map-factory";
+import { ResourceFilterMapFactory } from "src/resource/models/resource-filter-map-factory";
 import {
   ResourceList,
   ResourcePagination,
-} from "src/resource/resource-listing.typings";
-import { ResourceOrderMap } from "src/resource/resource-order.typings";
+} from "src/resource/models/resource-list";
+import { ResourceOrderMap } from "src/resource/models/resource-order-map";
+import { ResourceCrudHandler } from "src/resource/resource-crud-handler.service";
 
 import { User } from "./user.entity";
 import { UserVerificationService } from "./user-verification.service";

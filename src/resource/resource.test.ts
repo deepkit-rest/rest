@@ -15,13 +15,13 @@ import {
   Reference,
 } from "@deepkit/type";
 
+import { ResourceFilterMap } from "./models/resource-filter-map";
+import { ResourceFilterMapFactory } from "./models/resource-filter-map-factory";
+import { ResourceList, ResourcePagination } from "./models/resource-list";
+import { ResourceOrderMap } from "./models/resource-order-map";
 import { ResourceModule } from "./resource.module";
 import { ResourceCrudAdapter } from "./resource-crud-adapter.interface";
 import { ResourceCrudHandler } from "./resource-crud-handler.service";
-import { ResourceFilterMap } from "./resource-filter.typings";
-import { ResourceFilterMapFactory } from "./resource-filter-map-factory";
-import { ResourceList, ResourcePagination } from "./resource-listing.typings";
-import { ResourceOrderMap } from "./resource-order.typings";
 
 describe("Resource", () => {
   let facade: TestingFacade<App<any>>;
