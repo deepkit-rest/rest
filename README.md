@@ -35,7 +35,7 @@ APP_FRAMEWORK_DEBUG=true
 
 3. Run `npm run dev`
 
-And it's running! Go to your browser and open `http://localhost:8080/_debug` (on WSL, the port will be automatically forwarded to host, so you can use `localhost` as well), you'll see the DeepKit Debugger.
+And it's running! Go to your browser and open `http://localhost:8080/_debug` (if you use WSL, the port will be automatically forwarded to the host, so you can use `localhost` as well), you'll see the DeepKit Debugger.
 
 ## License
 
