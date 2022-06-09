@@ -9,7 +9,7 @@ import { entities } from "src/core/entities";
 import { RequestContext } from "src/core/request-context";
 import { DatabaseModule } from "src/database/database.module";
 import { DATABASE } from "src/database/database.tokens";
-import { Mailer } from "src/mailer/mailer.service";
+import { EmailEngine } from "src/email-engine/email-engine.interface";
 
 import { User } from "./user.entity";
 import { UserModule } from "./user.module";
@@ -32,7 +32,7 @@ describe("User", () => {
           provide: RequestContext,
           useFactory: () => ({ user: { id: user.id } }),
         },
-        { provide: Mailer, useValue: { send: jest.fn() } },
+        { provide: EmailEngine, useValue: { send: jest.fn() } },
       ],
     });
     requester = facade.app.get(HttpKernel);

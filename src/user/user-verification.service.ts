@@ -1,13 +1,13 @@
 import { ExpirableMap } from "src/common/map";
 import { randomInt } from "src/common/utilities";
-import { Mailer } from "src/mailer/mailer.service";
+import { EmailEngine } from "src/email-engine/email-engine.interface";
 
 import { User } from "./user.entity";
 
 export class UserVerificationService {
   private map = new ExpirableMap<User["id"], string>(1000 * 60 * 5, 10000);
 
-  constructor(private mailer: Mailer) {}
+  constructor(private mailer: EmailEngine) {}
 
   request(id: User["id"]): void {
     if (this.map.has(id)) throw new Error("Duplicate request");
@@ -19,9 +19,9 @@ export class UserVerificationService {
     const code = this.map.get(id);
     await this.mailer.send({
       subject: "Verify Your Email",
-      text: `Verification Code: ${code}`,
-      html: `Verification Code: <b>${code}</b>`,
-      to: email,
+      content: `Verification Code: ${code}`,
+      contentInHtml: `Verification Code: <b>${code}</b>`,
+      recipients: [{ address: email }],
     });
   }
 
