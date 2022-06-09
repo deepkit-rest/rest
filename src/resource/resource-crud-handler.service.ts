@@ -3,6 +3,7 @@ import { HttpNotFoundError } from "@deepkit/http";
 import * as orm from "@deepkit/orm"; // we have to use namespace import for `Query` here, otherwise the application will stuck and cannot bootstrap (bug)
 import { FieldName, FilterQuery } from "@deepkit/orm";
 import { ReflectionClass, TypeClass } from "@deepkit/type";
+import { appendFilter } from "src/common/orm";
 
 import { ResourceCrudAdapter } from "./resource-crud-adapter.interface";
 import { ResourceList, ResourcePagination } from "./resource-listing.typings";
@@ -32,8 +33,9 @@ export class ResourceCrudHandler<Entity> {
   }
 
   async retrieve(condition: FilterQuery<Entity>): Promise<Entity> {
-    const query = this.adapter.query();
-    const entity = await query.filter(condition).findOneOrUndefined();
+    let query = this.adapter.query();
+    query = appendFilter(query, condition);
+    const entity = await query.findOneOrUndefined();
     if (!entity) throw new HttpNotFoundError();
     return entity;
   }

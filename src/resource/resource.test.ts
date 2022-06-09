@@ -24,39 +24,91 @@ import { ResourceList, ResourcePagination } from "./resource-listing.typings";
 import { ResourceOrderMap } from "./resource-order.typings";
 
 describe("Resource", () => {
-  describe("CRUD", () => {
-    let facade: TestingFacade<App<any>>;
-    let requester: HttpKernel;
-    let database: orm.Database;
+  let facade: TestingFacade<App<any>>;
+  let requester: HttpKernel;
+  let database: orm.Database;
 
-    async function prepare<Entity>(
-      entity: ClassType<Entity>,
-      adapter: ClassType<ResourceCrudAdapter<Entity>>,
-      controller: ClassType,
-      entities: ClassType[] = [],
-    ) {
-      facade = createTestingApp({
-        imports: [new ResourceModule<Entity>().withAdapter(adapter)],
-        controllers: [controller],
-        providers: [
-          {
-            provide: "database",
-            useValue: new orm.Database(
-              new SQLiteDatabaseAdapter(), //
-              [entity, ...entities],
-            ),
-          },
-        ],
-      });
-      requester = facade.app.get(HttpKernel);
-      database = facade.app.get(InjectorContext).get<orm.Database>("database");
-      await database.migrate();
-      // temporary workaround: transport setup is not working, so we have to
-      // manually set it up
-      facade.app.get(Logger).setTransport([new MemoryLoggerTransport()]);
-      await facade.startServer();
+  async function prepare<Entity>(
+    entity: ClassType<Entity>,
+    adapter: ClassType<ResourceCrudAdapter<Entity>>,
+    controller: ClassType,
+    entities: ClassType[] = [],
+  ) {
+    facade = createTestingApp({
+      imports: [new ResourceModule<Entity>().withAdapter(adapter)],
+      controllers: [controller],
+      providers: [
+        {
+          provide: "database",
+          useValue: new orm.Database(
+            new SQLiteDatabaseAdapter(), //
+            [entity, ...entities],
+          ),
+        },
+      ],
+    });
+    requester = facade.app.get(HttpKernel);
+    database = facade.app.get(InjectorContext).get<orm.Database>("database");
+    await database.migrate();
+    // temporary workaround: transport setup is not working, so we have to
+    // manually set it up
+    facade.app.get(Logger).setTransport([new MemoryLoggerTransport()]);
+    await facade.startServer();
+  }
+
+  describe("CRUD", () => {
+    @entity.name("my-entity")
+    class MyEntity {
+      id: number & AutoIncrement & PrimaryKey = 0;
+      constructor(public included: boolean = true) {}
     }
 
+    class MyAdapter implements ResourceCrudAdapter<MyEntity> {
+      constructor(private db: Inject<orm.Database, "database">) {}
+      query(): orm.Query<MyEntity> {
+        return this.db.query(MyEntity).filter({ included: true });
+      }
+    }
+
+    @http.controller()
+    class MyController {
+      constructor(private handler: ResourceCrudHandler<MyEntity>) {}
+      @http.GET()
+      list(): Promise<ResourceList<MyEntity>> {
+        return this.handler.list({ pagination: { limit: 10, offset: 0 } });
+      }
+
+      @http.GET(":id")
+      retrieve(id: number): Promise<MyEntity> {
+        return this.handler.retrieve({ id });
+      }
+    }
+
+    beforeEach(async () => {
+      await prepare(MyEntity, MyAdapter, MyController);
+    });
+
+    describe("List", () => {
+      it("should respect filter conditions", async () => {
+        await database.persist(new MyEntity(), new MyEntity(false));
+        const response = await requester.request(HttpRequest.GET("/"));
+        expect(response.statusCode).toBe(200);
+        expect(response.json.total).toBe(1);
+      });
+    });
+
+    describe("Retrieve", () => {
+      it("should respect filter conditions", async () => {
+        await database.persist(new MyEntity(), new MyEntity(false));
+        const response1 = await requester.request(HttpRequest.GET("/1"));
+        expect(response1.statusCode).toBe(200);
+        const response2 = await requester.request(HttpRequest.GET("/2"));
+        expect(response2.statusCode).toBe(404);
+      });
+    });
+  });
+
+  describe("Params", () => {
     describe("Pagination", () => {
       @entity.name("my-entity")
       class MyEntity {
@@ -64,8 +116,6 @@ describe("Resource", () => {
       }
 
       class MyAdapter implements ResourceCrudAdapter<MyEntity> {
-        limit = 1;
-        offset = 1;
         constructor(private db: Inject<orm.Database, "database">) {}
         query(): orm.Query<MyEntity> {
           return this.db.query(MyEntity);
