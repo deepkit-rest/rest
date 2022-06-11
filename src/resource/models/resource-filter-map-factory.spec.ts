@@ -4,6 +4,7 @@ import {
   PrimaryKey,
   Reference,
   ReflectionKind,
+  ReflectionProperty,
 } from "@deepkit/type";
 
 import { ResourceFilterMapFactory } from "./resource-filter-map-factory";
@@ -18,49 +19,38 @@ describe("ResourceFilterMapFactory", () => {
   }
 
   it("should work", async () => {
-    {
-      const s = ResourceFilterMapFactory.build<MyEntity>("all", "include");
-      expect(s.getPropertyNames()).toEqual(["id", "ref1"]);
-      expectOperatorMap(s.getProperty("id").type, ReflectionKind.number);
-      expectOperatorMap(s.getProperty("ref1").type, ReflectionKind.number);
-    }
-    {
-      const s = ResourceFilterMapFactory.build<MyEntity>("all", "exclude");
-      expect(s.getPropertyNames()).toEqual([]);
-    }
-    {
-      const s = ResourceFilterMapFactory.build<MyEntity>(["id"], "include");
-      expect(s.getPropertyNames()).toEqual(["id"]);
-      expectOperatorMap(s.getProperty("id").type, ReflectionKind.number);
-    }
-    {
-      const s = ResourceFilterMapFactory.build<MyEntity>(["id"], "exclude");
-      expect(s.getPropertyNames()).toEqual(["ref1"]);
-      expectOperatorMap(s.getProperty("ref1").type, ReflectionKind.number);
-    }
+    const s = ResourceFilterMapFactory.build<MyEntity>("all", "include");
+    expect(s.getPropertyNames()).toEqual(["id", "ref1"]);
+    expectOperatorMap(s.getProperty("id"), ReflectionKind.number);
+    expectOperatorMap(s.getProperty("ref1"), ReflectionKind.number);
   });
 
-  function expectOperatorMap(target: unknown, kind: ReflectionKind) {
+  function expectOperatorMap(target: ReflectionProperty, kind: ReflectionKind) {
     expect(target).toMatchObject({
-      kind: ReflectionKind.objectLiteral,
-      types: [
-        { name: "$eq", type: { kind }, optional: true },
-        { name: "$ne", type: { kind }, optional: true },
-        { name: "$gt", type: { kind }, optional: true },
-        { name: "$gte", type: { kind }, optional: true },
-        { name: "$lt", type: { kind }, optional: true },
-        { name: "$lte", type: { kind }, optional: true },
-        {
-          name: "$in",
-          type: { kind: ReflectionKind.array, type: { kind } },
-          optional: true,
+      property: {
+        optional: true,
+        type: {
+          kind: ReflectionKind.objectLiteral,
+          types: [
+            { name: "$eq", type: { kind }, optional: true },
+            { name: "$ne", type: { kind }, optional: true },
+            { name: "$gt", type: { kind }, optional: true },
+            { name: "$gte", type: { kind }, optional: true },
+            { name: "$lt", type: { kind }, optional: true },
+            { name: "$lte", type: { kind }, optional: true },
+            {
+              name: "$in",
+              type: { kind: ReflectionKind.array, type: { kind } },
+              optional: true,
+            },
+            {
+              name: "$nin",
+              type: { kind: ReflectionKind.array, type: { kind } },
+              optional: true,
+            },
+          ],
         },
-        {
-          name: "$nin",
-          type: { kind: ReflectionKind.array, type: { kind } },
-          optional: true,
-        },
-      ],
+      },
     });
   }
 });

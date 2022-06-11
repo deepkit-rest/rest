@@ -8,38 +8,47 @@ import {
   TypePropertySignature,
 } from "@deepkit/type";
 
-class ResourceFilterMap {}
+import {
+  AddPropertyOptions,
+  ResourceQueryModelFactory,
+} from "./resource-query-model-factory";
 
-export class ResourceFilterMapFactory {
-  static build<Entity>(
+export class ResourceFilterMapFactory extends ResourceQueryModelFactory {
+  static override build<Entity>(
     fields: FilterableField<Entity>[] | "all",
-    strategy: "include" | "exclude" = "include",
+    strategy?: "include" | "exclude",
     entityType?: ReceiveType<Entity>,
   ): ReflectionClass<any> {
-    const entitySchema = ReflectionClass.from(entityType);
-    const filterSchema = ReflectionClass.from(ResourceFilterMap).clone();
-    if (fields === "all") {
-      if (strategy === "include")
-        fields = this.extractFilterableFields(entitySchema);
-      else fields = [];
-    } else if (strategy === "exclude") {
-      const all = this.extractFilterableFields(entitySchema);
-      fields = all.filter((field) => !fields.includes(field));
-    }
-    fields.forEach((field) => {
-      const fieldSchema = entitySchema.getProperty(field);
-      const isRelation =
-        fieldSchema.isReference() || fieldSchema.isBackReference();
-      const fieldSchemaToUse = isRelation
-        ? fieldSchema.getResolvedReflectionClass().getPrimary()
-        : fieldSchema;
-      filterSchema.addProperty({
-        name: fieldSchema.name,
-        type: ResourceFilterMapFactory.buildOperatorMap(fieldSchemaToUse),
-        optional: true,
-      });
-    });
-    return filterSchema;
+    return super.build(fields, strategy, entityType);
+  }
+
+  protected static override selectValidFields<Entity>(
+    entitySchema: ReflectionClass<any>,
+  ): FilterableField<Entity>[] {
+    return entitySchema
+      .getProperties()
+      .map((schema) =>
+        isFilterableField<Entity>(schema.name, schema)
+          ? schema.name
+          : undefined,
+      )
+      .filter((v): v is NonNullable<typeof v> => !!v);
+  }
+
+  protected static override transformField(
+    entitySchema: ReflectionClass<any>,
+    fieldSchema: ReflectionProperty,
+  ): AddPropertyOptions {
+    const isRelation =
+      fieldSchema.isReference() || fieldSchema.isBackReference();
+    const fieldSchemaToUse = isRelation
+      ? fieldSchema.getResolvedReflectionClass().getPrimary()
+      : fieldSchema;
+    return {
+      name: fieldSchema.name,
+      type: ResourceFilterMapFactory.buildOperatorMap(fieldSchemaToUse),
+      optional: true,
+    };
   }
 
   private static buildOperatorMap(
@@ -65,19 +74,6 @@ export class ResourceFilterMapFactory {
     );
     result.types = resultPropertyTypes;
     return result;
-  }
-
-  private static extractFilterableFields<Entity>(
-    entitySchema: ReflectionClass<any>,
-  ) {
-    return entitySchema
-      .getProperties()
-      .map((schema) =>
-        isFilterableField<Entity>(schema.name, schema)
-          ? schema.name
-          : undefined,
-      )
-      .filter((v): v is NonNullable<typeof v> => !!v);
   }
 }
 
