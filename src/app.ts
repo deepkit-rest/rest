@@ -10,6 +10,7 @@ import { FileModule } from "./file/file.module";
 import { FileEngineModule } from "./file-engine/file-engine.module";
 import { HttpExtensionModule } from "./http-extension/http-extension.module";
 import { RestModule } from "./rest/rest.module";
+import { TagModule } from "./tag/tag.module";
 import { UserModule } from "./user/user.module";
 
 new App({
@@ -23,6 +24,7 @@ new App({
     new AuthModule(),
     new UserModule(),
     new FileModule(),
+    new TagModule(),
   ],
   providers: [{ provide: RequestContext, scope: "http" }],
 })
