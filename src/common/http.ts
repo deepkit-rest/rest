@@ -15,3 +15,12 @@ export class HttpRangeNotSatisfiableError extends createHttpError(
   416,
   "Range Not Satisfiable",
 ) {}
+
+export type HttpMethod =
+  | "GET"
+  | "POST"
+  | "PUT"
+  | "DELETE"
+  | "PATCH"
+  | "HEAD"
+  | "OPTIONS";
