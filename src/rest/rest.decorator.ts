@@ -9,6 +9,7 @@ import {
 import { PrettifiedDecoratorApi } from "src/common/decorator";
 import { HttpMethod } from "src/common/http";
 
+import { RestActionHandler } from "./rest.interfaces";
 import { RestActionMeta, RestResourceMeta } from "./rest.meta";
 
 export class RestClassDecoratorApi extends PrettifiedDecoratorApi<RestResourceMeta> {
@@ -57,11 +58,15 @@ export class RestPropertyDecoratorApi extends PrettifiedDecoratorApi<RestActionM
   suffix(suffix: string): void {
     this.meta.suffix = suffix;
   }
+
+  useHandler(handlerType: ClassType<RestActionHandler>): void {
+    this.meta.handlerType = handlerType;
+  }
 }
 
 export const restProperty = createPropertyDecorator(RestPropertyDecoratorApi);
 
-export const rest = mergeDecorator(restClass, restProperty) as RestDecorator;
+export const rest: RestDecorator = mergeDecorator(restClass, restProperty);
 export type RestDecorator = MergedDecorator<
   Omit<
     typeof restClass & typeof restProperty,

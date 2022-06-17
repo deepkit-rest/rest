@@ -1,17 +1,24 @@
 import { AppModule, createModule } from "@deepkit/app";
 import { ClassType } from "@deepkit/core";
+import { HttpRequestParser } from "src/common/http-request-parser.service";
 
 import { RestConfig } from "./rest.config";
 import { restClass } from "./rest.decorator";
-import { RestResource } from "./rest.interface";
+import { RestResource } from "./rest.interfaces";
 import { RestListener } from "./rest.listener";
 import { RestParameterResolver } from "./rest.parameter-resolver";
+import { RestActionHandlerResolver } from "./rest-action-handler-resolver.service";
 import { RestResourceManager } from "./rest-resource-manager.service";
 
 export class RestModule extends createModule({
   config: RestConfig,
-  providers: [RestResourceManager, RestParameterResolver],
-  exports: [RestResourceManager, RestParameterResolver],
+  providers: [
+    RestResourceManager,
+    RestParameterResolver,
+    RestActionHandlerResolver,
+    HttpRequestParser,
+  ],
+  exports: [RestParameterResolver],
   listeners: [RestListener],
 }) {
   readonly registry = new RestResourceRegistry();

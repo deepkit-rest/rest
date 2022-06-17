@@ -3,3 +3,11 @@ import * as orm from "@deepkit/orm"; // temporary workaround: we have to use nam
 export interface RestResource<Entity> {
   query(): orm.Query<Entity>;
 }
+
+export interface RestActionHandler {
+  handle(...args: any[]): any;
+}
+
+export interface ResolvedRestActionHandler {
+  (): Promise<any>;
+}

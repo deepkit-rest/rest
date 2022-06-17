@@ -1,15 +1,26 @@
 import { App } from "@deepkit/app";
 import { ClassType } from "@deepkit/core";
 import { createTestingApp, TestingFacade } from "@deepkit/framework";
-import { HttpKernel, HttpRequest, RouteConfig, Router } from "@deepkit/http";
-import { Inject, InjectorContext } from "@deepkit/injector";
+import {
+  HttpBody,
+  HttpKernel,
+  HttpQueries,
+  HttpRequest,
+  RouteConfig,
+  Router,
+} from "@deepkit/http";
+import { Inject, InjectorContext, ProviderWithScope } from "@deepkit/injector";
 import { Logger, MemoryLoggerTransport } from "@deepkit/logger";
 import * as orm from "@deepkit/orm"; // temporary workaround: we have to use namespace import here as a temporary workaround, otherwise the application will not be able to bootstrap. This will be fixed in the next release
 import { AutoIncrement, entity, PrimaryKey } from "@deepkit/type";
 
 import { RestConfig } from "./rest.config";
 import { rest } from "./rest.decorator";
-import { RestResource } from "./rest.interface";
+import {
+  ResolvedRestActionHandler,
+  RestActionHandler,
+  RestResource,
+} from "./rest.interfaces";
 import { RestModule } from "./rest.module";
 
 describe("REST", () => {
@@ -20,6 +31,7 @@ describe("REST", () => {
   async function setup(
     config: Partial<RestConfig>,
     controllers: ClassType<RestResource<any>>[],
+    providers: ProviderWithScope[] = [],
   ) {
     facade = createTestingApp({
       imports: [new RestModule(config)],
@@ -29,6 +41,7 @@ describe("REST", () => {
           provide: "DATABASE",
           useValue: new orm.Database(new orm.MemoryDatabaseAdapter()),
         },
+        ...providers,
       ],
     });
     requester = facade.app.get(HttpKernel);
@@ -121,7 +134,40 @@ describe("REST", () => {
     }
     await setup({ prefix: "prefix", versioning: false }, [TestingResource]);
     await database.persist(new User());
-    expect.assertions(3);
-    await requester.request(HttpRequest.GET("/prefix/users/1"));
+    const response = await requester.request(
+      HttpRequest.GET("/prefix/users/1"),
+    );
+    expect(response.statusCode).toBe(200);
+  });
+
+  test("action handler", async () => {
+    class TestingActionHandler implements RestActionHandler {
+      handle(
+        body: HttpBody<{ key1: number }>,
+        queries: HttpQueries<{ key2: number }>,
+      ) {
+        expect(body).toEqual({ key1: 1 });
+        expect(queries).toEqual({ key2: 2 });
+      }
+    }
+
+    @rest.resource(User)
+    class TestingResource extends UserRestResource {
+      @rest.action("POST").useHandler(TestingActionHandler)
+      action(handler: ResolvedRestActionHandler) {
+        return handler();
+      }
+    }
+
+    await setup(
+      { prefix: "prefix", versioning: false },
+      [TestingResource],
+      [TestingActionHandler],
+    );
+
+    const response = await requester.request(
+      HttpRequest.POST("/prefix/users").json({ key1: 1 }).query({ key2: 2 }),
+    );
+    expect(response.statusCode).toBe(200);
   });
 });

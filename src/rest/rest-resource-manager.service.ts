@@ -4,7 +4,7 @@ import { join } from "path";
 
 import { RestConfig } from "./rest.config";
 import { restClass } from "./rest.decorator";
-import { RestResource } from "./rest.interface";
+import { RestResource } from "./rest.interfaces";
 import { RestResourceMeta } from "./rest.meta";
 import { RestParameterResolver } from "./rest.parameter-resolver";
 
@@ -27,11 +27,13 @@ export class RestResourceManager {
     let path = actionMeta.detailed ? `:${resourceMeta.lookup}` : "";
     if (actionMeta.suffix) path = join(path, actionMeta.suffix);
     http[actionMeta.method](path)(type.prototype, name);
+    const resolver = RestParameterResolver;
     if (actionMeta.detailed) {
-      const resolver = RestParameterResolver;
       http.resolveParameterByName("lookup", resolver)(type.prototype, name);
       http.resolveParameterByName("target", resolver)(type.prototype, name);
     }
+    if (actionMeta.handlerType)
+      http.resolveParameterByName("handler", resolver)(type.prototype, name);
   }
 
   private getMetaOrThrow(type: ResourceClassType): RestResourceMeta {
