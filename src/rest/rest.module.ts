@@ -10,17 +10,20 @@ import { RestParameterResolver } from "./rest.parameter-resolver";
 import { RestActionHandlerResolver } from "./rest-action-handler-resolver.service";
 import { RestResourceManager } from "./rest-resource-manager.service";
 
-export class RestModule extends createModule({
-  config: RestConfig,
-  providers: [
-    RestResourceManager,
-    RestParameterResolver,
-    RestActionHandlerResolver,
-    HttpRequestParser,
-  ],
-  exports: [RestParameterResolver],
-  listeners: [RestListener],
-}) {
+export class RestModule extends createModule(
+  {
+    config: RestConfig,
+    providers: [
+      RestResourceManager,
+      RestParameterResolver,
+      RestActionHandlerResolver,
+      HttpRequestParser,
+    ],
+    exports: [RestParameterResolver],
+    listeners: [RestListener],
+  },
+  "rest",
+) {
   readonly registry = new RestResourceRegistry();
 
   override process(): void {

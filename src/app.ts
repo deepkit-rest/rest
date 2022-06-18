@@ -8,12 +8,14 @@ import { DatabaseModule } from "./database/database.module";
 import { EmailEngineModule } from "./email-engine/email-engine.module";
 import { FileModule } from "./file/file.module";
 import { FileEngineModule } from "./file-engine/file-engine.module";
+import { RestModule } from "./rest/rest.module";
 import { UserModule } from "./user/user.module";
 
 new App({
   imports: [
     new FrameworkModule(),
     new DatabaseModule().withEntities(...entities),
+    new RestModule(),
     new FileEngineModule(),
     new EmailEngineModule(),
     new AuthModule(),
