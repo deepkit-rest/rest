@@ -14,7 +14,9 @@ import { RestActionMeta, RestResourceMeta } from "./rest.meta";
 export class RestClassDecoratorApi extends PrettifiedDecoratorApi<RestResourceMeta> {
   meta = new RestResourceMeta();
 
-  onDecorate(): void {}
+  onDecorate(type: ClassType<unknown>): void {
+    this.meta.type = type;
+  }
 
   resource(entityType: ClassType<unknown>, name?: string): void {
     this.meta.entityType = entityType;
@@ -32,6 +34,7 @@ export class RestClassDecoratorApi extends PrettifiedDecoratorApi<RestResourceMe
   }
 
   useAction(name: string, action: RestActionMeta): void {
+    action.resource = this.meta;
     this.meta.actions[name] = action;
   }
 }
@@ -44,6 +47,7 @@ export class RestPropertyDecoratorApi extends PrettifiedDecoratorApi<RestActionM
   onDecorate(type: ClassType<unknown>, property?: string): void {
     if (!property) throw Error("Not decorated on property");
     restClass.useAction(property, this.meta)(type, property);
+    this.meta.name = property;
   }
 
   action(method: HttpMethod): void {
