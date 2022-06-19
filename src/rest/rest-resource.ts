@@ -6,17 +6,17 @@ import { join } from "path";
 import { RestConfig } from "./rest.config";
 import { restClass } from "./rest.decorator";
 import { RestResourceMeta } from "./rest.meta";
-import {
-  RestActionContext,
-  RestActionRouteParameterResolver,
-} from "./rest-action";
+import { RestActionRouteParameterResolver } from "./rest-action";
 
 export interface RestResource<Entity> {
   query(): orm.Query<Entity>;
 }
 
 export class RestResourceManager {
-  constructor(private config: RestConfig) {}
+  constructor(
+    private config: RestConfig,
+    private parameterResolver: RestActionRouteParameterResolver,
+  ) {}
 
   setup(type: ResourceClassType): void {
     const meta = this.getMetaOrThrow(type);
@@ -34,12 +34,7 @@ export class RestResourceManager {
     let path = actionMeta.detailed ? `:${resourceMeta.lookup}` : "";
     if (actionMeta.path) path = join(path, actionMeta.path);
     http[actionMeta.method](path)(type.prototype, name);
-    const resolver = RestActionRouteParameterResolver;
-    http.resolveParameter(RestActionContext, resolver)(type.prototype, name);
-    if (actionMeta.detailed) {
-      http.resolveParameterByName("lookup", resolver)(type.prototype, name);
-      http.resolveParameterByName("target", resolver)(type.prototype, name);
-    }
+    this.parameterResolver.setupAction(actionMeta);
   }
 
   private getMetaOrThrow(type: ResourceClassType): RestResourceMeta {

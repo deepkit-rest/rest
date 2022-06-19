@@ -1,4 +1,6 @@
+import { ClassType } from "@deepkit/core";
 import {
+  http,
   HttpNotFoundError,
   HttpRequest,
   RouteParameterResolver,
@@ -24,6 +26,17 @@ export class RestActionRouteParameterResolver
   implements RouteParameterResolver
 {
   constructor(private lookupResolver: RestActionLookupResolver) {}
+
+  setupAction(actionMeta: RestActionMetaValidated): void {
+    const resourceMeta = actionMeta.resource.validate();
+    const resolver = this.constructor as ClassType;
+    const args = [resourceMeta.classType.prototype, actionMeta.name] as const;
+    http.resolveParameter(RestActionContext, resolver)(...args);
+    if (actionMeta.detailed) {
+      http.resolveParameterByName("lookup", resolver)(...args);
+      http.resolveParameterByName("target", resolver)(...args);
+    }
+  }
 
   async resolve(contextRaw: RouteParameterResolverContext): Promise<unknown> {
     contextRaw.route = (contextRaw as any).routeConfig; // temporary workaround
