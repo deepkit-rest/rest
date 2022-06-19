@@ -71,9 +71,9 @@ describe("REST", () => {
       route1() {}
       @rest.action("GET").detailed()
       route2() {}
-      @rest.action("DELETE").suffix("suffix")
+      @rest.action("DELETE").path("suffix")
       route3() {}
-      @rest.action("PATCH").detailed().suffix("suffix")
+      @rest.action("PATCH").detailed().path("suffix")
       route4() {}
     }
     await setup({ prefix: "prefix", versioning: false }, [TestingResource]);

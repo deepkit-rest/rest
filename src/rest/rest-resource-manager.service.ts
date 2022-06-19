@@ -25,7 +25,7 @@ export class RestResourceManager {
     const resourceMeta = this.getMetaOrThrow(type).validate();
     const actionMeta = resourceMeta.actions[name].validate();
     let path = actionMeta.detailed ? `:${resourceMeta.lookup}` : "";
-    if (actionMeta.suffix) path = join(path, actionMeta.suffix);
+    if (actionMeta.path) path = join(path, actionMeta.path);
     http[actionMeta.method](path)(type.prototype, name);
     const resolver = RestParameterResolver;
     if (actionMeta.detailed) {

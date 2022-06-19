@@ -23,7 +23,7 @@ export interface RestResourceMetaValidated
 export class RestActionMeta {
   detailed = false;
   method?: HttpMethod;
-  suffix?: string;
+  path?: string;
   handlerType?: ClassType<RestActionHandler>;
   validate(): RestActionMetaValidated {
     if (!this.method) throw new Error("Action not properly decorated");
