@@ -36,8 +36,6 @@ export class RestResourceManager {
       http.resolveParameterByName("lookup", resolver)(type.prototype, name);
       http.resolveParameterByName("target", resolver)(type.prototype, name);
     }
-    if (actionMeta.handlerType)
-      http.resolveParameterByName("handler", resolver)(type.prototype, name);
   }
 
   private getMetaOrThrow(type: ResourceClassType): RestResourceMeta {

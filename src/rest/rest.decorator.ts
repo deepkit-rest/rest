@@ -9,7 +9,6 @@ import {
 import { PrettifiedDecoratorApi } from "src/common/decorator";
 import { HttpMethod } from "src/common/http";
 
-import { RestActionHandler } from "./rest.interfaces";
 import { RestActionMeta, RestResourceMeta } from "./rest.meta";
 
 export class RestClassDecoratorApi extends PrettifiedDecoratorApi<RestResourceMeta> {
@@ -57,10 +56,6 @@ export class RestPropertyDecoratorApi extends PrettifiedDecoratorApi<RestActionM
 
   path(suffixPath: string): void {
     this.meta.path = suffixPath;
-  }
-
-  useHandler(handlerType: ClassType<RestActionHandler>): void {
-    this.meta.handlerType = handlerType;
   }
 }
 

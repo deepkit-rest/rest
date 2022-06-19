@@ -21,13 +21,9 @@ import {
   RestResourceMetaValidated,
 } from "./rest.meta";
 import { RestQuery } from "./rest.query";
-import { RestActionHandlerResolver } from "./rest-action-handler-resolver.service";
 
 export class RestParameterResolver implements RouteParameterResolver {
-  constructor(
-    private injector: InjectorContext,
-    private actionHandlerResolver: RestActionHandlerResolver,
-  ) {}
+  constructor(private injector: InjectorContext) {}
 
   async resolve(contextRaw: RouteParameterResolverContext): Promise<unknown> {
     contextRaw.route = (contextRaw as any).routeConfig; // temporary workaround
@@ -39,8 +35,6 @@ export class RestParameterResolver implements RouteParameterResolver {
       return this.resolveLookup(context, false);
     if (context.parameterName === "target")
       return this.resolveLookup(context, true);
-    if (context.parameterName === "handler")
-      return this.resolveActionHandler(context);
 
     throw new Error(`Unsupported parameter name ${contextRaw.name}`);
   }
@@ -84,23 +78,6 @@ export class RestParameterResolver implements RouteParameterResolver {
     }
 
     return lookupValue;
-  }
-
-  private async resolveActionHandler({
-    request,
-    module,
-    resourceMeta,
-    actionMeta,
-  }: RestActionContext) {
-    const handlerType = actionMeta.handlerType;
-    if (!handlerType) throw new Error("Action handler not specified");
-    const handler = this.injector.get(handlerType, module);
-    return this.actionHandlerResolver.resolve(
-      handler,
-      request,
-      resourceMeta,
-      actionMeta,
-    );
   }
 }
 

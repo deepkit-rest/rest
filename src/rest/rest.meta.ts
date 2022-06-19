@@ -2,8 +2,6 @@ import { ClassType } from "@deepkit/core";
 import { HttpMethod } from "src/common/http";
 import { PartialRequired } from "src/common/utilities";
 
-import { RestActionHandler } from "./rest.interfaces";
-
 export class RestResourceMeta {
   name?: string;
   entityType?: ClassType<unknown>;
@@ -24,7 +22,6 @@ export class RestActionMeta {
   detailed = false;
   method?: HttpMethod;
   path?: string;
-  handlerType?: ClassType<RestActionHandler>;
   validate(): RestActionMetaValidated {
     if (!this.method) throw new Error("Action not properly decorated");
     return this as RestActionMetaValidated;

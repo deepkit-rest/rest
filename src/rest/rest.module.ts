@@ -7,18 +7,12 @@ import { restClass } from "./rest.decorator";
 import { RestResource } from "./rest.interfaces";
 import { RestListener } from "./rest.listener";
 import { RestParameterResolver } from "./rest.parameter-resolver";
-import { RestActionHandlerResolver } from "./rest-action-handler-resolver.service";
 import { RestResourceManager } from "./rest-resource-manager.service";
 
 export class RestModule extends createModule(
   {
     config: RestConfig,
-    providers: [
-      RestResourceManager,
-      RestParameterResolver,
-      RestActionHandlerResolver,
-      HttpRequestParser,
-    ],
+    providers: [RestResourceManager, RestParameterResolver, HttpRequestParser],
     exports: [RestParameterResolver],
     listeners: [RestListener],
   },
