@@ -88,12 +88,18 @@ export class RestParameterResolver implements RouteParameterResolver {
   private async resolveActionHandler({
     request,
     module,
+    resourceMeta,
     actionMeta,
   }: RestParameterResolverContext) {
     const handlerType = actionMeta.handlerType;
     if (!handlerType) throw new Error("Action handler not specified");
     const handler = this.injector.get(handlerType, module);
-    return this.actionHandlerResolver.resolve(handler, request);
+    return this.actionHandlerResolver.resolve(
+      handler,
+      request,
+      resourceMeta,
+      actionMeta,
+    );
   }
 }
 

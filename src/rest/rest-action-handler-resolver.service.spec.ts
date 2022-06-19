@@ -1,8 +1,12 @@
-import { HttpBody, HttpQueries, HttpRequest } from "@deepkit/http";
+import { HttpRequest } from "@deepkit/http";
 import { ValidationError } from "@deepkit/type";
 import { HttpRequestParser } from "src/common/http-request-parser.service";
 
-import { RestActionHandler } from "./rest.interfaces";
+import { RestActionHandler, RestActionHandlerContext } from "./rest.interfaces";
+import {
+  RestActionMetaValidated,
+  RestResourceMetaValidated,
+} from "./rest.meta";
 import { RestActionHandlerResolver } from "./rest-action-handler-resolver.service";
 
 describe("RestActionHandlerResolver", () => {
@@ -15,71 +19,48 @@ describe("RestActionHandlerResolver", () => {
   });
 
   describe("resolve", () => {
-    it("should work when handler takes no parameters", async () => {
+    it("should work", async () => {
       class Handler implements RestActionHandler {
-        handle() {
-          return "return";
+        handle(context: RestActionHandlerContext) {
+          return context;
         }
       }
-      const request: HttpRequest = { body: {}, url: "/" } as any;
+      const request: HttpRequest = { body: undefined, url: "/" } as any;
+      const resourceMeta: RestResourceMetaValidated = {} as any;
+      const actionMeta: RestActionMetaValidated = {} as any;
       jest
         .mocked(requestParser.parseUrl)
-        .mockReturnValue({ path: "/", queries: {} });
-      const result = resolver.resolve(new Handler(), request);
-      expect(await result()).toBe("return");
-    });
-
-    it("should resolve handler parameters", async () => {
-      class Handler implements RestActionHandler {
-        handle(body: HttpBody<any>, queries: HttpQueries<any>) {
-          expect(body).toEqual({ key: "value1" });
-          expect(queries).toEqual({ key: "value2" });
-          return "return";
-        }
-      }
-      const request: HttpRequest = {
-        body: { key: "value1" },
-        url: "/?key=value2",
-      } as any;
+        .mockReturnValue({ path: "/", queries: { key1: "v1" } });
       jest
-        .mocked(requestParser.parseUrl)
-        .mockReturnValue({ path: "/", queries: { key: "value2" } });
-      const result = resolver.resolve(new Handler(), request);
-      expect(await result()).toBe("return");
-    });
-
-    it("should deserialize handler parameters", async () => {
-      class Body {}
-      class Handler implements RestActionHandler {
-        handle(body: HttpBody<Body>) {
-          expect(body).toBeInstanceOf(Body);
-          return "return";
-        }
-      }
-      const request: HttpRequest = { body: {}, url: "/" } as any;
-      jest
-        .mocked(requestParser.parseUrl)
-        .mockReturnValue({ path: "/", queries: {} });
-      const result = resolver.resolve(new Handler(), request);
-      expect(await result()).toBe("return");
-    });
-
-    it("should validate handler parameters", async () => {
-      class Handler implements RestActionHandler {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        handle(body: HttpBody<{ key: number }>) {}
-      }
-      jest
-        .mocked(requestParser.parseUrl)
-        .mockReturnValue({ path: "/", queries: {} });
-
-      const request1: HttpRequest = { body: { key: "nan" }, url: "/" } as any;
-      const result1 = resolver.resolve(new Handler(), request1);
-      await expect(result1()).rejects.toBeInstanceOf(ValidationError);
-
-      const request2: HttpRequest = { body: { key: 1 }, url: "/" } as any;
-      const result2 = resolver.resolve(new Handler(), request2);
-      await expect(result2()).resolves.toBeUndefined();
+        .mocked(requestParser.parseBody)
+        .mockReturnValue(Promise.resolve({ key2: "v2" }));
+      const result = resolver.resolve(
+        new Handler(),
+        request,
+        resourceMeta,
+        actionMeta,
+      );
+      const context: RestActionHandlerContext = await result();
+      expect(context).toEqual({
+        request,
+        resourceMeta,
+        actionMeta,
+        parseBody: expect.any(Function),
+        parseQueries: expect.any(Function),
+      });
+      expect(() => context.parseQueries()).toThrow("No type received");
+      expect(() => context.parseBody()).toThrow("No type received");
+      expect(context.parseQueries<{ key1: string }>()).toEqual({ key1: "v1" });
+      expect(context.parseBody<{ key2: string }>()).toEqual({ key2: "v2" });
+      class Model {}
+      expect(context.parseQueries<Model>()).toBeInstanceOf(Model);
+      expect(context.parseBody<Model>()).toBeInstanceOf(Model);
+      expect(() => {
+        context.parseQueries<{ key1: number }>();
+      }).toThrow(ValidationError);
+      expect(() => {
+        context.parseBody<{ key2: number }>();
+      }).toThrow(ValidationError);
     });
   });
 });

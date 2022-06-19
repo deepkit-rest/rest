@@ -1,24 +1,23 @@
 import { App } from "@deepkit/app";
 import { ClassType } from "@deepkit/core";
 import { createTestingApp, TestingFacade } from "@deepkit/framework";
-import {
-  HttpBody,
-  HttpKernel,
-  HttpQueries,
-  HttpRequest,
-  RouteConfig,
-  Router,
-} from "@deepkit/http";
+import { HttpKernel, HttpRequest, RouteConfig, Router } from "@deepkit/http";
 import { Inject, InjectorContext, ProviderWithScope } from "@deepkit/injector";
 import { Logger, MemoryLoggerTransport } from "@deepkit/logger";
 import * as orm from "@deepkit/orm"; // temporary workaround: we have to use namespace import here as a temporary workaround, otherwise the application will not be able to bootstrap. This will be fixed in the next release
-import { AutoIncrement, entity, PrimaryKey } from "@deepkit/type";
+import {
+  AutoIncrement,
+  entity,
+  PrimaryKey,
+  ValidationError,
+} from "@deepkit/type";
 
 import { RestConfig } from "./rest.config";
 import { rest } from "./rest.decorator";
 import {
   ResolvedRestActionHandler,
   RestActionHandler,
+  RestActionHandlerContext,
   RestResource,
 } from "./rest.interfaces";
 import { RestModule } from "./rest.module";
@@ -141,13 +140,10 @@ describe("REST", () => {
   });
 
   test("action handler", async () => {
+    let context!: RestActionHandlerContext;
     class TestingActionHandler implements RestActionHandler {
-      handle(
-        body: HttpBody<{ key1: number }>,
-        queries: HttpQueries<{ key2: number }>,
-      ) {
-        expect(body).toEqual({ key1: 1 });
-        expect(queries).toEqual({ key2: 2 });
+      handle(ctx: RestActionHandlerContext) {
+        context = ctx;
       }
     }
 
@@ -166,8 +162,18 @@ describe("REST", () => {
     );
 
     const response = await requester.request(
-      HttpRequest.POST("/prefix/users").json({ key1: 1 }).query({ key2: 2 }),
+      HttpRequest.POST("/prefix/users")
+        .json({ key1: "v1" })
+        .query({ key2: "v2" }),
     );
     expect(response.statusCode).toBe(200);
+    expect(context.parseBody<any>()).toEqual({ key1: "v1" });
+    expect(context.parseQueries<any>()).toEqual({ key2: "v2" });
+    expect(() => {
+      context.parseBody<{ key1: number }>();
+    }).toThrow(ValidationError);
+    expect(() => {
+      context.parseQueries<{ key2: number }>();
+    }).toThrow(ValidationError);
   });
 });
