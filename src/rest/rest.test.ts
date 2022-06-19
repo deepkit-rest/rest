@@ -21,6 +21,7 @@ import {
   RestResource,
 } from "./rest.interfaces";
 import { RestModule } from "./rest.module";
+import { RestActionContext } from "./rest.parameter-resolver";
 
 describe("REST", () => {
   let facade: TestingFacade<App<any>>;
@@ -122,13 +123,24 @@ describe("REST", () => {
   });
 
   test("parameter resolving", async () => {
+    let lookup1!: User["id"];
+    let target1!: User;
+    let context1!: RestActionContext;
+    let request1!: HttpRequest;
+
     @rest.resource(User).lookup("id")
     class TestingResource extends UserRestResource {
       @rest.action("GET").detailed()
-      retrieve(lookup: User["id"], target: User, request: HttpRequest) {
-        expect(target).toBeInstanceOf(User);
-        expect(lookup).toBe(target.id);
-        expect(request).toBeDefined();
+      retrieve(
+        lookup: User["id"],
+        target: User,
+        context: RestActionContext,
+        request: HttpRequest,
+      ) {
+        lookup1 = lookup;
+        target1 = target;
+        context1 = context;
+        request1 = request;
       }
     }
     await setup({ prefix: "prefix", versioning: false }, [TestingResource]);
@@ -137,6 +149,10 @@ describe("REST", () => {
       HttpRequest.GET("/prefix/users/1"),
     );
     expect(response.statusCode).toBe(200);
+    expect(target1).toBeInstanceOf(User);
+    expect(lookup1).toBe(target1.id);
+    expect(context1).toBeInstanceOf(RestActionContext);
+    expect(request1).toBeDefined();
   });
 
   test("action handler", async () => {

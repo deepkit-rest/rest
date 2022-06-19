@@ -32,8 +32,9 @@ export class RestParameterResolver implements RouteParameterResolver {
   async resolve(contextRaw: RouteParameterResolverContext): Promise<unknown> {
     contextRaw.route = (contextRaw as any).routeConfig; // temporary workaround
 
-    const context = RestParameterResolverContext.from(contextRaw);
+    const context = RestActionContext.build(contextRaw);
 
+    if (context.parameterToken === RestActionContext) return context;
     if (context.parameterName === "lookup")
       return this.resolveLookup(context, false);
     if (context.parameterName === "target")
@@ -52,7 +53,7 @@ export class RestParameterResolver implements RouteParameterResolver {
       resourceType,
       resourceMeta,
       actionMeta,
-    }: RestParameterResolverContext,
+    }: RestActionContext,
     query: boolean,
   ) {
     if (!actionMeta.detailed)
@@ -90,7 +91,7 @@ export class RestParameterResolver implements RouteParameterResolver {
     module,
     resourceMeta,
     actionMeta,
-  }: RestParameterResolverContext) {
+  }: RestActionContext) {
     const handlerType = actionMeta.handlerType;
     if (!handlerType) throw new Error("Action handler not specified");
     const handler = this.injector.get(handlerType, module);
@@ -103,8 +104,9 @@ export class RestParameterResolver implements RouteParameterResolver {
   }
 }
 
-class RestParameterResolverContext {
-  static from(context: RouteParameterResolverContext) {
+// TODO: move to a more proper file
+export class RestActionContext {
+  static build(context: RouteParameterResolverContext): RestActionContext {
     const { controller: resourceType, module } = context.route.action;
 
     const resourceMeta = restClass._fetch(resourceType)?.validate();
@@ -118,9 +120,10 @@ class RestParameterResolverContext {
 
     const entitySchema = ReflectionClass.from(resourceMeta.entityType);
 
-    return new RestParameterResolverContext({
+    return new RestActionContext({
       request: context.request,
       parameterName: context.name,
+      parameterToken: context.token,
       parameters: context.parameters,
       module,
       entitySchema,
@@ -133,6 +136,7 @@ class RestParameterResolverContext {
 
   request!: HttpRequest;
   parameterName!: string;
+  parameterToken!: unknown;
   parameters!: Record<string, unknown>;
   module?: InjectorModule;
   entitySchema!: ReflectionClass<any>;
@@ -141,7 +145,7 @@ class RestParameterResolverContext {
   actionName!: string;
   actionMeta!: RestActionMetaValidated;
 
-  constructor(data: RestParameterResolverContext) {
+  private constructor(data: RestActionContext) {
     Object.assign(this, data);
   }
 }

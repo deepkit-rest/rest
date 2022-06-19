@@ -6,7 +6,10 @@ import { RestConfig } from "./rest.config";
 import { restClass } from "./rest.decorator";
 import { RestResource } from "./rest.interfaces";
 import { RestResourceMeta } from "./rest.meta";
-import { RestParameterResolver } from "./rest.parameter-resolver";
+import {
+  RestActionContext,
+  RestParameterResolver,
+} from "./rest.parameter-resolver";
 
 export class RestResourceManager {
   constructor(private config: RestConfig) {}
@@ -28,6 +31,7 @@ export class RestResourceManager {
     if (actionMeta.path) path = join(path, actionMeta.path);
     http[actionMeta.method](path)(type.prototype, name);
     const resolver = RestParameterResolver;
+    http.resolveParameter(RestActionContext, resolver)(type.prototype, name);
     if (actionMeta.detailed) {
       http.resolveParameterByName("lookup", resolver)(type.prototype, name);
       http.resolveParameterByName("target", resolver)(type.prototype, name);
