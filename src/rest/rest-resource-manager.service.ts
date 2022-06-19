@@ -8,8 +8,8 @@ import { RestResource } from "./rest.interfaces";
 import { RestResourceMeta } from "./rest.meta";
 import {
   RestActionContext,
-  RestParameterResolver,
-} from "./rest.parameter-resolver";
+  RestActionRouteParameterResolver,
+} from "./rest-action";
 
 export class RestResourceManager {
   constructor(private config: RestConfig) {}
@@ -30,7 +30,7 @@ export class RestResourceManager {
     let path = actionMeta.detailed ? `:${resourceMeta.lookup}` : "";
     if (actionMeta.path) path = join(path, actionMeta.path);
     http[actionMeta.method](path)(type.prototype, name);
-    const resolver = RestParameterResolver;
+    const resolver = RestActionRouteParameterResolver;
     http.resolveParameter(RestActionContext, resolver)(type.prototype, name);
     if (actionMeta.detailed) {
       http.resolveParameterByName("lookup", resolver)(type.prototype, name);

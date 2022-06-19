@@ -22,8 +22,10 @@ import {
 } from "./rest.meta";
 import { RestQuery } from "./rest.query";
 
-export class RestParameterResolver implements RouteParameterResolver {
-  constructor(private injector: InjectorContext) {}
+export class RestActionRouteParameterResolver
+  implements RouteParameterResolver
+{
+  constructor(private lookupResolver: RestActionLookupResolver) {}
 
   async resolve(contextRaw: RouteParameterResolverContext): Promise<unknown> {
     contextRaw.route = (contextRaw as any).routeConfig; // temporary workaround
@@ -31,33 +33,26 @@ export class RestParameterResolver implements RouteParameterResolver {
     const context = RestActionContext.build(contextRaw);
 
     if (context.parameterToken === RestActionContext) return context;
+
     if (context.parameterName === "lookup")
-      return this.resolveLookup(context, false);
+      return this.lookupResolver.resolveValue(context);
     if (context.parameterName === "target")
-      return this.resolveLookup(context, true);
+      return this.lookupResolver.resolveResult(context);
 
     throw new Error(`Unsupported parameter name ${contextRaw.name}`);
   }
+}
 
-  private async resolveLookup(
-    {
-      parameters,
-      module,
-      entitySchema,
-      resourceType,
-      resourceMeta,
-      actionMeta,
-    }: RestActionContext,
-    query: boolean,
-  ) {
+export class RestActionLookupResolver {
+  constructor(private injector: InjectorContext) {}
+
+  async resolveValue(context: RestActionContext): Promise<unknown> {
+    const { parameters, entitySchema, resourceMeta, actionMeta } = context;
+
     if (!actionMeta.detailed)
-      throw new Error("Cannot lookup entity for non-detailed actions");
+      throw new Error("Cannot resolve lookup value for non-detailed actions");
 
-    const lookupField = resourceMeta.lookup;
-    if (!lookupField) throw new Error("Lookup field not specified");
-
-    if (!entitySchema.hasProperty(lookupField))
-      throw new Error("Lookup field does not exist");
+    const lookupField = this.getField(resourceMeta, entitySchema);
     const lookupType = entitySchema.getProperty(lookupField).type;
     type LookupType = InlineRuntimeType<typeof lookupType>;
 
@@ -66,22 +61,41 @@ export class RestParameterResolver implements RouteParameterResolver {
     const validationErrors = validate<LookupType>(lookupValue);
     if (validationErrors.length) throw new ValidationError(validationErrors);
 
-    if (query) {
-      const resource = this.injector.get(resourceType, module);
-      const lookupResult = await resource
-        .query()
-        .lift(RestQuery)
-        .filterAppend({ [lookupField]: lookupValue })
-        .findOneOrUndefined();
-      if (!lookupResult) throw new HttpNotFoundError();
-      return lookupResult;
-    }
-
     return lookupValue;
+  }
+
+  async resolveResult(context: RestActionContext): Promise<unknown> {
+    const { module, entitySchema, resourceMeta, resourceType, actionMeta } =
+      context;
+
+    if (!actionMeta.detailed)
+      throw new Error("Cannot resolve lookup result for non-detailed actions");
+
+    const resource = this.injector.get(resourceType, module);
+    const lookupField = this.getField(resourceMeta, entitySchema);
+    const lookupValue = await this.resolveValue(context);
+    const lookupResult = await resource
+      .query()
+      .lift(RestQuery)
+      .filterAppend({ [lookupField]: lookupValue })
+      .findOneOrUndefined();
+
+    if (!lookupResult) throw new HttpNotFoundError();
+    return lookupResult;
+  }
+
+  private getField(
+    resourceMeta: RestResourceMetaValidated,
+    entitySchema: ReflectionClass<any>,
+  ) {
+    const lookupField = resourceMeta.lookup;
+    if (!lookupField) throw new Error("Lookup field not specified");
+    if (!entitySchema.hasProperty(lookupField))
+      throw new Error("Lookup field does not exist");
+    return lookupField;
   }
 }
 
-// TODO: move to a more proper file
 export class RestActionContext {
   static build(context: RouteParameterResolverContext): RestActionContext {
     const { controller: resourceType, module } = context.route.action;

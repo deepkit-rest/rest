@@ -11,7 +11,7 @@ import { RestConfig } from "./rest.config";
 import { rest } from "./rest.decorator";
 import { RestResource } from "./rest.interfaces";
 import { RestModule } from "./rest.module";
-import { RestActionContext } from "./rest.parameter-resolver";
+import { RestActionContext } from "./rest-action";
 
 describe("REST", () => {
   let facade: TestingFacade<App<any>>;

@@ -6,14 +6,22 @@ import { RestConfig } from "./rest.config";
 import { restClass } from "./rest.decorator";
 import { RestResource } from "./rest.interfaces";
 import { RestListener } from "./rest.listener";
-import { RestParameterResolver } from "./rest.parameter-resolver";
+import {
+  RestActionLookupResolver,
+  RestActionRouteParameterResolver,
+} from "./rest-action";
 import { RestResourceManager } from "./rest-resource-manager.service";
 
 export class RestModule extends createModule(
   {
     config: RestConfig,
-    providers: [RestResourceManager, RestParameterResolver, HttpRequestParser],
-    exports: [RestParameterResolver],
+    providers: [
+      RestResourceManager,
+      RestActionRouteParameterResolver,
+      RestActionLookupResolver,
+      HttpRequestParser,
+    ],
+    exports: [RestActionRouteParameterResolver],
     listeners: [RestListener],
   },
   "rest",
