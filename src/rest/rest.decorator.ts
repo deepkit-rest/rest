@@ -10,12 +10,13 @@ import { PrettifiedDecoratorApi } from "src/common/decorator";
 import { HttpMethod } from "src/common/http";
 
 import { RestActionMeta, RestResourceMeta } from "./rest.meta";
+import { RestResource } from "./rest-resource";
 
 export class RestClassDecoratorApi extends PrettifiedDecoratorApi<RestResourceMeta> {
   meta = new RestResourceMeta();
 
-  onDecorate(type: ClassType<unknown>): void {
-    this.meta.type = type;
+  onDecorate(type: ClassType<RestResource<unknown>>): void {
+    this.meta.classType = type;
   }
 
   resource(entityType: ClassType<unknown>, name?: string): void {

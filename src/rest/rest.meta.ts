@@ -2,22 +2,27 @@ import { ClassType } from "@deepkit/core";
 import { HttpMethod } from "src/common/http";
 import { PartialRequired } from "src/common/utilities";
 
+import { RestResource } from "./rest-resource";
+
 export class RestResourceMeta {
-  type?: ClassType<unknown>;
+  classType?: ClassType<RestResource<unknown>>;
   name?: string;
   entityType?: ClassType<unknown>;
   version?: number;
   lookup?: string;
   actions: Record<string, RestActionMeta> = {};
   validate(): RestResourceMetaValidated {
-    if (!this.type || !this.name || !this.entityType)
+    if (!this.classType || !this.name || !this.entityType)
       throw new Error("Resource not properly decorated");
     return this as RestResourceMetaValidated;
   }
 }
 
 export interface RestResourceMetaValidated
-  extends PartialRequired<RestResourceMeta, "type" | "name" | "entityType"> {}
+  extends PartialRequired<
+    RestResourceMeta,
+    "classType" | "name" | "entityType"
+  > {}
 
 export class RestActionMeta {
   resource?: RestResourceMeta;

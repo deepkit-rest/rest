@@ -1,4 +1,3 @@
-import { ClassType } from "@deepkit/core";
 import {
   HttpNotFoundError,
   HttpRequest,
@@ -20,7 +19,6 @@ import {
   RestResourceMetaValidated,
 } from "./rest.meta";
 import { RestQuery } from "./rest.query";
-import { RestResource } from "./rest-resource";
 
 export class RestActionRouteParameterResolver
   implements RouteParameterResolver
@@ -47,7 +45,8 @@ export class RestActionLookupResolver {
   constructor(private injector: InjectorContext) {}
 
   async resolveValue(context: RestActionContext): Promise<unknown> {
-    const { parameters, entitySchema, resourceMeta, actionMeta } = context;
+    const { parameters, resourceMeta, actionMeta } = context;
+    const entitySchema = ReflectionClass.from(resourceMeta.entityType);
 
     if (!actionMeta.detailed)
       throw new Error("Cannot resolve lookup value for non-detailed actions");
@@ -65,13 +64,13 @@ export class RestActionLookupResolver {
   }
 
   async resolveResult(context: RestActionContext): Promise<unknown> {
-    const { module, entitySchema, resourceMeta, resourceType, actionMeta } =
-      context;
+    const { module, resourceMeta, actionMeta } = context;
+    const entitySchema = ReflectionClass.from(resourceMeta.entityType);
 
     if (!actionMeta.detailed)
       throw new Error("Cannot resolve lookup result for non-detailed actions");
 
-    const resource = this.injector.get(resourceType, module);
+    const resource = this.injector.get(resourceMeta.classType, module);
     const lookupField = this.getField(resourceMeta, entitySchema);
     const lookupValue = await this.resolveValue(context);
     const lookupResult = await resource
@@ -109,18 +108,13 @@ export class RestActionContext {
     if (!actionMeta)
       throw new Error(`Cannot resolve parameters for non-action routes`);
 
-    const entitySchema = ReflectionClass.from(resourceMeta.entityType);
-
     return new RestActionContext({
       request: context.request,
       parameterName: context.name,
       parameterToken: context.token,
       parameters: context.parameters,
       module,
-      entitySchema,
-      resourceType,
       resourceMeta,
-      actionName,
       actionMeta,
     });
   }
@@ -130,10 +124,7 @@ export class RestActionContext {
   parameterToken!: unknown;
   parameters!: Record<string, unknown>;
   module?: InjectorModule;
-  entitySchema!: ReflectionClass<any>;
-  resourceType!: ClassType<RestResource<any>>;
   resourceMeta!: RestResourceMetaValidated;
-  actionName!: string;
   actionMeta!: RestActionMetaValidated;
 
   private constructor(data: RestActionContext) {
