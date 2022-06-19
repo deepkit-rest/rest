@@ -1,15 +1,19 @@
 import { ClassType } from "@deepkit/core";
 import { http } from "@deepkit/http";
+import * as orm from "@deepkit/orm"; // temporary workaround: we have to use namespace import here as a temporary workaround, otherwise the application will not be able to bootstrap. This will be fixed in the next release
 import { join } from "path";
 
 import { RestConfig } from "./rest.config";
 import { restClass } from "./rest.decorator";
-import { RestResource } from "./rest.interfaces";
 import { RestResourceMeta } from "./rest.meta";
 import {
   RestActionContext,
   RestActionRouteParameterResolver,
 } from "./rest-action";
+
+export interface RestResource<Entity> {
+  query(): orm.Query<Entity>;
+}
 
 export class RestResourceManager {
   constructor(private config: RestConfig) {}

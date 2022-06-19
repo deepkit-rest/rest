@@ -3,7 +3,7 @@ import { onServerMainBootstrap } from "@deepkit/framework";
 import { Router } from "@deepkit/http";
 
 import { RestResourceRegistry } from "./rest.module";
-import { RestResourceManager } from "./rest-resource-manager.service";
+import { RestResourceManager } from "./rest-resource";
 
 export class RestListener {
   constructor(

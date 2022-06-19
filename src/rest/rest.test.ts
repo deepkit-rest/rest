@@ -9,9 +9,9 @@ import { AutoIncrement, entity, PrimaryKey } from "@deepkit/type";
 
 import { RestConfig } from "./rest.config";
 import { rest } from "./rest.decorator";
-import { RestResource } from "./rest.interfaces";
 import { RestModule } from "./rest.module";
 import { RestActionContext } from "./rest-action";
+import { RestResource } from "./rest-resource";
 
 describe("REST", () => {
   let facade: TestingFacade<App<any>>;

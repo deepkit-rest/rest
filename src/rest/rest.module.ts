@@ -4,13 +4,12 @@ import { HttpRequestParser } from "src/common/http-request-parser.service";
 
 import { RestConfig } from "./rest.config";
 import { restClass } from "./rest.decorator";
-import { RestResource } from "./rest.interfaces";
 import { RestListener } from "./rest.listener";
 import {
   RestActionLookupResolver,
   RestActionRouteParameterResolver,
 } from "./rest-action";
-import { RestResourceManager } from "./rest-resource-manager.service";
+import { RestResource, RestResourceManager } from "./rest-resource";
 
 export class RestModule extends createModule(
   {

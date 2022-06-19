@@ -15,12 +15,12 @@ import {
 } from "@deepkit/type";
 
 import { restClass } from "./rest.decorator";
-import { RestResource } from "./rest.interfaces";
 import {
   RestActionMetaValidated,
   RestResourceMetaValidated,
 } from "./rest.meta";
 import { RestQuery } from "./rest.query";
+import { RestResource } from "./rest-resource";
 
 export class RestActionRouteParameterResolver
   implements RouteParameterResolver
