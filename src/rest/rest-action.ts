@@ -38,19 +38,19 @@ export class RestActionRouteParameterResolver
     }
   }
 
-  async resolve(contextRaw: RouteParameterResolverContext): Promise<unknown> {
-    contextRaw.route = (contextRaw as any).routeConfig; // temporary workaround
+  async resolve(context: RouteParameterResolverContext): Promise<unknown> {
+    context.route = (context as any).routeConfig; // temporary workaround
 
-    const context = RestActionContext.build(contextRaw);
+    const actionContext = RestActionContext.build(context);
 
-    if (context.parameterToken === RestActionContext) return context;
+    if (context.token === RestActionContext) return actionContext;
 
-    if (context.parameterName === "lookup")
-      return this.lookupResolver.resolveValue(context);
-    if (context.parameterName === "target")
-      return this.lookupResolver.resolveResult(context);
+    if (context.name === "lookup")
+      return this.lookupResolver.resolveValue(actionContext);
+    if (context.name === "target")
+      return this.lookupResolver.resolveResult(actionContext);
 
-    throw new Error(`Unsupported parameter name ${contextRaw.name}`);
+    throw new Error(`Unsupported parameter name ${context.name}`);
   }
 }
 
@@ -123,8 +123,6 @@ export class RestActionContext {
 
     return new RestActionContext({
       request: context.request,
-      parameterName: context.name,
-      parameterToken: context.token,
       parameters: context.parameters,
       module,
       resourceMeta,
@@ -133,8 +131,6 @@ export class RestActionContext {
   }
 
   request!: HttpRequest;
-  parameterName!: string;
-  parameterToken!: unknown;
   parameters!: Record<string, unknown>;
   module?: InjectorModule;
   resourceMeta!: RestResourceMetaValidated;
