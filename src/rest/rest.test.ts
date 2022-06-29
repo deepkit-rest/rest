@@ -161,10 +161,13 @@ describe("REST", () => {
         this.meta.path = "v2";
       }
     }
-    class MyResource {
-      @rest.useConfigurator(MyConfigurator).path("v1")
+    @rest.resource(User)
+    class MyResource extends UserRestResource {
+      @rest.action("GET").useConfigurator(MyConfigurator).path("v1")
       action() {}
     }
+    expect(restClass._fetch(MyResource)?.actions?.["action"].path).toBe("v1");
+    await setup({ prefix: "prefix", versioning: false }, [MyResource]);
     expect(restClass._fetch(MyResource)?.actions?.["action"].path).toBe("v2");
   });
 
