@@ -1,6 +1,5 @@
 import { AppModule, createModule } from "@deepkit/app";
 import { ClassType } from "@deepkit/core";
-import { HttpRequestParser } from "src/common/http-request-parser.service";
 
 import { RestConfig } from "./rest.config";
 import { restClass } from "./rest.decorator";
@@ -18,7 +17,6 @@ export class RestModule extends createModule(
       RestResourceManager,
       RestActionRouteParameterResolver,
       RestActionLookupResolver,
-      HttpRequestParser,
     ],
     exports: [RestActionRouteParameterResolver],
     listeners: [RestListener],

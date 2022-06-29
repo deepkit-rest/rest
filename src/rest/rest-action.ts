@@ -41,7 +41,7 @@ export class RestActionRouteParameterResolver
   async resolve(context: RouteParameterResolverContext): Promise<unknown> {
     context.route = (context as any).routeConfig; // temporary workaround
 
-    const actionContext = RestActionContext.build(context);
+    const actionContext = await RestActionContext.build(context);
 
     if (context.token === RestActionContext) return actionContext;
 
@@ -109,8 +109,11 @@ export class RestActionLookupResolver {
 }
 
 export class RestActionContext {
-  static build(context: RouteParameterResolverContext): RestActionContext {
+  static async build(
+    context: RouteParameterResolverContext,
+  ): Promise<RestActionContext> {
     const { controller: resourceType, module } = context.route.action;
+    if (!module) throw new Error("Module not defined");
 
     const resourceMeta = restClass._fetch(resourceType)?.validate();
     if (!resourceMeta)
@@ -132,7 +135,7 @@ export class RestActionContext {
 
   request!: HttpRequest;
   parameters!: Record<string, unknown>;
-  module?: InjectorModule;
+  module!: InjectorModule;
   resourceMeta!: RestResourceMetaValidated;
   actionMeta!: RestActionMetaValidated;
 
