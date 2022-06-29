@@ -35,6 +35,9 @@ export class RestResourceManager {
     if (actionMeta.path) path = join(path, actionMeta.path);
     http[actionMeta.method](path)(type.prototype, name);
     this.parameterResolver.setupAction(actionMeta);
+    actionMeta.configurators.forEach((configurator) => {
+      configurator.configure();
+    });
   }
 
   private getMetaOrThrow(type: ResourceClassType): RestResourceMeta {

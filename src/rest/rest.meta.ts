@@ -30,6 +30,7 @@ export class RestActionMeta {
   detailed = false;
   method?: HttpMethod;
   path?: string;
+  configurators: RestMetaConfigurator<RestActionMeta>[] = [];
   validate(): RestActionMetaValidated {
     if (!this.resource || !this.name || !this.method)
       throw new Error("Action not properly decorated");
@@ -39,3 +40,12 @@ export class RestActionMeta {
 
 export interface RestActionMetaValidated
   extends PartialRequired<RestActionMeta, "resource" | "name" | "method"> {}
+
+export interface RestMetaConfigurator<Meta> {
+  meta: Meta;
+  configure(): void;
+}
+
+export interface RestMetaConfiguratorClass<Meta> {
+  new (meta: Meta): RestMetaConfigurator<Meta>;
+}

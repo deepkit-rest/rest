@@ -1,14 +1,23 @@
 import { App } from "@deepkit/app";
 import { ClassType } from "@deepkit/core";
 import { createTestingApp, TestingFacade } from "@deepkit/framework";
-import { HttpKernel, HttpRequest, RouteConfig, Router } from "@deepkit/http";
+import {
+  http,
+  HttpAction,
+  httpClass,
+  HttpKernel,
+  HttpRequest,
+  RouteConfig,
+  Router,
+} from "@deepkit/http";
 import { Inject, InjectorContext, ProviderWithScope } from "@deepkit/injector";
 import { Logger, MemoryLoggerTransport } from "@deepkit/logger";
 import * as orm from "@deepkit/orm"; // temporary workaround: we have to use namespace import here as a temporary workaround, otherwise the application will not be able to bootstrap. This will be fixed in the next release
 import { AutoIncrement, entity, PrimaryKey } from "@deepkit/type";
 
 import { RestConfig } from "./rest.config";
-import { rest } from "./rest.decorator";
+import { rest, restClass } from "./rest.decorator";
+import { RestActionMeta, RestMetaConfigurator } from "./rest.meta";
 import { RestModule } from "./rest.module";
 import { RestActionContext } from "./rest-action";
 import { RestResource } from "./rest-resource";
@@ -143,5 +152,33 @@ describe("REST", () => {
     expect(lookup1).toBe(target1.id);
     expect(context1).toBeInstanceOf(RestActionContext);
     expect(request1).toBeDefined();
+  });
+
+  test("meta configurator", async () => {
+    class MyConfigurator implements RestMetaConfigurator<RestActionMeta> {
+      constructor(public meta: RestActionMeta) {}
+      configure(): void {
+        this.meta.path = "v2";
+      }
+    }
+    class MyResource {
+      @rest.useConfigurator(MyConfigurator).path("v1")
+      action() {}
+    }
+    expect(restClass._fetch(MyResource)?.actions?.["action"].path).toBe("v2");
+  });
+
+  test("compatibility with @http", async () => {
+    @rest.resource(User)
+    class MyResource extends UserRestResource {
+      @rest.action("GET")
+      @http.group("test")
+      action() {}
+    }
+    await setup({ prefix: "prefix", versioning: false }, [MyResource as any]);
+    const actions = httpClass._fetch(MyResource)?.actions;
+    const meta: HttpAction = actions?.values().next().value;
+    expect(meta?.httpMethods).toEqual(["GET"]);
+    expect(meta?.groups).toEqual(["test"]);
   });
 });

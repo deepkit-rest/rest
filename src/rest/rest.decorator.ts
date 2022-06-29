@@ -9,7 +9,11 @@ import {
 import { PrettifiedDecoratorApi } from "src/common/decorator";
 import { HttpMethod } from "src/common/http";
 
-import { RestActionMeta, RestResourceMeta } from "./rest.meta";
+import {
+  RestActionMeta,
+  RestMetaConfiguratorClass,
+  RestResourceMeta,
+} from "./rest.meta";
 import { RestResource } from "./rest-resource";
 
 export class RestClassDecoratorApi extends PrettifiedDecoratorApi<RestResourceMeta> {
@@ -49,6 +53,12 @@ export class RestPropertyDecoratorApi extends PrettifiedDecoratorApi<RestActionM
     if (!property) throw Error("Not decorated on property");
     restClass.useAction(property, this.meta)(type, property);
     this.meta.name = property;
+  }
+
+  useConfigurator(
+    configurator: RestMetaConfiguratorClass<RestActionMeta>,
+  ): void {
+    this.meta.configurators.push(new configurator(this.meta));
   }
 
   action(method: HttpMethod): void {
