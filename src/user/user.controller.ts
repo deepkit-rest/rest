@@ -7,9 +7,9 @@ import {
   HttpQueries,
 } from "@deepkit/http";
 import { InlineRuntimeType, Maximum } from "@deepkit/type";
-import { NoContentResponse } from "src/common/http";
 import { RequestContext } from "src/core/request-context";
 import { InjectDatabaseSession } from "src/database/database.tokens";
+import { NoContentResponse } from "src/http-extension/http-common";
 import { RestCrudFilterMapFactory } from "src/rest-crud/models/rest-crud-filter-map-factory";
 import {
   ResourceList,

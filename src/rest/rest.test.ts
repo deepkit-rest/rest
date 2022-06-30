@@ -214,4 +214,27 @@ describe("REST", () => {
     expect(meta?.httpMethods).toEqual(["GET"]);
     expect(meta?.groups).toEqual(["test"]);
   });
+
+  test("http scope injection", async () => {
+    @rest.resource(User)
+    class MyResource extends UserRestResource {
+      constructor(
+        private dep: Dep,
+        database: Inject<orm.Database, "DATABASE">,
+      ) {
+        super(database);
+      }
+
+      @rest.action("GET")
+      route() {}
+    }
+    class Dep {}
+    const promise = setup(
+      { prefix: "prefix", versioning: false },
+      [MyResource as any],
+      [{ provide: Dep, scope: "http" }],
+    );
+    await expect(promise).resolves.toBeUndefined();
+    await requester.request(HttpRequest.GET("/prefix/users"));
+  });
 });

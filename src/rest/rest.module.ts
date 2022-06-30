@@ -16,9 +16,9 @@ export class RestModule extends createModule(
     config: RestConfig,
     providers: [
       RestResourceManager,
-      RestActionRouteParameterResolver,
-      RestFieldLookupResolver,
-      RestPrimaryKeyLookupResolver,
+      { provide: RestActionRouteParameterResolver, scope: "http" },
+      { provide: RestFieldLookupResolver, scope: "http" },
+      { provide: RestPrimaryKeyLookupResolver, scope: "http" },
     ],
     exports: [
       RestResourceManager,
@@ -45,7 +45,8 @@ export class RestModule extends createModule(
   ): void {
     const isResource = !!restClass._fetch(type);
     if (!isResource) return;
-    if (!module.isProvided(type)) module.addProvider(type);
+    if (!module.isProvided(type))
+      module.addProvider({ provide: type, scope: "http" });
     this.registry.add({ module, type });
   }
 }

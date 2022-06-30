@@ -1,6 +1,4 @@
-import { ClassType } from "@deepkit/core";
 import {
-  http,
   HttpRequest,
   RouteParameterResolver,
   RouteParameterResolverContext,
@@ -17,17 +15,6 @@ export class RestActionRouteParameterResolver
   implements RouteParameterResolver
 {
   constructor(private injector: InjectorContext) {}
-
-  setupAction(actionMeta: RestActionMetaValidated): void {
-    const resourceMeta = actionMeta.resource.validate();
-    const resolver = this.constructor as ClassType;
-    const args = [resourceMeta.classType.prototype, actionMeta.name] as const;
-    http.resolveParameter(RestActionContext, resolver)(...args);
-    if (actionMeta.detailed) {
-      http.resolveParameterByName("lookup", resolver)(...args);
-      http.resolveParameterByName("target", resolver)(...args);
-    }
-  }
 
   async resolve(context: RouteParameterResolverContext): Promise<unknown> {
     context.route = (context as any).routeConfig; // temporary workaround

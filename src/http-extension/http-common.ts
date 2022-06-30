@@ -1,4 +1,7 @@
 import { createHttpError, HtmlResponse } from "@deepkit/http";
+import { InjectorContext } from "@deepkit/injector";
+
+export class HttpInjectorContext extends InjectorContext {}
 
 export class NoContentResponse extends HtmlResponse {
   constructor() {

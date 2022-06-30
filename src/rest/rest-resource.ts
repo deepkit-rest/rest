@@ -5,18 +5,18 @@ import { join } from "path";
 
 import { RestConfig } from "./rest.config";
 import { restClass } from "./rest.decorator";
-import { RestResourceMeta } from "./rest.meta";
-import { RestActionRouteParameterResolver } from "./rest-action";
+import { RestActionMetaValidated, RestResourceMeta } from "./rest.meta";
+import {
+  RestActionContext,
+  RestActionRouteParameterResolver,
+} from "./rest-action";
 
 export interface RestResource<Entity> {
   query(): orm.Query<Entity>;
 }
 
 export class RestResourceManager {
-  constructor(
-    private config: RestConfig,
-    private parameterResolver: RestActionRouteParameterResolver,
-  ) {}
+  constructor(private config: RestConfig) {}
 
   setup(type: ResourceClassType): void {
     const meta = this.getMetaOrThrow(type);
@@ -34,10 +34,23 @@ export class RestResourceManager {
     let path = actionMeta.detailed ? `:${resourceMeta.lookup}` : "";
     if (actionMeta.path) path = join(path, actionMeta.path);
     http[actionMeta.method](path)(type.prototype, name);
-    this.parameterResolver.setupAction(actionMeta);
+    this.setupActionParameterResolver(actionMeta);
     actionMeta.configurators.forEach((configurator) => {
       configurator.configure(actionMeta);
     });
+  }
+
+  private setupActionParameterResolver(
+    actionMeta: RestActionMetaValidated,
+  ): void {
+    const resourceMeta = actionMeta.resource.validate();
+    const resolver = RestActionRouteParameterResolver;
+    const args = [resourceMeta.classType.prototype, actionMeta.name] as const;
+    http.resolveParameter(RestActionContext, resolver)(...args);
+    if (actionMeta.detailed) {
+      http.resolveParameterByName("lookup", resolver)(...args);
+      http.resolveParameterByName("target", resolver)(...args);
+    }
   }
 
   private getMetaOrThrow(type: ResourceClassType): RestResourceMeta {

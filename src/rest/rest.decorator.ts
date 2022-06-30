@@ -7,7 +7,7 @@ import {
   mergeDecorator,
 } from "@deepkit/type";
 import { PrettifiedDecoratorApi } from "src/common/decorator";
-import { HttpMethod } from "src/common/http";
+import { HttpMethod } from "src/http-extension/http-common";
 
 import {
   RestActionMeta,

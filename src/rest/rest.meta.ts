@@ -1,6 +1,6 @@
 import { ClassType } from "@deepkit/core";
-import { HttpMethod } from "src/common/http";
 import { PartialRequired } from "src/common/utilities";
+import { HttpMethod } from "src/http-extension/http-common";
 
 import { RestLookupResolver } from "./rest-lookup";
 import { RestResource } from "./rest-resource";

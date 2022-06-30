@@ -1,6 +1,6 @@
 import { Guard, GuardContext } from "src/common/guard";
-import { HttpUnauthorizedError } from "src/common/http";
 import { RequestContext } from "src/core/request-context";
+import { HttpUnauthorizedError } from "src/http-extension/http-common";
 
 import { AuthTokenService } from "./auth-token.service";
 

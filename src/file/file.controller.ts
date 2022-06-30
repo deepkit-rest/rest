@@ -7,14 +7,14 @@ import {
   HttpResponse,
 } from "@deepkit/http";
 import { InlineRuntimeType, Maximum } from "@deepkit/type";
-import {
-  HttpRangeNotSatisfiableError,
-  NoContentResponse,
-} from "src/common/http";
 import { HttpRangeParser } from "src/common/http-range-parser.service";
 import { RequestContext } from "src/core/request-context";
 import { InjectDatabaseSession } from "src/database/database.tokens";
 import { FileEngine } from "src/file-engine/file-engine.interface";
+import {
+  HttpRangeNotSatisfiableError,
+  NoContentResponse,
+} from "src/http-extension/http-common";
 import { RestCrudFilterMapFactory } from "src/rest-crud/models/rest-crud-filter-map-factory";
 import {
   ResourceList,
