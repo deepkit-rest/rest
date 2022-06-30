@@ -20,6 +20,7 @@ import { rest, restClass } from "./rest.decorator";
 import { RestActionMeta, RestMetaConfigurator } from "./rest.meta";
 import { RestModule } from "./rest.module";
 import { RestActionContext } from "./rest-action";
+import { RestLookupResolver } from "./rest-lookup";
 import { RestResource } from "./rest-resource";
 
 describe("REST", () => {
@@ -152,6 +153,36 @@ describe("REST", () => {
     expect(lookup1).toBe(target1.id);
     expect(context1).toBeInstanceOf(RestActionContext);
     expect(request1).toBeDefined();
+  });
+
+  test("parameter resolving (custom lookup resolver)", async () => {
+    let assert!: () => void;
+    class MyLookupResolver implements RestLookupResolver {
+      async resolveValue(): Promise<unknown> {
+        return 1;
+      }
+      async resolveResult(): Promise<unknown> {
+        return 2;
+      }
+    }
+    @rest.resource(User).lookup("id", MyLookupResolver)
+    class MyResource extends UserRestResource {
+      @rest.action("GET")
+      action(lookup: unknown, target: unknown) {
+        assert = () => {
+          expect(lookup).toBe(1);
+          expect(target).toBe(2);
+        };
+      }
+    }
+    await setup(
+      { prefix: "prefix", versioning: false },
+      [MyResource as any],
+      [MyLookupResolver],
+    );
+    const response = await requester.request(HttpRequest.GET("/prefix/users"));
+    expect(response.statusCode).toBe(200);
+    assert();
   });
 
   test("meta configurator", async () => {

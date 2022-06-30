@@ -4,10 +4,11 @@ import { ClassType } from "@deepkit/core";
 import { RestConfig } from "./rest.config";
 import { restClass } from "./rest.decorator";
 import { RestListener } from "./rest.listener";
+import { RestActionRouteParameterResolver } from "./rest-action";
 import {
-  RestActionLookupResolver,
-  RestActionRouteParameterResolver,
-} from "./rest-action";
+  RestFieldLookupResolver,
+  RestPrimaryKeyLookupResolver,
+} from "./rest-lookup";
 import { RestResource, RestResourceManager } from "./rest-resource";
 
 export class RestModule extends createModule(
@@ -16,9 +17,15 @@ export class RestModule extends createModule(
     providers: [
       RestResourceManager,
       RestActionRouteParameterResolver,
-      RestActionLookupResolver,
+      RestFieldLookupResolver,
+      RestPrimaryKeyLookupResolver,
     ],
-    exports: [RestActionRouteParameterResolver],
+    exports: [
+      RestResourceManager,
+      RestActionRouteParameterResolver,
+      RestFieldLookupResolver,
+      RestPrimaryKeyLookupResolver,
+    ],
     listeners: [RestListener],
   },
   "rest",
