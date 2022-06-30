@@ -1,5 +1,4 @@
 import { HttpNotFoundError } from "@deepkit/http";
-import { InjectorContext } from "@deepkit/injector";
 import {
   deserialize,
   InlineRuntimeType,
@@ -7,6 +6,7 @@ import {
   validate,
   ValidationError,
 } from "@deepkit/type";
+import { HttpInjectorContext } from "src/http-extension/http-common";
 
 import { RestQuery } from "./rest.query";
 import { RestActionContext } from "./rest-action";
@@ -17,7 +17,7 @@ export interface RestLookupResolver {
 }
 
 export class RestFieldLookupResolver implements RestLookupResolver {
-  constructor(protected injector: InjectorContext) {}
+  constructor(protected injector: HttpInjectorContext) {}
 
   async resolveValue(context: RestActionContext): Promise<unknown> {
     const { parameters, resourceMeta } = context;

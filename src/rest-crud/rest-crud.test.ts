@@ -14,6 +14,7 @@ import {
   PrimaryKey,
   Reference,
 } from "@deepkit/type";
+import { HttpExtensionModule } from "src/http-extension/http-extension.module";
 import { rest } from "src/rest/rest.decorator";
 import { RestModule } from "src/rest/rest.module";
 import { RestResource } from "src/rest/rest-resource";
@@ -36,6 +37,7 @@ describe("REST CRUD", () => {
   ) {
     facade = createTestingApp({
       imports: [
+        new HttpExtensionModule(),
         new RestModule({ prefix: "", versioning: false }),
         new RestCrudModule(),
       ],

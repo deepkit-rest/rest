@@ -3,7 +3,8 @@ import {
   RouteParameterResolver,
   RouteParameterResolverContext,
 } from "@deepkit/http";
-import { InjectorContext, InjectorModule } from "@deepkit/injector";
+import { InjectorModule } from "@deepkit/injector";
+import { HttpInjectorContext } from "src/http-extension/http-common";
 
 import { restClass } from "./rest.decorator";
 import {
@@ -14,7 +15,7 @@ import { RestFieldLookupResolver } from "./rest-lookup";
 export class RestActionRouteParameterResolver
   implements RouteParameterResolver
 {
-  constructor(private injector: InjectorContext) {}
+  constructor(private injector: HttpInjectorContext) {}
 
   async resolve(context: RouteParameterResolverContext): Promise<unknown> {
     context.route = (context as any).routeConfig; // temporary workaround

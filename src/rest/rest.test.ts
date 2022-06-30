@@ -14,6 +14,7 @@ import { Inject, InjectorContext, ProviderWithScope } from "@deepkit/injector";
 import { Logger, MemoryLoggerTransport } from "@deepkit/logger";
 import * as orm from "@deepkit/orm"; // temporary workaround: we have to use namespace import here as a temporary workaround, otherwise the application will not be able to bootstrap. This will be fixed in the next release
 import { AutoIncrement, entity, PrimaryKey } from "@deepkit/type";
+import { HttpExtensionModule } from "src/http-extension/http-extension.module";
 
 import { RestConfig } from "./rest.config";
 import { rest, restClass } from "./rest.decorator";
@@ -34,7 +35,7 @@ describe("REST", () => {
     providers: ProviderWithScope[] = [],
   ) {
     facade = createTestingApp({
-      imports: [new RestModule(config)],
+      imports: [new HttpExtensionModule(), new RestModule(config)],
       controllers,
       providers: [
         {
@@ -167,7 +168,7 @@ describe("REST", () => {
     }
     @rest.resource(User).lookup("id", MyLookupResolver)
     class MyResource extends UserRestResource {
-      @rest.action("GET")
+      @rest.action("GET").detailed()
       action(lookup: unknown, target: unknown) {
         assert = () => {
           expect(lookup).toBe(1);
@@ -177,10 +178,12 @@ describe("REST", () => {
     }
     await setup(
       { prefix: "prefix", versioning: false },
-      [MyResource as any],
+      [MyResource],
       [MyLookupResolver],
     );
-    const response = await requester.request(HttpRequest.GET("/prefix/users"));
+    const response = await requester.request(
+      HttpRequest.GET("/prefix/users/1"),
+    );
     expect(response.statusCode).toBe(200);
     assert();
   });
