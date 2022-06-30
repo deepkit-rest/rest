@@ -9,6 +9,7 @@ import { EmailEngineModule } from "./email-engine/email-engine.module";
 import { FileModule } from "./file/file.module";
 import { FileEngineModule } from "./file-engine/file-engine.module";
 import { RestModule } from "./rest/rest.module";
+import { RestCrudModule } from "./rest-crud/rest-crud.module";
 import { UserModule } from "./user/user.module";
 
 new App({
@@ -16,6 +17,7 @@ new App({
     new FrameworkModule(),
     new DatabaseModule().withEntities(...entities),
     new RestModule(),
+    new RestCrudModule(),
     new FileEngineModule(),
     new EmailEngineModule(),
     new AuthModule(),

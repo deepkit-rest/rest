@@ -4,10 +4,10 @@ import { PartialRequired } from "src/common/utilities";
 
 import { RestResource } from "./rest-resource";
 
-export class RestResourceMeta {
-  classType?: ClassType<RestResource<unknown>>;
+export class RestResourceMeta<Entity = unknown> {
+  classType?: ClassType<RestResource<Entity>>;
   name?: string;
-  entityType?: ClassType<unknown>;
+  entityType?: ClassType<Entity>;
   version?: number;
   lookup?: string;
   actions: Record<string, RestActionMeta> = {};
@@ -18,9 +18,9 @@ export class RestResourceMeta {
   }
 }
 
-export interface RestResourceMetaValidated
+export interface RestResourceMetaValidated<Entity = unknown>
   extends PartialRequired<
-    RestResourceMeta,
+    RestResourceMeta<Entity>,
     "classType" | "name" | "entityType"
   > {}
 

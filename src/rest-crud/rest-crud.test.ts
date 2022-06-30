@@ -1,7 +1,7 @@
 import { App } from "@deepkit/app";
 import { ClassType } from "@deepkit/core";
 import { createTestingApp, TestingFacade } from "@deepkit/framework";
-import { http, HttpKernel, HttpQueries, HttpRequest } from "@deepkit/http";
+import { HttpKernel, HttpQueries, HttpRequest } from "@deepkit/http";
 import { Inject, InjectorContext } from "@deepkit/injector";
 import { Logger, MemoryLoggerTransport } from "@deepkit/logger";
 import * as orm from "@deepkit/orm"; // temporary workaround: we have to use namespace import here as a temporary workaround, otherwise the application will not be able to bootstrap. This will be fixed in the next release
@@ -14,36 +14,36 @@ import {
   PrimaryKey,
   Reference,
 } from "@deepkit/type";
+import { rest } from "src/rest/rest.decorator";
+import { RestModule } from "src/rest/rest.module";
+import { RestResource } from "src/rest/rest-resource";
 
 import { RestCrudFilterMap } from "./models/rest-crud-filter-map";
 import { RestCrudFilterMapFactory } from "./models/rest-crud-filter-map-factory";
 import { RestCrudList, RestCrudPagination } from "./models/rest-crud-list";
 import { RestCrudOrderMap } from "./models/rest-crud-order-map";
 import { RestCrudModule } from "./rest-crud.module";
-import { RestCrudAdapter } from "./rest-crud-crud-adapter.interface";
-import { RestCrudHandler } from "./rest-crud-crud-handler.service";
+import { RestCrudHandler } from "./rest-crud-handler.service";
 
-describe("RestCrud", () => {
+describe("REST CRUD", () => {
   let facade: TestingFacade<App<any>>;
   let requester: HttpKernel;
   let database: orm.Database;
 
   async function prepare<Entity>(
-    entity: ClassType<Entity>,
-    adapter: ClassType<RestCrudAdapter<Entity>>,
-    controller: ClassType,
+    resource: ClassType<RestResource<Entity>>,
     entities: ClassType[] = [],
   ) {
     facade = createTestingApp({
-      imports: [new RestCrudModule<Entity>().withAdapter(adapter)],
-      controllers: [controller],
+      imports: [
+        new RestModule({ prefix: "", versioning: false }),
+        new RestCrudModule(),
+      ],
+      controllers: [resource],
       providers: [
         {
           provide: "database",
-          useValue: new orm.Database(
-            new SQLiteDatabaseAdapter(), //
-            [entity, ...entities],
-          ),
+          useValue: new orm.Database(new SQLiteDatabaseAdapter(), entities),
         },
       ],
     });
@@ -63,35 +63,36 @@ describe("RestCrud", () => {
       constructor(public included: boolean = true) {}
     }
 
-    class MyAdapter implements RestCrudAdapter<MyEntity> {
-      constructor(private db: Inject<orm.Database, "database">) {}
+    @rest.resource(MyEntity, "name").lookup("id")
+    class MyResource implements RestResource<MyEntity> {
+      constructor(
+        private db: Inject<orm.Database, "database">,
+        private handler: RestCrudHandler,
+      ) {}
       query(): orm.Query<MyEntity> {
         return this.db.query(MyEntity).filter({ included: true });
       }
-    }
-
-    @http.controller()
-    class MyController {
-      constructor(private handler: RestCrudHandler<MyEntity>) {}
-      @http.GET()
+      @rest.action("GET")
       list(): Promise<RestCrudList<MyEntity>> {
-        return this.handler.list({ pagination: { limit: 10, offset: 0 } });
+        return this.handler.list(this, {
+          pagination: { limit: 10, offset: 0 },
+        });
       }
 
-      @http.GET(":id")
+      @rest.action("GET").detailed()
       retrieve(id: number): Promise<MyEntity> {
-        return this.handler.retrieve({ id });
+        return this.handler.retrieve(this, { id });
       }
     }
 
     beforeEach(async () => {
-      await prepare(MyEntity, MyAdapter, MyController);
+      await prepare(MyResource, [MyEntity]);
     });
 
     describe("List", () => {
       it("should respect filter conditions", async () => {
         await database.persist(new MyEntity(), new MyEntity(false));
-        const response = await requester.request(HttpRequest.GET("/"));
+        const response = await requester.request(HttpRequest.GET("/name"));
         expect(response.statusCode).toBe(200);
         expect(response.json.total).toBe(1);
       });
@@ -100,9 +101,9 @@ describe("RestCrud", () => {
     describe("Retrieve", () => {
       it("should respect filter conditions", async () => {
         await database.persist(new MyEntity(), new MyEntity(false));
-        const response1 = await requester.request(HttpRequest.GET("/1"));
+        const response1 = await requester.request(HttpRequest.GET("/name/1"));
         expect(response1.statusCode).toBe(200);
-        const response2 = await requester.request(HttpRequest.GET("/2"));
+        const response2 = await requester.request(HttpRequest.GET("/name/2"));
         expect(response2.statusCode).toBe(404);
       });
     });
@@ -115,24 +116,23 @@ describe("RestCrud", () => {
         id: number & AutoIncrement & PrimaryKey = 0;
       }
 
-      class MyAdapter implements RestCrudAdapter<MyEntity> {
-        constructor(private db: Inject<orm.Database, "database">) {}
+      @rest.resource(MyEntity, "path")
+      class MyResource implements RestResource<MyEntity> {
+        constructor(
+          private db: Inject<orm.Database, "database">,
+          private handler: RestCrudHandler,
+        ) {}
         query(): orm.Query<MyEntity> {
           return this.db.query(MyEntity);
         }
-      }
-
-      @http.controller()
-      class MyController {
-        constructor(private handler: RestCrudHandler<MyEntity>) {}
-        @http.GET()
+        @rest.action("GET")
         handle(pagination: HttpQueries<RestCrudPagination>) {
-          return this.handler.list({ pagination });
+          return this.handler.list(this, { pagination });
         }
       }
 
       beforeEach(async () => {
-        await prepare(MyEntity, MyAdapter, MyController);
+        await prepare(MyResource, [MyEntity]);
       });
 
       it.each`
@@ -150,7 +150,7 @@ describe("RestCrud", () => {
             new MyEntity(),
           );
           const response = await requester.request(
-            HttpRequest.GET("/").query({ limit, offset }),
+            HttpRequest.GET("/path").query({ limit, offset }),
           );
           expect(response.json).toEqual({ total: 3, items });
         },
@@ -166,7 +166,7 @@ describe("RestCrud", () => {
         "should fail when limit is $limit and offset is $offset",
         async ({ limit, offset }) => {
           const response = await requester.request(
-            HttpRequest.GET("/").query({ limit, offset }),
+            HttpRequest.GET("/path").query({ limit, offset }),
           );
           expect(response.statusCode).toBe(400);
         },
@@ -185,23 +185,22 @@ describe("RestCrud", () => {
         owner!: User & Reference;
       }
 
-      class BookAdapter implements RestCrudAdapter<Book> {
-        constructor(private db: Inject<orm.Database, "database">) {}
+      const filterModel = RestCrudFilterMapFactory.build<Book>("all");
+
+      @rest.resource(Book, "path")
+      class BookResource implements RestResource<Book> {
+        constructor(
+          private db: Inject<orm.Database, "database">,
+          private handler: RestCrudHandler,
+        ) {}
         query(): orm.Query<Book> {
           return this.db.query(Book);
         }
-      }
-
-      const filterModel = RestCrudFilterMapFactory.build<Book>("all");
-
-      @http.controller()
-      class BookController {
-        constructor(private handler: RestCrudHandler<Book>) {}
-        @http.GET()
+        @rest.action("GET")
         async handle(
           filter: HttpQueries<InlineRuntimeType<typeof filterModel>>,
         ): Promise<RestCrudList<Book>> {
-          return this.handler.list({
+          return this.handler.list(this, {
             pagination: { limit: 10, offset: 0 },
             filter,
           });
@@ -209,7 +208,7 @@ describe("RestCrud", () => {
       }
 
       beforeEach(async () => {
-        await prepare(Book, BookAdapter, BookController, [User]);
+        await prepare(BookResource, [Book, User]);
       });
 
       it.each`
@@ -224,7 +223,7 @@ describe("RestCrud", () => {
         const books = [new Book(), new Book(), new Book()];
         books.forEach((book) => (book.owner = new User()));
         await database.persist(...books);
-        const request = HttpRequest.GET("/");
+        const request = HttpRequest.GET("/path");
         request["queryPath"] = filter;
         const response = await requester.request(request);
         expect(response.json).toEqual({ total, items });
@@ -243,19 +242,18 @@ describe("RestCrud", () => {
         owner!: User & Reference;
       }
 
-      class UserAdapter implements RestCrudAdapter<User> {
-        constructor(private db: Inject<orm.Database, "database">) {}
+      @rest.resource(User, "path")
+      class UserResource implements RestResource<User> {
+        constructor(
+          private db: Inject<orm.Database, "database">,
+          private handler: RestCrudHandler,
+        ) {}
         query(): orm.Query<User> {
           return this.db.query(User);
         }
-      }
-
-      @http.controller()
-      class UserController {
-        constructor(private handler: RestCrudHandler<User>) {}
-        @http.GET()
+        @rest.action("GET")
         handle(filter: HttpQueries<RestCrudFilterMap<User>>) {
-          return this.handler.list({
+          return this.handler.list(this, {
             pagination: { limit: 10, offset: 0 },
             filter,
           });
@@ -263,7 +261,7 @@ describe("RestCrud", () => {
       }
 
       beforeEach(async () => {
-        await prepare(User, UserAdapter, UserController, [Book]);
+        await prepare(UserResource, [User, Book]);
       });
 
       it.each`
@@ -273,7 +271,7 @@ describe("RestCrud", () => {
         ${"id[$gt]=1"} | ${2}  | ${[{ id: 2 }, { id: 3 }]}
       `("should work with query $filter", async ({ filter, total, items }) => {
         await database.persist(new User(), new User(), new User());
-        const request = HttpRequest.GET("/");
+        const request = HttpRequest.GET("/path");
         request["queryPath"] = filter;
         const response = await requester.request(request);
         expect(response.json).toEqual({ total, items });
@@ -292,19 +290,18 @@ describe("RestCrud", () => {
         owner!: User & Reference;
       }
 
-      class UserAdapter implements RestCrudAdapter<User> {
-        constructor(private db: Inject<orm.Database, "database">) {}
+      @rest.resource(User, "path")
+      class UserResource implements RestResource<User> {
+        constructor(
+          private db: Inject<orm.Database, "database">,
+          private handler: RestCrudHandler,
+        ) {}
         query(): orm.Query<User> {
           return this.db.query(User);
         }
-      }
-
-      @http.controller()
-      class UserController {
-        constructor(private handler: RestCrudHandler<User>) {}
-        @http.GET()
+        @rest.action("GET")
         handle(order: HttpQueries<RestCrudOrderMap<User>>) {
-          return this.handler.list({
+          return this.handler.list(this, {
             pagination: { limit: 10, offset: 0 },
             order,
           });
@@ -312,7 +309,7 @@ describe("RestCrud", () => {
       }
 
       beforeEach(async () => {
-        await prepare(User, UserAdapter, UserController, [Book]);
+        await prepare(UserResource, [User, Book]);
       });
 
       it.each`
@@ -322,7 +319,7 @@ describe("RestCrud", () => {
         ${"id=desc"} | ${[{ id: 2 }, { id: 1 }]}
       `("should work with query $order", async ({ order, items }) => {
         await database.persist(new User(), new User());
-        const request = HttpRequest.GET("/");
+        const request = HttpRequest.GET("/path");
         request["queryPath"] = order;
         const response = await requester.request(request);
         expect(response.json).toEqual({ total: 2, items });
