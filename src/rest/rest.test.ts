@@ -156,14 +156,13 @@ describe("REST", () => {
 
   test("meta configurator", async () => {
     class MyConfigurator implements RestMetaConfigurator<RestActionMeta> {
-      constructor(public meta: RestActionMeta) {}
-      configure(): void {
-        this.meta.path = "v2";
+      configure(meta: RestActionMeta): void {
+        meta.path = "v2";
       }
     }
     @rest.resource(User)
     class MyResource extends UserRestResource {
-      @rest.action("GET").useConfigurator(MyConfigurator).path("v1")
+      @rest.action("GET").useConfigurator(new MyConfigurator()).path("v1")
       action() {}
     }
     expect(restClass._fetch(MyResource)?.actions?.["action"].path).toBe("v1");

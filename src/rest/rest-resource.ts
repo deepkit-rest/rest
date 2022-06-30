@@ -36,7 +36,7 @@ export class RestResourceManager {
     http[actionMeta.method](path)(type.prototype, name);
     this.parameterResolver.setupAction(actionMeta);
     actionMeta.configurators.forEach((configurator) => {
-      configurator.configure();
+      configurator.configure(actionMeta);
     });
   }
 

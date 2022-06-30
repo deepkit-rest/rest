@@ -11,7 +11,7 @@ import { HttpMethod } from "src/common/http";
 
 import {
   RestActionMeta,
-  RestMetaConfiguratorClass,
+  RestMetaConfigurator,
   RestResourceMeta,
 } from "./rest.meta";
 import { RestResource } from "./rest-resource";
@@ -55,10 +55,8 @@ export class RestPropertyDecoratorApi extends PrettifiedDecoratorApi<RestActionM
     this.meta.name = property;
   }
 
-  useConfigurator(
-    configurator: RestMetaConfiguratorClass<RestActionMeta>,
-  ): void {
-    this.meta.configurators.push(new configurator(this.meta));
+  useConfigurator(configurator: RestMetaConfigurator<RestActionMeta>): void {
+    this.meta.configurators.push(configurator);
   }
 
   action(method: HttpMethod): void {
