@@ -10,10 +10,10 @@ import {
 
 import {
   AddPropertyOptions,
-  ResourceQueryModelFactory,
-} from "./resource-query-model-factory";
+  RestCrudQueryModelFactory,
+} from "./rest-crud-query-model-factory";
 
-export class ResourceFilterMapFactory extends ResourceQueryModelFactory {
+export class RestCrudFilterMapFactory extends RestCrudQueryModelFactory {
   static override build<Entity>(
     fields: FilterableField<Entity>[] | "all",
     strategy?: "include" | "exclude",
@@ -46,7 +46,7 @@ export class ResourceFilterMapFactory extends ResourceQueryModelFactory {
       : fieldSchema;
     return {
       name: fieldSchema.name,
-      type: ResourceFilterMapFactory.buildOperatorMap(fieldSchemaToUse),
+      type: RestCrudFilterMapFactory.buildOperatorMap(fieldSchemaToUse),
       optional: true,
     };
   }

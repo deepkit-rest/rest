@@ -6,9 +6,9 @@ import {
   ReflectionProperty,
 } from "@deepkit/type";
 
-class ResourceQueryModel {}
+class RestCrudQueryModel {}
 
-export abstract class ResourceQueryModelFactory {
+export abstract class RestCrudQueryModelFactory {
   protected constructor() {}
 
   static build<Entity>(
@@ -17,7 +17,7 @@ export abstract class ResourceQueryModelFactory {
     entityType?: ReceiveType<Entity>,
   ): ReflectionClass<any> {
     const entitySchema = ReflectionClass.from(entityType);
-    const modelSchema = ReflectionClass.from(ResourceQueryModel).clone();
+    const modelSchema = ReflectionClass.from(RestCrudQueryModel).clone();
     fields = this.selectFields(entitySchema, fields, strategy);
     fields.forEach((field) => {
       const fieldSchema = entitySchema.getProperty(field);

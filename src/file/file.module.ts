@@ -1,6 +1,6 @@
 import { createModule } from "@deepkit/app";
 import { HttpRangeParser } from "src/common/http-range-parser.service";
-import { ResourceModule } from "src/resource/resource.module";
+import { ResourceModule } from "src/rest-crud/resource.module";
 
 import { FileController } from "./file.controller";
 import { FileRecordAdapter } from "./file-record.adapter";

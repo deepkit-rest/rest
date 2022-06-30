@@ -7,11 +7,11 @@ import {
 
 import {
   AddPropertyOptions,
-  ResourceQueryModelFactory,
-} from "./resource-query-model-factory";
+  RestCrudQueryModelFactory,
+} from "./rest-crud-query-model-factory";
 
-describe("ResourceQueryModelFactory", () => {
-  class TestingFactory extends ResourceQueryModelFactory {
+describe("RestCrudQueryModelFactory", () => {
+  class TestingFactory extends RestCrudQueryModelFactory {
     protected static override selectValidFields<Entity>(
       entitySchema: ReflectionClass<any>,
     ): FieldName<Entity>[] {

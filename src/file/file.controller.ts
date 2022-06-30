@@ -15,13 +15,13 @@ import { HttpRangeParser } from "src/common/http-range-parser.service";
 import { RequestContext } from "src/core/request-context";
 import { InjectDatabaseSession } from "src/database/database.tokens";
 import { FileEngine } from "src/file-engine/file-engine.interface";
-import { ResourceFilterMapFactory } from "src/resource/models/resource-filter-map-factory";
+import { RestCrudFilterMapFactory } from "src/rest-crud/models/rest-crud-filter-map-factory";
 import {
   ResourceList,
   ResourcePagination,
-} from "src/resource/models/resource-list";
-import { ResourceOrderMap } from "src/resource/models/resource-order-map";
-import { ResourceCrudHandler } from "src/resource/resource-crud-handler.service";
+} from "src/rest-crud/models/rest-crud-list";
+import { ResourceOrderMap } from "src/rest-crud/models/rest-crud-order-map";
+import { ResourceCrudHandler } from "src/rest-crud/rest-crud-crud-handler.service";
 import { User } from "src/user/user.entity";
 
 import { FileRecord } from "./file-record.entity";
@@ -168,7 +168,7 @@ export class FileController {
 }
 
 const models = {
-  filter: ResourceFilterMapFactory.build<FileRecord>([]),
+  filter: RestCrudFilterMapFactory.build<FileRecord>([]),
 };
 
 interface FileRecordListParameters {

@@ -15,27 +15,27 @@ import {
   Reference,
 } from "@deepkit/type";
 
-import { ResourceFilterMap } from "./models/resource-filter-map";
-import { ResourceFilterMapFactory } from "./models/resource-filter-map-factory";
-import { ResourceList, ResourcePagination } from "./models/resource-list";
-import { ResourceOrderMap } from "./models/resource-order-map";
-import { ResourceModule } from "./resource.module";
-import { ResourceCrudAdapter } from "./resource-crud-adapter.interface";
-import { ResourceCrudHandler } from "./resource-crud-handler.service";
+import { RestCrudFilterMap } from "./models/rest-crud-filter-map";
+import { RestCrudFilterMapFactory } from "./models/rest-crud-filter-map-factory";
+import { RestCrudList, RestCrudPagination } from "./models/rest-crud-list";
+import { RestCrudOrderMap } from "./models/rest-crud-order-map";
+import { RestCrudModule } from "./rest-crud.module";
+import { RestCrudAdapter } from "./rest-crud-crud-adapter.interface";
+import { RestCrudHandler } from "./rest-crud-crud-handler.service";
 
-describe("Resource", () => {
+describe("RestCrud", () => {
   let facade: TestingFacade<App<any>>;
   let requester: HttpKernel;
   let database: orm.Database;
 
   async function prepare<Entity>(
     entity: ClassType<Entity>,
-    adapter: ClassType<ResourceCrudAdapter<Entity>>,
+    adapter: ClassType<RestCrudAdapter<Entity>>,
     controller: ClassType,
     entities: ClassType[] = [],
   ) {
     facade = createTestingApp({
-      imports: [new ResourceModule<Entity>().withAdapter(adapter)],
+      imports: [new RestCrudModule<Entity>().withAdapter(adapter)],
       controllers: [controller],
       providers: [
         {
@@ -63,7 +63,7 @@ describe("Resource", () => {
       constructor(public included: boolean = true) {}
     }
 
-    class MyAdapter implements ResourceCrudAdapter<MyEntity> {
+    class MyAdapter implements RestCrudAdapter<MyEntity> {
       constructor(private db: Inject<orm.Database, "database">) {}
       query(): orm.Query<MyEntity> {
         return this.db.query(MyEntity).filter({ included: true });
@@ -72,9 +72,9 @@ describe("Resource", () => {
 
     @http.controller()
     class MyController {
-      constructor(private handler: ResourceCrudHandler<MyEntity>) {}
+      constructor(private handler: RestCrudHandler<MyEntity>) {}
       @http.GET()
-      list(): Promise<ResourceList<MyEntity>> {
+      list(): Promise<RestCrudList<MyEntity>> {
         return this.handler.list({ pagination: { limit: 10, offset: 0 } });
       }
 
@@ -115,7 +115,7 @@ describe("Resource", () => {
         id: number & AutoIncrement & PrimaryKey = 0;
       }
 
-      class MyAdapter implements ResourceCrudAdapter<MyEntity> {
+      class MyAdapter implements RestCrudAdapter<MyEntity> {
         constructor(private db: Inject<orm.Database, "database">) {}
         query(): orm.Query<MyEntity> {
           return this.db.query(MyEntity);
@@ -124,9 +124,9 @@ describe("Resource", () => {
 
       @http.controller()
       class MyController {
-        constructor(private handler: ResourceCrudHandler<MyEntity>) {}
+        constructor(private handler: RestCrudHandler<MyEntity>) {}
         @http.GET()
-        handle(pagination: HttpQueries<ResourcePagination>) {
+        handle(pagination: HttpQueries<RestCrudPagination>) {
           return this.handler.list({ pagination });
         }
       }
@@ -185,22 +185,22 @@ describe("Resource", () => {
         owner!: User & Reference;
       }
 
-      class BookAdapter implements ResourceCrudAdapter<Book> {
+      class BookAdapter implements RestCrudAdapter<Book> {
         constructor(private db: Inject<orm.Database, "database">) {}
         query(): orm.Query<Book> {
           return this.db.query(Book);
         }
       }
 
-      const filterModel = ResourceFilterMapFactory.build<Book>("all");
+      const filterModel = RestCrudFilterMapFactory.build<Book>("all");
 
       @http.controller()
       class BookController {
-        constructor(private handler: ResourceCrudHandler<Book>) {}
+        constructor(private handler: RestCrudHandler<Book>) {}
         @http.GET()
         async handle(
           filter: HttpQueries<InlineRuntimeType<typeof filterModel>>,
-        ): Promise<ResourceList<Book>> {
+        ): Promise<RestCrudList<Book>> {
           return this.handler.list({
             pagination: { limit: 10, offset: 0 },
             filter,
@@ -243,7 +243,7 @@ describe("Resource", () => {
         owner!: User & Reference;
       }
 
-      class UserAdapter implements ResourceCrudAdapter<User> {
+      class UserAdapter implements RestCrudAdapter<User> {
         constructor(private db: Inject<orm.Database, "database">) {}
         query(): orm.Query<User> {
           return this.db.query(User);
@@ -252,9 +252,9 @@ describe("Resource", () => {
 
       @http.controller()
       class UserController {
-        constructor(private handler: ResourceCrudHandler<User>) {}
+        constructor(private handler: RestCrudHandler<User>) {}
         @http.GET()
-        handle(filter: HttpQueries<ResourceFilterMap<User>>) {
+        handle(filter: HttpQueries<RestCrudFilterMap<User>>) {
           return this.handler.list({
             pagination: { limit: 10, offset: 0 },
             filter,
@@ -292,7 +292,7 @@ describe("Resource", () => {
         owner!: User & Reference;
       }
 
-      class UserAdapter implements ResourceCrudAdapter<User> {
+      class UserAdapter implements RestCrudAdapter<User> {
         constructor(private db: Inject<orm.Database, "database">) {}
         query(): orm.Query<User> {
           return this.db.query(User);
@@ -301,9 +301,9 @@ describe("Resource", () => {
 
       @http.controller()
       class UserController {
-        constructor(private handler: ResourceCrudHandler<User>) {}
+        constructor(private handler: RestCrudHandler<User>) {}
         @http.GET()
-        handle(order: HttpQueries<ResourceOrderMap<User>>) {
+        handle(order: HttpQueries<RestCrudOrderMap<User>>) {
           return this.handler.list({
             pagination: { limit: 10, offset: 0 },
             order,

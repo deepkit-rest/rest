@@ -10,13 +10,13 @@ import { InlineRuntimeType, Maximum } from "@deepkit/type";
 import { NoContentResponse } from "src/common/http";
 import { RequestContext } from "src/core/request-context";
 import { InjectDatabaseSession } from "src/database/database.tokens";
-import { ResourceFilterMapFactory } from "src/resource/models/resource-filter-map-factory";
+import { RestCrudFilterMapFactory } from "src/rest-crud/models/rest-crud-filter-map-factory";
 import {
   ResourceList,
   ResourcePagination,
-} from "src/resource/models/resource-list";
-import { ResourceOrderMap } from "src/resource/models/resource-order-map";
-import { ResourceCrudHandler } from "src/resource/resource-crud-handler.service";
+} from "src/rest-crud/models/rest-crud-list";
+import { ResourceOrderMap } from "src/rest-crud/models/rest-crud-order-map";
+import { ResourceCrudHandler } from "src/rest-crud/rest-crud-crud-handler.service";
 
 import { User } from "./user.entity";
 import { UserVerificationService } from "./user-verification.service";
@@ -126,7 +126,7 @@ export class UserController {
 }
 
 const models = {
-  filter: ResourceFilterMapFactory.build<User>(
+  filter: RestCrudFilterMapFactory.build<User>(
     ["id", "name", "email", "createdAt"], //
   ),
 };

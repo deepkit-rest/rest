@@ -1,10 +1,10 @@
 import { FieldName } from "@deepkit/orm";
 
-export type ResourceOrder = "asc" | "desc";
+export type RestCrudOrder = "asc" | "desc";
 
-export type ResourceOrderMap<
+export type RestCrudOrderMap<
   Entity,
   Field extends FieldName<Entity> = FieldName<Entity>,
 > = {
-  [Key in Field]?: ResourceOrder;
+  [Key in Field]?: RestCrudOrder;
 };

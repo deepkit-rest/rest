@@ -5,14 +5,14 @@ import { FieldName, FilterQuery } from "@deepkit/orm";
 import { ReflectionClass, TypeClass } from "@deepkit/type";
 import { appendFilter } from "src/common/orm";
 
-import { ResourceList, ResourcePagination } from "./models/resource-list";
-import { ResourceOrderMap } from "./models/resource-order-map";
-import { ResourceCrudAdapter } from "./resource-crud-adapter.interface";
+import { RestCrudList, RestCrudPagination } from "./models/rest-crud-list";
+import { RestCrudOrderMap } from "./models/rest-crud-order-map";
+import { RestCrudAdapter } from "./rest-crud-crud-adapter.interface";
 
-export class ResourceCrudHandler<Entity> {
+export class RestCrudHandler<Entity> {
   private adapterSchema;
   private entitySchema;
-  constructor(private adapter: ResourceCrudAdapter<Entity>) {
+  constructor(private adapter: RestCrudAdapter<Entity>) {
     const adapterClassType = adapter.constructor as ClassType<typeof adapter>;
     this.adapterSchema = ReflectionClass.from(adapterClassType);
     const adapterType = this.adapterSchema.type as TypeClass;
@@ -21,8 +21,8 @@ export class ResourceCrudHandler<Entity> {
   }
 
   async list(
-    { pagination, filter, order }: ResourceListingOptions<Entity>, //
-  ): Promise<ResourceList<Entity>> {
+    { pagination, filter, order }: RestCrudListingOptions<Entity>, //
+  ): Promise<RestCrudList<Entity>> {
     let query = this.adapter.query();
     if (filter) query = this.applyFilterMap(query, filter);
     const total = await query.count();
@@ -42,7 +42,7 @@ export class ResourceCrudHandler<Entity> {
 
   applyPagination(
     query: orm.Query<Entity>,
-    { limit, offset }: ResourcePagination,
+    { limit, offset }: RestCrudPagination,
   ): orm.Query<Entity> {
     if (limit) query = query.limit(limit);
     if (offset) query = query.skip(offset);
@@ -74,7 +74,7 @@ export class ResourceCrudHandler<Entity> {
 
   applyOrderMap<Entity>(
     query: orm.Query<Entity>,
-    orderMap: ResourceOrderMap<Entity, any>,
+    orderMap: RestCrudOrderMap<Entity, any>,
   ): orm.Query<Entity> {
     Object.entries(orderMap).forEach(([field, order]) => {
       query = query.orderBy(field as FieldName<Entity>, order);
@@ -83,8 +83,8 @@ export class ResourceCrudHandler<Entity> {
   }
 }
 
-export interface ResourceListingOptions<Entity> {
-  pagination: ResourcePagination;
+export interface RestCrudListingOptions<Entity> {
+  pagination: RestCrudPagination;
   filter?: object;
-  order?: ResourceOrderMap<Entity>;
+  order?: RestCrudOrderMap<Entity>;
 }

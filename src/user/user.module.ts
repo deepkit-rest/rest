@@ -1,5 +1,5 @@
 import { createModule } from "@deepkit/app";
-import { ResourceModule } from "src/resource/resource.module";
+import { ResourceModule } from "src/rest-crud/resource.module";
 
 import { UserAdapter } from "./user.adapter";
 import { UserController } from "./user.controller";

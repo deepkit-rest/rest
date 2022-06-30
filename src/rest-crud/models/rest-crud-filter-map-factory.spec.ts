@@ -7,9 +7,9 @@ import {
   ReflectionProperty,
 } from "@deepkit/type";
 
-import { ResourceFilterMapFactory } from "./resource-filter-map-factory";
+import { RestCrudFilterMapFactory } from "./rest-crud-filter-map-factory";
 
-describe("ResourceFilterMapFactory", () => {
+describe("RestCrudFilterMapFactory", () => {
   class MyEntity {
     id: number & AutoIncrement & PrimaryKey = 0;
     ref1!: MyEntity & Reference;
@@ -19,7 +19,7 @@ describe("ResourceFilterMapFactory", () => {
   }
 
   it("should work", async () => {
-    const s = ResourceFilterMapFactory.build<MyEntity>("all", "include");
+    const s = RestCrudFilterMapFactory.build<MyEntity>("all", "include");
     expect(s.getPropertyNames()).toEqual(["id", "ref1"]);
     expectOperatorMap(s.getProperty("id"), ReflectionKind.number);
     expectOperatorMap(s.getProperty("ref1"), ReflectionKind.number);
