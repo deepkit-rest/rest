@@ -13,9 +13,21 @@ export class RestResourceMeta<Entity = unknown> {
   lookup?: string;
   lookupResolverType?: ClassType<RestLookupResolver>;
   actions: Record<string, RestActionMeta> = {};
+
+  private validated = false;
+
   validate(): RestResourceMetaValidated {
-    if (!this.classType || !this.name || !this.entityType)
-      throw new Error("Resource not properly decorated");
+    if (!this.validated) {
+      if (!this.classType || !this.name || !this.entityType)
+        throw new Error("Resource not properly decorated");
+      if (!this.lookup) {
+        const actions = Object.values(this.actions);
+        const hasDetailed = actions.some((meta) => meta.detailed);
+        if (hasDetailed)
+          throw new Error("Lookup is required for detailed actions");
+      }
+    }
+    this.validated = true;
     return this as RestResourceMetaValidated;
   }
 }
@@ -33,9 +45,14 @@ export class RestActionMeta {
   method?: HttpMethod;
   path?: string;
   configurators: RestMetaConfigurator<RestActionMeta>[] = [];
+
+  private validated = false;
+
   validate(): RestActionMetaValidated {
-    if (!this.resource || !this.name || !this.method)
-      throw new Error("Action not properly decorated");
+    if (!this.validated)
+      if (!this.resource || !this.name || !this.method)
+        throw new Error("Action not properly decorated");
+    this.validated = true;
     return this as RestActionMetaValidated;
   }
 }
