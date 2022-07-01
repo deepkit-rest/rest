@@ -3,8 +3,6 @@ import { ClassType } from "@deepkit/core";
 import { createTestingApp, TestingFacade } from "@deepkit/framework";
 import {
   http,
-  HttpAction,
-  httpClass,
   HttpKernel,
   HttpRequest,
   RouteConfig,
@@ -123,6 +121,24 @@ describe("REST", () => {
     ]);
   });
 
+  test("routing (with @http)", async () => {
+    @rest.resource(User)
+    class MyResource extends UserRestResource {
+      @http.GET("http")
+      action1() {}
+      @rest.action("POST")
+      @http.group("test")
+      action2() {}
+    }
+    await setup({ prefix: "prefix", versioning: false }, [MyResource as any]);
+    const routes = facade.app.get(Router).getRoutes();
+    expect(routes).toHaveLength(2);
+    expect(routes).toMatchObject<Partial<RouteConfig>[]>([
+      { baseUrl: "prefix/users", path: "http", httpMethods: ["GET"] },
+      { baseUrl: "prefix/users", path: "", httpMethods: ["POST"] },
+    ]);
+  });
+
   test("parameter resolving", async () => {
     let lookup1!: User["id"];
     let target1!: User;
@@ -202,20 +218,6 @@ describe("REST", () => {
     expect(restClass._fetch(MyResource)?.actions?.["action"].path).toBe("v1");
     await setup({ prefix: "prefix", versioning: false }, [MyResource]);
     expect(restClass._fetch(MyResource)?.actions?.["action"].path).toBe("v2");
-  });
-
-  test("compatibility with @http", async () => {
-    @rest.resource(User)
-    class MyResource extends UserRestResource {
-      @rest.action("GET")
-      @http.group("test")
-      action() {}
-    }
-    await setup({ prefix: "prefix", versioning: false }, [MyResource as any]);
-    const actions = httpClass._fetch(MyResource)?.actions;
-    const meta: HttpAction = actions?.values().next().value;
-    expect(meta?.httpMethods).toEqual(["GET"]);
-    expect(meta?.groups).toEqual(["test"]);
   });
 
   test("http scope injection", async () => {

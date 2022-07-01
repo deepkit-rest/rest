@@ -1,3 +1,4 @@
+import { AppModule } from "@deepkit/app";
 import { ClassType } from "@deepkit/core";
 import { http } from "@deepkit/http";
 import * as orm from "@deepkit/orm"; // temporary workaround: we have to use namespace import here as a temporary workaround, otherwise the application will not be able to bootstrap. This will be fixed in the next release
@@ -15,7 +16,14 @@ export interface RestResource<Entity> {
   query(): orm.Query<Entity>;
 }
 
-export class RestResourceManager {
+export class RestResourceRegistry extends Set<RestResourceRegistryItem> {}
+
+export interface RestResourceRegistryItem {
+  type: ClassType<RestResource<unknown>>;
+  module: AppModule<any>;
+}
+
+export class RestResourceInstaller {
   constructor(private config: RestConfig) {}
 
   setup(type: ResourceClassType): void {

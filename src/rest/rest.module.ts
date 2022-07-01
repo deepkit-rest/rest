@@ -9,19 +9,17 @@ import {
   RestFieldLookupResolver,
   RestPrimaryKeyLookupResolver,
 } from "./rest-lookup";
-import { RestResource, RestResourceManager } from "./rest-resource";
+import { RestResourceInstaller, RestResourceRegistry } from "./rest-resource";
 
 export class RestModule extends createModule(
   {
     config: RestConfig,
     providers: [
-      RestResourceManager,
       { provide: RestActionRouteParameterResolver, scope: "http" },
       { provide: RestFieldLookupResolver, scope: "http" },
       { provide: RestPrimaryKeyLookupResolver, scope: "http" },
     ],
     exports: [
-      RestResourceManager,
       RestActionRouteParameterResolver,
       RestFieldLookupResolver,
       RestPrimaryKeyLookupResolver,
@@ -31,12 +29,13 @@ export class RestModule extends createModule(
   "rest",
 ) {
   readonly registry = new RestResourceRegistry();
+  readonly installer = new RestResourceInstaller(this.config);
 
   override process(): void {
-    this.addProvider({
-      provide: RestResourceRegistry,
-      useValue: this.registry,
-    });
+    this.addProvider(
+      { provide: RestResourceRegistry, useValue: this.registry },
+      { provide: RestResourceInstaller, useValue: this.installer },
+    );
   }
 
   override processController(
@@ -48,12 +47,6 @@ export class RestModule extends createModule(
     if (!module.isProvided(type))
       module.addProvider({ provide: type, scope: "http" });
     this.registry.add({ module, type });
+    this.installer.setup(type);
   }
-}
-
-export class RestResourceRegistry extends Set<RestResourceRegistryItem> {}
-
-export interface RestResourceRegistryItem {
-  type: ClassType<RestResource<unknown>>;
-  module: AppModule<any>;
 }
