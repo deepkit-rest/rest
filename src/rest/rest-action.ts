@@ -4,47 +4,26 @@ import {
   RouteParameterResolverContext,
 } from "@deepkit/http";
 import { InjectorModule } from "@deepkit/injector";
-import { HttpInjectorContext } from "src/http-extension/http-common";
 
 import { restClass } from "./rest.decorator";
 import {
   RestActionMetaValidated,
   RestResourceMetaValidated,
 } from "./rest.meta";
-import { RestFieldLookupResolver } from "./rest-lookup";
+
 export class RestActionRouteParameterResolver
   implements RouteParameterResolver
 {
-  constructor(private injector: HttpInjectorContext) {}
-
-  async resolve(context: RouteParameterResolverContext): Promise<unknown> {
+  resolve(context: RouteParameterResolverContext): unknown {
     context.route = (context as any).routeConfig; // temporary workaround
-
-    const actionContext = await RestActionContext.build(context);
-
+    const actionContext = RestActionContext.build(context);
     if (context.token === RestActionContext) return actionContext;
-
-    if (actionContext.actionMeta.detailed) {
-      const {
-        resourceMeta: { lookupResolverType = RestFieldLookupResolver },
-        module,
-      } = actionContext;
-
-      const lookupResolver = this.injector.get(lookupResolverType, module);
-      if (context.name === "lookup")
-        return lookupResolver.resolveValue(actionContext);
-      if (context.name === "target")
-        return lookupResolver.resolveResult(actionContext);
-    }
-
     throw new Error(`Unsupported parameter name ${context.name}`);
   }
 }
 
-export class RestActionContext {
-  static async build(
-    context: RouteParameterResolverContext,
-  ): Promise<RestActionContext> {
+export class RestActionContext<Entity = unknown> {
+  static build(context: RouteParameterResolverContext): RestActionContext {
     const { controller: resourceType, module } = context.route.action;
     if (!module) throw new Error("Module not defined");
 
@@ -59,20 +38,20 @@ export class RestActionContext {
 
     return new RestActionContext({
       request: context.request,
-      parameters: context.parameters,
       module,
       resourceMeta,
       actionMeta,
+      actionParameters: context.parameters,
     });
   }
 
   request!: HttpRequest;
-  parameters!: Record<string, unknown>;
   module!: InjectorModule;
-  resourceMeta!: RestResourceMetaValidated;
+  resourceMeta!: RestResourceMetaValidated<Entity>;
   actionMeta!: RestActionMetaValidated;
+  actionParameters!: Record<string, unknown>;
 
-  private constructor(data: RestActionContext) {
+  private constructor(data: RestActionContext<Entity>) {
     Object.assign(this, data);
   }
 }

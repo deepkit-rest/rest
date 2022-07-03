@@ -2,7 +2,6 @@ import { ClassType } from "@deepkit/core";
 import { PartialRequired } from "src/common/utilities";
 import { HttpMethod } from "src/http-extension/http-common";
 
-import { RestLookupResolver } from "./rest-lookup";
 import { RestResource } from "./rest-resource";
 
 export class RestResourceMeta<Entity = unknown> {
@@ -11,7 +10,6 @@ export class RestResourceMeta<Entity = unknown> {
   entityType?: ClassType<Entity>;
   version?: number;
   lookup?: string;
-  lookupResolverType?: ClassType<RestLookupResolver>;
   actions: Record<string, RestActionMeta> = {};
 
   private validated = false;

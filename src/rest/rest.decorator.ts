@@ -14,7 +14,6 @@ import {
   RestMetaConfigurator,
   RestResourceMeta,
 } from "./rest.meta";
-import { RestLookupResolver } from "./rest-lookup";
 import { RestResource } from "./rest-resource";
 
 export class RestClassDecoratorApi extends PrettifiedDecoratorApi<RestResourceMeta> {
@@ -35,9 +34,8 @@ export class RestClassDecoratorApi extends PrettifiedDecoratorApi<RestResourceMe
     this.meta.version = version;
   }
 
-  lookup(name: string, type?: ClassType<RestLookupResolver>): void {
+  lookup(name: string): void {
     this.meta.lookup = name;
-    this.meta.lookupResolverType = type;
   }
 
   useAction(name: string, action: RestActionMeta): void {

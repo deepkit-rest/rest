@@ -19,7 +19,6 @@ import { rest, restClass } from "./rest.decorator";
 import { RestActionMeta, RestMetaConfigurator } from "./rest.meta";
 import { RestModule } from "./rest.module";
 import { RestActionContext } from "./rest-action";
-import { RestLookupResolver } from "./rest-lookup";
 import { RestResource } from "./rest-resource";
 
 describe("REST", () => {
@@ -140,24 +139,16 @@ describe("REST", () => {
   });
 
   test("parameter resolving", async () => {
-    let lookup1!: User["id"];
-    let target1!: User;
-    let context1!: RestActionContext;
-    let request1!: HttpRequest;
+    let assertion!: () => void;
 
     @rest.resource(User).lookup("id")
     class TestingResource extends UserRestResource {
       @rest.action("GET").detailed()
-      retrieve(
-        lookup: User["id"],
-        target: User,
-        context: RestActionContext,
-        request: HttpRequest,
-      ) {
-        lookup1 = lookup;
-        target1 = target;
-        context1 = context;
-        request1 = request;
+      retrieve(context: RestActionContext, request: HttpRequest) {
+        assertion = () => {
+          expect(context).toBeInstanceOf(RestActionContext);
+          expect(request).toBeDefined();
+        };
       }
     }
     await setup({ prefix: "prefix", versioning: false }, [TestingResource]);
@@ -166,42 +157,7 @@ describe("REST", () => {
       HttpRequest.GET("/prefix/users/1"),
     );
     expect(response.statusCode).toBe(200);
-    expect(target1).toBeInstanceOf(User);
-    expect(lookup1).toBe(target1.id);
-    expect(context1).toBeInstanceOf(RestActionContext);
-    expect(request1).toBeDefined();
-  });
-
-  test("parameter resolving (custom lookup resolver)", async () => {
-    let assert!: () => void;
-    class MyLookupResolver implements RestLookupResolver {
-      async resolveValue(): Promise<unknown> {
-        return 1;
-      }
-      async resolveResult(): Promise<unknown> {
-        return 2;
-      }
-    }
-    @rest.resource(User).lookup("id", MyLookupResolver)
-    class MyResource extends UserRestResource {
-      @rest.action("GET").detailed()
-      action(lookup: unknown, target: unknown) {
-        assert = () => {
-          expect(lookup).toBe(1);
-          expect(target).toBe(2);
-        };
-      }
-    }
-    await setup(
-      { prefix: "prefix", versioning: false },
-      [MyResource],
-      [MyLookupResolver],
-    );
-    const response = await requester.request(
-      HttpRequest.GET("/prefix/users/1"),
-    );
-    expect(response.statusCode).toBe(200);
-    assert();
+    assertion();
   });
 
   test("meta configurator", async () => {
