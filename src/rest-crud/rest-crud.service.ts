@@ -11,6 +11,7 @@ import { RestActionContext } from "src/rest/rest-action";
 import { RestCrudFilterMapFactory } from "./models/rest-crud-filter-map-factory";
 import { RestCrudList, RestCrudPagination } from "./models/rest-crud-list";
 import { RestCrudOrderMapFactory } from "./models/rest-crud-order-map-factory";
+import { RestCrudResource } from "./rest-crud.interface";
 
 export class RestCrudService {
   constructor(
@@ -38,10 +39,10 @@ export class RestCrudService {
 
     const resource = this.injector.get(resourceType, module);
     let query = resource.query();
-    query = this.applyFilterMap(query, entityType, filterMap);
+    query = this.applyFilterMap(query, entityType, filterMap as object);
     const total = await query.count();
     query = this.applyPagination(query, pagination);
-    query = this.applyOrderMap(query, orderMap);
+    query = this.applyOrderMap(query, orderMap as object);
     const items = await query.find();
 
     return { total, items };
@@ -49,13 +50,16 @@ export class RestCrudService {
 
   async retrieve<Entity>(context: RestActionContext<Entity>): Promise<Entity> {
     const { resourceMeta, actionMeta, actionParameters, module } = context;
+    const instance = this.injector.get(resourceMeta.classType, module);
+    const resource: RestCrudResource<Entity> = instance;
     if (!actionMeta.detailed) throw new Error("Not a detailed action");
     const fieldName = resourceMeta.lookup;
     if (!fieldName) throw new Error("Lookup not specified");
     const entitySchema = ReflectionClass.from(resourceMeta.entityType);
     const fieldType = entitySchema.getProperty(fieldName).type;
-    const fieldValue = purify(actionParameters[fieldName], fieldType) as any;
-    const resource = this.injector.get(resourceMeta.classType, module);
+    const fieldValue: any = resource.resolveLookup
+      ? resource.resolveLookup(actionParameters[fieldName])
+      : purify(actionParameters[fieldName], fieldType);
     const result = await resource
       .query()
       .addFilter(fieldName, fieldValue)

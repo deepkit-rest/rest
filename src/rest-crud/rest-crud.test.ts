@@ -13,6 +13,7 @@ import {
   PrimaryKey,
   Reference,
 } from "@deepkit/type";
+import { purify } from "src/common/type";
 import { HttpExtensionModule } from "src/http-extension/http-extension.module";
 import { rest } from "src/rest/rest.decorator";
 import { RestModule } from "src/rest/rest.module";
@@ -22,6 +23,7 @@ import { RestResource } from "src/rest/rest-resource";
 import { Filterable } from "./models/rest-crud-filter-map-factory";
 import { RestCrudList } from "./models/rest-crud-list";
 import { Orderable } from "./models/rest-crud-order-map-factory";
+import { RestCrudResource } from "./rest-crud.interface";
 import { RestCrudModule } from "./rest-crud.module";
 import { RestCrudService } from "./rest-crud.service";
 
@@ -65,13 +67,16 @@ describe("REST CRUD", () => {
     }
 
     @rest.resource(MyEntity, "name").lookup("id")
-    class MyResource implements RestResource<MyEntity> {
+    class MyResource implements RestCrudResource<MyEntity> {
       constructor(
         private db: Inject<orm.Database, "database">,
         private crud: RestCrudService,
       ) {}
       query(): orm.Query<MyEntity> {
         return this.db.query(MyEntity).filter({ included: true });
+      }
+      resolveLookup(raw: unknown): unknown {
+        return raw === "first" ? 1 : purify<MyEntity["id"]>(raw);
       }
       @rest.action("GET")
       list(
@@ -100,12 +105,20 @@ describe("REST CRUD", () => {
     });
 
     describe("Retrieve", () => {
-      it("should respect filter conditions", async () => {
+      it("should work", async () => {
         await database.persist(new MyEntity(), new MyEntity(false));
         const response1 = await requester.request(HttpRequest.GET("/name/1"));
         expect(response1.statusCode).toBe(200);
         const response2 = await requester.request(HttpRequest.GET("/name/2"));
         expect(response2.statusCode).toBe(404);
+      });
+      it("should respect custom lookup resolving", async () => {
+        await database.persist(new MyEntity(), new MyEntity());
+        const response = await requester.request(
+          HttpRequest.GET("/name/first"),
+        );
+        expect(response.statusCode).toBe(200);
+        expect(response.json["id"]).toBe(1);
       });
     });
   });
