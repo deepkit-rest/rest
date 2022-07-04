@@ -16,7 +16,7 @@ import { AuthTokenService } from "./auth-token.service";
 // - logout: DELETE /sessions/current
 // - register: POST /users
 
-@http.controller("auth")
+@http.controller("api/auth")
 export class AuthController {
   constructor(
     private db: InjectDatabaseSession,

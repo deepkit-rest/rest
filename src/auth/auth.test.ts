@@ -98,7 +98,7 @@ describe("Auth", () => {
         await database.query(User).find();
 
         const response = await app.get(HttpKernel).request(
-          HttpRequest.POST("/auth/register").json({
+          HttpRequest.POST("/api/auth/register").json({
             name: "name",
             email: "email@email.com",
             password: "password",

@@ -18,7 +18,7 @@ new App({
     new FrameworkModule(),
     new HttpExtensionModule(),
     new DatabaseModule().withEntities(...entities),
-    new RestModule({ prefix: "" }),
+    new RestModule(),
     new RestCrudModule(),
     new FileEngineModule(),
     new EmailEngineModule(),
