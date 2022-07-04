@@ -1,44 +1,30 @@
-import { FieldName } from "@deepkit/orm";
 import {
-  ReceiveType,
+  Data,
   ReflectionClass,
   ReflectionKind,
   ReflectionProperty,
   TypeObjectLiteral,
   TypePropertySignature,
 } from "@deepkit/type";
+import { ReflectionClassAddPropertyOptions } from "src/common/type";
 
-import {
-  AddPropertyOptions,
-  RestCrudQueryModelFactory,
-} from "./rest-crud-query-model-factory";
+import { RestCrudQueryModelFactory } from "./rest-crud-query-model-factory";
+
+export type Filterable = Data<"filterable", true>;
 
 export class RestCrudFilterMapFactory extends RestCrudQueryModelFactory {
-  static override build<Entity>(
-    fields: FilterableField<Entity>[] | "all",
-    strategy?: "include" | "exclude",
-    entityType?: ReceiveType<Entity>,
-  ): ReflectionClass<any> {
-    return super.build(fields, strategy, entityType);
-  }
-
-  protected static override selectValidFields<Entity>(
+  protected selectFields(
     entitySchema: ReflectionClass<any>,
-  ): FilterableField<Entity>[] {
+  ): ReflectionProperty[] {
     return entitySchema
       .getProperties()
-      .map((schema) =>
-        isFilterableField<Entity>(schema.name, schema)
-          ? schema.name
-          : undefined,
-      )
-      .filter((v): v is NonNullable<typeof v> => !!v);
+      .filter((s) => s.getData()["filterable"]);
   }
 
-  protected static override transformField(
+  protected processField(
     entitySchema: ReflectionClass<any>,
     fieldSchema: ReflectionProperty,
-  ): AddPropertyOptions {
+  ): ReflectionClassAddPropertyOptions {
     const isRelation =
       fieldSchema.isReference() || fieldSchema.isBackReference();
     const fieldSchemaToUse = isRelation
@@ -46,12 +32,12 @@ export class RestCrudFilterMapFactory extends RestCrudQueryModelFactory {
       : fieldSchema;
     return {
       name: fieldSchema.name,
-      type: RestCrudFilterMapFactory.buildOperatorMap(fieldSchemaToUse),
+      type: this.buildOperatorMap(fieldSchemaToUse),
       optional: true,
     };
   }
 
-  private static buildOperatorMap(
+  protected buildOperatorMap(
     fieldSchema: ReflectionProperty,
   ): TypeObjectLiteral {
     const { kind, type } = fieldSchema.property as TypePropertySignature;
@@ -75,23 +61,4 @@ export class RestCrudFilterMapFactory extends RestCrudQueryModelFactory {
     result.types = resultPropertyTypes;
     return result;
   }
-}
-
-type FilterableField<Entity> = {
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  [Field in FieldName<Entity>]: Entity[Field] extends Function | unknown[]
-    ? never
-    : Field;
-}[FieldName<Entity>];
-
-function isFilterableField<Entity>(
-  field: unknown,
-  schema: ReflectionProperty,
-): field is FilterableField<Entity> {
-  return (
-    schema.name === field &&
-    !schema.isArray() &&
-    schema.isPublic() &&
-    schema.type.kind !== ReflectionKind.function
-  );
 }

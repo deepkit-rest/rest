@@ -1,9 +1,14 @@
 import {
+  httpClass,
   HttpRequest,
   RouteParameterResolver,
   RouteParameterResolverContext,
 } from "@deepkit/http";
 import { InjectorModule } from "@deepkit/injector";
+import {
+  HttpControllerMeta,
+  HttpRouteMeta,
+} from "src/http-extension/http-common";
 
 import { restClass } from "./rest.decorator";
 import {
@@ -25,16 +30,19 @@ export class RestActionRouteParameterResolver
 export class RestActionContext<Entity = unknown> {
   static build(context: RouteParameterResolverContext): RestActionContext {
     const { controller: resourceType, module } = context.route.action;
-    if (!module) throw new Error("Module not defined");
+    if (!module) throw new Error("Cannot read resource module");
 
     const resourceMeta = restClass._fetch(resourceType)?.validate();
     if (!resourceMeta)
       throw new Error(`Cannot resolve parameters for non-resource controllers`);
-
     const actionName = context.route.action.methodName;
     const actionMeta = resourceMeta.actions[actionName].validate();
     if (!actionMeta)
       throw new Error(`Cannot resolve parameters for non-action routes`);
+
+    const controllerMeta = httpClass._fetch(resourceType);
+    if (!controllerMeta) throw new Error("Cannot read controller meta");
+    const routeMeta = controllerMeta.getAction(actionName);
 
     return new RestActionContext({
       request: context.request,
@@ -42,6 +50,8 @@ export class RestActionContext<Entity = unknown> {
       resourceMeta,
       actionMeta,
       actionParameters: context.parameters,
+      controllerMeta,
+      routeMeta,
     });
   }
 
@@ -50,6 +60,8 @@ export class RestActionContext<Entity = unknown> {
   resourceMeta!: RestResourceMetaValidated<Entity>;
   actionMeta!: RestActionMetaValidated;
   actionParameters!: Record<string, unknown>;
+  controllerMeta!: HttpControllerMeta;
+  routeMeta!: HttpRouteMeta;
 
   private constructor(data: RestActionContext<Entity>) {
     Object.assign(this, data);

@@ -3,7 +3,7 @@ import formidable from "formidable";
 import qs from "qs";
 
 export class HttpRequestParser {
-  parseUrl(url: string): { path: string; queries: object } {
+  parseUrl(url: string): { path: string; queries: Record<string, unknown> } {
     const indexOfQueryMark = url.indexOf("?");
     const path = url.slice(0, indexOfQueryMark);
     const queriesStr = url.slice(indexOfQueryMark + 1);
@@ -11,7 +11,7 @@ export class HttpRequestParser {
     return { path, queries };
   }
 
-  async parseBody(request: HttpRequest): Promise<object> {
+  async parseBody(request: HttpRequest): Promise<Record<string, unknown>> {
     const form = formidable({
       multiples: true,
       hashAlgorithm: "sha1",

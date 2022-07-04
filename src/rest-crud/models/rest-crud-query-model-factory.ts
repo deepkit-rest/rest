@@ -5,57 +5,29 @@ import {
   ReflectionClass,
   ReflectionProperty,
 } from "@deepkit/type";
+import { ReflectionClassAddPropertyOptions } from "src/common/type";
 
 class RestCrudQueryModel {}
 
 export abstract class RestCrudQueryModelFactory {
-  protected constructor() {}
-
-  static build<Entity>(
-    fields: FieldName<Entity>[] | "all",
-    strategy: "include" | "exclude" = "include",
-    entityType?: ReceiveType<Entity>,
-  ): ReflectionClass<any> {
+  build<Entity>(entityType?: ReceiveType<Entity>): ReflectionClass<any> {
+    if (!entityType) throw new Error("Type not specified");
     const entitySchema = ReflectionClass.from(entityType);
     const modelSchema = ReflectionClass.from(RestCrudQueryModel).clone();
-    fields = this.selectFields(entitySchema, fields, strategy);
-    fields.forEach((field) => {
-      const fieldSchema = entitySchema.getProperty(field);
-      const transformed = this.transformField(entitySchema, fieldSchema);
+    const fieldSchemas = this.selectFields(entitySchema);
+    fieldSchemas.forEach((fieldSchema) => {
+      const transformed = this.processField(entitySchema, fieldSchema);
       modelSchema.addProperty(transformed);
     });
     return modelSchema;
   }
 
-  protected static selectFields<Entity>(
+  protected abstract selectFields(
     entitySchema: ReflectionClass<any>,
-    fields: FieldName<Entity>[] | "all",
-    strategy: "include" | "exclude",
-  ): FieldName<Entity>[] {
-    if (fields === "all") {
-      fields =
-        strategy === "include" ? this.selectValidFields(entitySchema) : [];
-    } else if (strategy === "exclude") {
-      const all = this.selectValidFields(entitySchema);
-      fields = all.filter((field) => !fields.includes(field));
-    }
-    return fields;
-  }
+  ): ReflectionProperty[];
 
-  protected static selectValidFields<Entity>(
-    entitySchema: ReflectionClass<any>,
-  ): FieldName<Entity>[] {
-    throw new Error("Not implemented");
-  }
-
-  protected static transformField(
+  protected abstract processField(
     entitySchema: ReflectionClass<any>,
     fieldSchema: ReflectionProperty,
-  ): AddPropertyOptions {
-    throw new Error("Not implemented");
-  }
+  ): ReflectionClassAddPropertyOptions;
 }
-
-export type AddPropertyOptions = Parameters<
-  ReflectionClass<any>["addProperty"]
->[0];

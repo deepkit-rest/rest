@@ -1,4 +1,4 @@
-import { createHttpError, HtmlResponse } from "@deepkit/http";
+import { createHttpError, HtmlResponse, httpClass } from "@deepkit/http";
 import { InjectorContext } from "@deepkit/injector";
 
 export class HttpInjectorContext extends InjectorContext {}
@@ -27,3 +27,6 @@ export type HttpMethod =
   | "PATCH"
   | "HEAD"
   | "OPTIONS";
+
+export type HttpControllerMeta = ReturnType<typeof httpClass._fetch>;
+export { HttpAction as HttpRouteMeta } from "@deepkit/http";

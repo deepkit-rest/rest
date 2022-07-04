@@ -1,11 +1,11 @@
-import { Positive, PositiveNoZero } from "@deepkit/type";
+import { Maximum, Positive, PositiveNoZero } from "@deepkit/type";
 
 export interface RestCrudList<Entity> {
   total: number;
   items: Entity[];
 }
 
-export interface RestCrudPagination {
-  limit: number & PositiveNoZero;
-  offset: number & Positive;
+export class RestCrudPagination {
+  limit: number & PositiveNoZero & Maximum<50> = 30;
+  offset: number & Positive & Maximum<1000> = 0;
 }
