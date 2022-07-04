@@ -3,7 +3,7 @@ import { Entity } from "src/common/entity";
 import { PartialRequired } from "src/common/utilities";
 import { User } from "src/user/user.entity";
 
-@entity.name("file-record")
+@entity.name("file-record").collection("file-records")
 export class FileRecord extends Entity<FileRecord, "owner" | "name" | "path"> {
   override id: Entity["id"] = uuid(); // temporary workaround: type info is lost during class inheritances (https://github.com/deepkit/deepkit-framework/issues/238)
   owner!: User & Reference;
