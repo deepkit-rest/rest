@@ -1,19 +1,14 @@
 import { createModule } from "@deepkit/app";
-import { ResourceModule } from "src/rest-crud/resource.module";
 
-import { UserAdapter } from "./user.adapter";
-import { UserController } from "./user.controller";
-import { User } from "./user.entity";
 import { UserListener } from "./user.listener";
+import { UserResource } from "./user.resource";
 import { UserVerificationService } from "./user-verification.service";
 
 export class UserModule extends createModule(
   {
-    controllers: [UserController],
+    controllers: [UserResource],
     providers: [UserVerificationService],
     listeners: [UserListener],
   },
   "user",
-) {
-  override imports = [new ResourceModule<User>().withAdapter(UserAdapter)];
-}
+) {}

@@ -10,6 +10,9 @@ import { RequestContext } from "src/core/request-context";
 import { DatabaseModule } from "src/database/database.module";
 import { DATABASE } from "src/database/database.tokens";
 import { EmailEngine } from "src/email-engine/email-engine.interface";
+import { HttpExtensionModule } from "src/http-extension/http-extension.module";
+import { RestModule } from "src/rest/rest.module";
+import { RestCrudModule } from "src/rest-crud/rest-crud.module";
 
 import { User } from "./user.entity";
 import { UserModule } from "./user.module";
@@ -24,7 +27,10 @@ describe("User", () => {
   beforeEach(async () => {
     facade = createTestingApp({
       imports: [
+        new HttpExtensionModule(),
         new DatabaseModule({ url: ":memory:" }).withEntities(...entities),
+        new RestModule({ prefix: "" }),
+        new RestCrudModule(),
         new UserModule(),
       ],
       providers: [

@@ -14,7 +14,7 @@ import { FileRecord } from "src/file/file-record.entity";
 
 const HASH_LENGTH = 60;
 
-@entity.name("user")
+@entity.name("user").collection("users")
 export class User extends Entity<User, "name" | "email" | "password"> {
   override id: Entity["id"] = uuid(); // temporary workaround: type info is lost during class inheritances (https://github.com/deepkit/deepkit-framework/issues/238)
   name!: string & MinLength<1> & MaxLength<20>;
