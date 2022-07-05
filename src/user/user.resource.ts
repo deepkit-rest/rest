@@ -13,10 +13,8 @@ import { NoContentResponse } from "src/http-extension/http-common";
 import { rest } from "src/rest/core/rest.decorator";
 import { RestActionContext } from "src/rest/core/rest-action";
 import { RestResource } from "src/rest/core/rest-resource";
-import {
-  RestCrudCustomizations,
-  RestCrudService,
-} from "src/rest/crud/rest-crud.service";
+import { RestCrudService } from "src/rest/crud/rest-crud";
+import { RestRetrieveCustomizations } from "src/rest/crud/rest-retrieve";
 import { RestList } from "src/rest/crud-models/rest-list";
 
 import { User } from "./user.entity";
@@ -24,7 +22,7 @@ import { UserVerificationService } from "./user-verification.service";
 
 @rest.resource(User).lookup("id")
 export class UserResource
-  implements RestResource<User>, RestCrudCustomizations
+  implements RestResource<User>, RestRetrieveCustomizations
 {
   constructor(
     private context: RequestContext,

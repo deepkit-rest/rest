@@ -20,7 +20,7 @@ import { RestModule } from "src/rest/rest.module";
 
 import { rest } from "./core/rest.decorator";
 import { RestResource } from "./core/rest-resource";
-import { RestCrudService } from "./crud/rest-crud.service";
+import { RestCrudService } from "./crud/rest-crud";
 import { Filterable } from "./crud-models/rest-filter-map";
 import { RestList } from "./crud-models/rest-list";
 import { Orderable } from "./crud-models/rest-order-map";

@@ -11,7 +11,9 @@ import {
   RestResourceInstaller,
   RestResourceRegistry,
 } from "./core/rest-resource";
-import { RestCrudService } from "./crud/rest-crud.service";
+import { RestCrudService } from "./crud/rest-crud";
+import { RestListService } from "./crud/rest-list";
+import { RestRetrieveService } from "./crud/rest-retrieve";
 import {
   RestFilterMapApplier,
   RestFilterMapFactory,
@@ -28,6 +30,8 @@ export class RestModule extends createModule(
     config: RestConfig,
     providers: [
       { provide: RestActionContextReader, scope: "http" },
+      { provide: RestListService, scope: "http" },
+      { provide: RestRetrieveService, scope: "http" },
       { provide: RestCrudService, scope: "http" },
       RestFilterMapFactory,
       RestFilterMapApplier,

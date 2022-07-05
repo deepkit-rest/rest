@@ -1,11 +1,9 @@
-import { HttpNotFoundError } from "@deepkit/http";
 import { purify } from "src/common/type";
+
 import {
   RestActionContext,
   RestActionContextReader,
-} from "src/rest/core/rest-action";
-
-import { RestResource } from "../core/rest-resource";
+} from "../core/rest-action";
 import {
   RestFilterMapApplier,
   RestFilterMapFactory,
@@ -20,7 +18,7 @@ import {
   RestOrderMapFactory,
 } from "../crud-models/rest-order-map";
 
-export class RestCrudService {
+export class RestListService {
   constructor(
     private contextReader: RestActionContextReader,
     private filterMapFactory: RestFilterMapFactory,
@@ -52,26 +50,4 @@ export class RestCrudService {
 
     return { total, items };
   }
-
-  async retrieve<Entity>(context: RestActionContext<Entity>): Promise<Entity> {
-    const { actionMeta } = context;
-    const resource: RestResource<Entity> & RestCrudCustomizations =
-      this.contextReader.getResource(context);
-    if (!actionMeta.detailed) throw new Error("Not a detailed action");
-    const [fieldName, fieldValueRaw] =
-      this.contextReader.getLookupInfo(context);
-    const fieldValue: any = resource.lookup
-      ? resource.lookup(fieldValueRaw)
-      : fieldValueRaw;
-    const result = await resource
-      .query()
-      .addFilter(fieldName, fieldValue)
-      .findOneOrUndefined();
-    if (!result) throw new HttpNotFoundError();
-    return result;
-  }
-}
-
-export interface RestCrudCustomizations {
-  lookup?(raw: unknown): unknown;
 }
