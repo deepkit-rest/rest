@@ -1,15 +1,12 @@
 import { AutoIncrement, PrimaryKey, ReflectionKind } from "@deepkit/type";
 
-import {
-  Orderable,
-  RestCrudOrderMapFactory,
-} from "./rest-crud-order-map-factory";
+import { Orderable, RestOrderMapFactory } from "./rest-order-map";
 
-describe("RestCrudOrderMapFactory", () => {
-  let factory: RestCrudOrderMapFactory;
+describe("RestOrderMapFactory", () => {
+  let factory: RestOrderMapFactory;
 
   beforeEach(() => {
-    factory = new RestCrudOrderMapFactory();
+    factory = new RestOrderMapFactory();
   });
 
   it("should work", async () => {

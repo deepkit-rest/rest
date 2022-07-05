@@ -8,11 +8,11 @@ import {
 } from "@deepkit/type";
 import { ReflectionClassAddPropertyOptions } from "src/common/type";
 
-import { RestCrudQueryModelFactory } from "./rest-crud-query-model-factory";
+import { RestQueryModelFactory } from "./rest-query-model";
 
 export type Filterable = Data<"filterable", true>;
 
-export class RestCrudFilterMapFactory extends RestCrudQueryModelFactory {
+export class RestFilterMapFactory extends RestQueryModelFactory {
   protected selectFields(
     entitySchema: ReflectionClass<any>,
   ): ReflectionProperty[] {

@@ -7,16 +7,13 @@ import {
   ReflectionProperty,
 } from "@deepkit/type";
 
-import {
-  Filterable,
-  RestCrudFilterMapFactory,
-} from "./rest-crud-filter-map-factory";
+import { Filterable, RestFilterMapFactory } from "./rest-filter-map";
 
-describe("RestCrudFilterMapFactory", () => {
-  let factory: RestCrudFilterMapFactory;
+describe("RestFilterMapFactory", () => {
+  let factory: RestFilterMapFactory;
 
   beforeEach(() => {
-    factory = new RestCrudFilterMapFactory();
+    factory = new RestFilterMapFactory();
   });
 
   it("should work", async () => {

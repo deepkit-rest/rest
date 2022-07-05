@@ -5,10 +5,10 @@ import {
 } from "@deepkit/type";
 import { ReflectionClassAddPropertyOptions } from "src/common/type";
 
-import { RestCrudQueryModelFactory } from "./rest-crud-query-model-factory";
+import { RestQueryModelFactory } from "./rest-query-model";
 
-describe("RestCrudQueryModelFactory", () => {
-  class TestingFactory extends RestCrudQueryModelFactory {
+describe("RestQueryModelFactory", () => {
+  class TestingFactory extends RestQueryModelFactory {
     protected selectFields(
       entitySchema: ReflectionClass<any>,
     ): ReflectionProperty[] {
@@ -24,7 +24,7 @@ describe("RestCrudQueryModelFactory", () => {
     }
   }
 
-  let factory: RestCrudQueryModelFactory;
+  let factory: RestQueryModelFactory;
 
   beforeEach(() => {
     factory = new TestingFactory();

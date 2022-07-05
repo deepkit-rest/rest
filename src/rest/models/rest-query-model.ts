@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { FieldName } from "@deepkit/orm";
 import {
   ReceiveType,
   ReflectionClass,
@@ -7,13 +5,13 @@ import {
 } from "@deepkit/type";
 import { ReflectionClassAddPropertyOptions } from "src/common/type";
 
-class RestCrudQueryModel {}
+class RestQueryModel {}
 
-export abstract class RestCrudQueryModelFactory {
+export abstract class RestQueryModelFactory {
   build<Entity>(entityType?: ReceiveType<Entity>): ReflectionClass<any> {
     if (!entityType) throw new Error("Type not specified");
     const entitySchema = ReflectionClass.from(entityType);
-    const modelSchema = ReflectionClass.from(RestCrudQueryModel).clone();
+    const modelSchema = ReflectionClass.from(RestQueryModel).clone();
     const fieldSchemas = this.selectFields(entitySchema);
     fieldSchemas.forEach((fieldSchema) => {
       const transformed = this.processField(entitySchema, fieldSchema);

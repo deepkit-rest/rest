@@ -9,20 +9,20 @@ import {
   RestActionContextReader,
 } from "src/rest/rest-action";
 
-import { RestCrudFilterMapFactory } from "./rest-crud-filter-map-factory";
-import { RestCrudList, RestCrudPagination } from "./rest-crud-list";
-import { RestCrudOrderMapFactory } from "./rest-crud-order-map-factory";
+import { RestFilterMapFactory } from "./models/rest-filter-map";
+import { RestList, RestPagination } from "./models/rest-list";
+import { RestOrderMapFactory } from "./models/rest-order-map";
 
 export class RestCrudService {
   constructor(
     private contextReader: RestActionContextReader,
-    private filterMapFactory: RestCrudFilterMapFactory,
-    private orderMapFactory: RestCrudOrderMapFactory,
+    private filterMapFactory: RestFilterMapFactory,
+    private orderMapFactory: RestOrderMapFactory,
   ) {}
 
   async list<Entity>(
     context: RestActionContext<Entity>,
-  ): Promise<RestCrudList<Entity>> {
+  ): Promise<RestList<Entity>> {
     const { entityType } = context.resourceMeta;
 
     const filterMapSchema = this.filterMapFactory.build(entityType);
@@ -30,7 +30,7 @@ export class RestCrudService {
     const queries = this.contextReader.parseQueries(context);
     const filterMap = purify(queries["filter"] ?? {}, filterMapSchema.type);
     const orderMap = purify(queries["order"] ?? {}, orderMapSchema.type);
-    const pagination = purify<RestCrudPagination>(queries);
+    const pagination = purify<RestPagination>(queries);
 
     const resource = this.contextReader.getResource(context);
     let query = resource.query();
@@ -62,7 +62,7 @@ export class RestCrudService {
 
   applyPagination<Entity>(
     query: orm.Query<Entity>,
-    { limit, offset }: RestCrudPagination,
+    { limit, offset }: RestPagination,
   ): orm.Query<Entity> {
     if (limit) query = query.limit(limit);
     if (offset) query = query.skip(offset);

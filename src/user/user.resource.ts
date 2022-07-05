@@ -10,10 +10,10 @@ import { purify } from "src/common/type";
 import { RequestContext } from "src/core/request-context";
 import { InjectDatabaseSession } from "src/database/database.tokens";
 import { NoContentResponse } from "src/http-extension/http-common";
+import { RestList } from "src/rest/models/rest-list";
 import { rest } from "src/rest/rest.decorator";
 import { RestActionContext } from "src/rest/rest-action";
-import { RestCrudService } from "src/rest/rest-crud/rest-crud.service";
-import { RestCrudList } from "src/rest/rest-crud/rest-crud-list";
+import { RestCrudService } from "src/rest/rest-crud.service";
 import { RestResource } from "src/rest/rest-resource";
 
 import { User } from "./user.entity";
@@ -38,7 +38,7 @@ export class UserResource implements RestResource<User> {
 
   @rest.action("GET")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
-  async list(context: RestActionContext<User>): Promise<RestCrudList<User>> {
+  async list(context: RestActionContext<User>): Promise<RestList<User>> {
     return this.crud.list(context);
   }
 

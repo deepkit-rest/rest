@@ -14,10 +14,10 @@ import {
   NoContentResponse,
 } from "src/http-extension/http-common";
 import { HttpRangeParser } from "src/http-extension/http-range-parser.service";
+import { RestList } from "src/rest/models/rest-list";
 import { rest } from "src/rest/rest.decorator";
 import { RestActionContext } from "src/rest/rest-action";
-import { RestCrudService } from "src/rest/rest-crud/rest-crud.service";
-import { RestCrudList } from "src/rest/rest-crud/rest-crud-list";
+import { RestCrudService } from "src/rest/rest-crud.service";
 import { RestResource } from "src/rest/rest-resource";
 import { User } from "src/user/user.entity";
 
@@ -43,7 +43,7 @@ export class FileResource implements RestResource<FileRecord> {
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   async list(
     context: RestActionContext<FileRecord>,
-  ): Promise<RestCrudList<FileRecord>> {
+  ): Promise<RestList<FileRecord>> {
     return this.crud.list(context);
   }
 

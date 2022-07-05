@@ -20,10 +20,10 @@ import { RestModule } from "src/rest/rest.module";
 import { RestActionContext } from "src/rest/rest-action";
 import { RestResource } from "src/rest/rest-resource";
 
-import { RestCrudService } from "./rest-crud/rest-crud.service";
-import { Filterable } from "./rest-crud/rest-crud-filter-map-factory";
-import { RestCrudList } from "./rest-crud/rest-crud-list";
-import { Orderable } from "./rest-crud/rest-crud-order-map-factory";
+import { Filterable } from "./models/rest-filter-map";
+import { RestList } from "./models/rest-list";
+import { Orderable } from "./models/rest-order-map";
+import { RestCrudService } from "./rest-crud.service";
 
 describe("REST CRUD", () => {
   let facade: TestingFacade<App<any>>;
@@ -76,9 +76,7 @@ describe("REST CRUD", () => {
         return raw === "first" ? 1 : purify<MyEntity["id"]>(raw);
       }
       @rest.action("GET")
-      list(
-        context: RestActionContext<MyEntity>,
-      ): Promise<RestCrudList<MyEntity>> {
+      list(context: RestActionContext<MyEntity>): Promise<RestList<MyEntity>> {
         return this.crud.list(context);
       }
 
@@ -208,7 +206,7 @@ describe("REST CRUD", () => {
         @rest.action("GET")
         async handle(
           context: RestActionContext<Book>,
-        ): Promise<RestCrudList<Book>> {
+        ): Promise<RestList<Book>> {
           return this.crud.list(context);
         }
       }
