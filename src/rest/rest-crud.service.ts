@@ -12,6 +12,7 @@ import {
 import { RestFilterMapFactory } from "./models/rest-filter-map";
 import { RestList, RestPagination } from "./models/rest-list";
 import { RestOrderMapFactory } from "./models/rest-order-map";
+import { RestResource } from "./rest-resource";
 
 export class RestCrudService {
   constructor(
@@ -45,7 +46,8 @@ export class RestCrudService {
 
   async retrieve<Entity>(context: RestActionContext<Entity>): Promise<Entity> {
     const { actionMeta } = context;
-    const resource = this.contextReader.getResource(context);
+    const resource: RestResource<Entity> & RestCrudCustomizations =
+      this.contextReader.getResource(context);
     if (!actionMeta.detailed) throw new Error("Not a detailed action");
     const [fieldName, fieldValueRaw] =
       this.contextReader.getLookupInfo(context);
@@ -103,4 +105,8 @@ export class RestCrudService {
     });
     return query;
   }
+}
+
+export interface RestCrudCustomizations {
+  lookup?(raw: unknown): unknown;
 }

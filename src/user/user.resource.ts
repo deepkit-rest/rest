@@ -13,14 +13,19 @@ import { NoContentResponse } from "src/http-extension/http-common";
 import { RestList } from "src/rest/models/rest-list";
 import { rest } from "src/rest/rest.decorator";
 import { RestActionContext } from "src/rest/rest-action";
-import { RestCrudService } from "src/rest/rest-crud.service";
+import {
+  RestCrudCustomizations,
+  RestCrudService,
+} from "src/rest/rest-crud.service";
 import { RestResource } from "src/rest/rest-resource";
 
 import { User } from "./user.entity";
 import { UserVerificationService } from "./user-verification.service";
 
 @rest.resource(User).lookup("id")
-export class UserResource implements RestResource<User> {
+export class UserResource
+  implements RestResource<User>, RestCrudCustomizations
+{
   constructor(
     private context: RequestContext,
     private database: InjectDatabaseSession,
