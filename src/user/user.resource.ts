@@ -12,15 +12,15 @@ import { InjectDatabaseSession } from "src/database/database.tokens";
 import { NoContentResponse } from "src/http-extension/http-common";
 import { rest } from "src/rest/rest.decorator";
 import { RestActionContext } from "src/rest/rest-action";
-import { RestCrudList } from "src/rest-crud/models/rest-crud-list";
-import { RestCrudResource } from "src/rest-crud/rest-crud.interface";
-import { RestCrudService } from "src/rest-crud/rest-crud.service";
+import { RestCrudService } from "src/rest/rest-crud/rest-crud.service";
+import { RestCrudList } from "src/rest/rest-crud/rest-crud-list";
+import { RestResource } from "src/rest/rest-resource";
 
 import { User } from "./user.entity";
 import { UserVerificationService } from "./user-verification.service";
 
 @rest.resource(User).lookup("id")
-export class UserResource implements RestCrudResource<User> {
+export class UserResource implements RestResource<User> {
   constructor(
     private context: RequestContext,
     private database: InjectDatabaseSession,
@@ -32,7 +32,7 @@ export class UserResource implements RestCrudResource<User> {
     return this.database.query(User);
   }
 
-  resolveLookup(raw: unknown): unknown {
+  lookup(raw: unknown): unknown {
     return raw === "me" ? this.context.user.id : purify<User["id"]>(raw);
   }
 

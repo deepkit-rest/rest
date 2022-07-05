@@ -12,7 +12,6 @@ import { FileEngine } from "src/file-engine/file-engine.interface";
 import { FileEngineModule } from "src/file-engine/file-engine.module";
 import { HttpExtensionModule } from "src/http-extension/http-extension.module";
 import { RestModule } from "src/rest/rest.module";
-import { RestCrudModule } from "src/rest-crud/rest-crud.module";
 import { User } from "src/user/user.entity";
 import { Readable } from "stream";
 
@@ -32,7 +31,6 @@ describe("File", () => {
         new HttpExtensionModule(),
         new DatabaseModule({ url: ":memory:" }).withEntities(...entities),
         new RestModule({ prefix: "" }),
-        new RestCrudModule(),
         new FileEngineModule({ name: "memory" }),
         new FileModule(),
       ],

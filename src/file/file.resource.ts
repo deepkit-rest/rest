@@ -16,16 +16,16 @@ import {
 import { HttpRangeParser } from "src/http-extension/http-range-parser.service";
 import { rest } from "src/rest/rest.decorator";
 import { RestActionContext } from "src/rest/rest-action";
-import { RestCrudList } from "src/rest-crud/models/rest-crud-list";
-import { RestCrudResource } from "src/rest-crud/rest-crud.interface";
-import { RestCrudService } from "src/rest-crud/rest-crud.service";
+import { RestCrudService } from "src/rest/rest-crud/rest-crud.service";
+import { RestCrudList } from "src/rest/rest-crud/rest-crud-list";
+import { RestResource } from "src/rest/rest-resource";
 import { User } from "src/user/user.entity";
 
 import { FileRecord } from "./file-record.entity";
 import { FileStreamUtils } from "./file-stream.utils";
 
 @rest.resource(FileRecord, "files").lookup("id")
-export class FileResource implements RestCrudResource<FileRecord> {
+export class FileResource implements RestResource<FileRecord> {
   constructor(
     private database: InjectDatabaseSession,
     private context: RequestContext,

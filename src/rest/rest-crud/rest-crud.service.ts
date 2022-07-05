@@ -9,10 +9,9 @@ import {
   RestActionContextReader,
 } from "src/rest/rest-action";
 
-import { RestCrudFilterMapFactory } from "./models/rest-crud-filter-map-factory";
-import { RestCrudList, RestCrudPagination } from "./models/rest-crud-list";
-import { RestCrudOrderMapFactory } from "./models/rest-crud-order-map-factory";
-import { RestCrudResource } from "./rest-crud.interface";
+import { RestCrudFilterMapFactory } from "./rest-crud-filter-map-factory";
+import { RestCrudList, RestCrudPagination } from "./rest-crud-list";
+import { RestCrudOrderMapFactory } from "./rest-crud-order-map-factory";
 
 export class RestCrudService {
   constructor(
@@ -46,13 +45,12 @@ export class RestCrudService {
 
   async retrieve<Entity>(context: RestActionContext<Entity>): Promise<Entity> {
     const { actionMeta } = context;
-    const resource: RestCrudResource<Entity> =
-      this.contextReader.getResource(context);
+    const resource = this.contextReader.getResource(context);
     if (!actionMeta.detailed) throw new Error("Not a detailed action");
     const [fieldName, fieldValueRaw] =
       this.contextReader.getLookupInfo(context);
-    const fieldValue: any = resource.resolveLookup
-      ? resource.resolveLookup(fieldValueRaw)
+    const fieldValue: any = resource.lookup
+      ? resource.lookup(fieldValueRaw)
       : fieldValueRaw;
     const result = await resource
       .query()

@@ -14,6 +14,7 @@ import {
 
 export interface RestResource<Entity> {
   query(): orm.Query<Entity>;
+  lookup?(raw: unknown): unknown;
 }
 
 export class RestResourceRegistry extends Set<RestResourceRegistryItem> {}

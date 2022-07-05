@@ -20,12 +20,10 @@ import { RestModule } from "src/rest/rest.module";
 import { RestActionContext } from "src/rest/rest-action";
 import { RestResource } from "src/rest/rest-resource";
 
-import { Filterable } from "./models/rest-crud-filter-map-factory";
-import { RestCrudList } from "./models/rest-crud-list";
-import { Orderable } from "./models/rest-crud-order-map-factory";
-import { RestCrudResource } from "./rest-crud.interface";
-import { RestCrudModule } from "./rest-crud.module";
-import { RestCrudService } from "./rest-crud.service";
+import { RestCrudService } from "./rest-crud/rest-crud.service";
+import { Filterable } from "./rest-crud/rest-crud-filter-map-factory";
+import { RestCrudList } from "./rest-crud/rest-crud-list";
+import { Orderable } from "./rest-crud/rest-crud-order-map-factory";
 
 describe("REST CRUD", () => {
   let facade: TestingFacade<App<any>>;
@@ -40,7 +38,6 @@ describe("REST CRUD", () => {
       imports: [
         new HttpExtensionModule(),
         new RestModule({ prefix: "", versioning: false }),
-        new RestCrudModule(),
       ],
       controllers: [resource],
       providers: [
@@ -67,7 +64,7 @@ describe("REST CRUD", () => {
     }
 
     @rest.resource(MyEntity, "name").lookup("id")
-    class MyResource implements RestCrudResource<MyEntity> {
+    class MyResource implements RestResource<MyEntity> {
       constructor(
         private db: Inject<orm.Database, "database">,
         private crud: RestCrudService,
@@ -75,7 +72,7 @@ describe("REST CRUD", () => {
       query(): orm.Query<MyEntity> {
         return this.db.query(MyEntity).filter({ included: true });
       }
-      resolveLookup(raw: unknown): unknown {
+      lookup(raw: unknown): unknown {
         return raw === "first" ? 1 : purify<MyEntity["id"]>(raw);
       }
       @rest.action("GET")
