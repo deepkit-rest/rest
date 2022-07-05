@@ -6,7 +6,7 @@ import { RestCrudService } from "./rest-crud.service";
 
 export class RestCrudModule extends createModule({
   providers: [
-    RestCrudService,
+    { provide: RestCrudService, scope: "http" },
     RestCrudFilterMapFactory,
     RestCrudOrderMapFactory,
   ],

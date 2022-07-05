@@ -4,12 +4,17 @@ import { ClassType } from "@deepkit/core";
 import { RestConfig } from "./rest.config";
 import { restClass } from "./rest.decorator";
 import { RestListener } from "./rest.listener";
-import { RestActionRouteParameterResolver } from "./rest-action";
+import {
+  RestActionContextReader,
+  RestActionRouteParameterResolver,
+} from "./rest-action";
 import { RestResourceInstaller, RestResourceRegistry } from "./rest-resource";
 
 export class RestModule extends createModule(
   {
     config: RestConfig,
+    providers: [{ provide: RestActionContextReader, scope: "http" }],
+    exports: [RestActionContextReader],
     listeners: [RestListener],
   },
   "rest",

@@ -5,16 +5,22 @@ import {
   RouteParameterResolverContext,
 } from "@deepkit/http";
 import { InjectorModule } from "@deepkit/injector";
+import { FieldName } from "@deepkit/orm";
+import { ReceiveType, ReflectionClass, Type } from "@deepkit/type";
+import { purify } from "src/common/type";
 import {
   HttpControllerMeta,
+  HttpInjectorContext,
   HttpRouteMeta,
 } from "src/http-extension/http-common";
+import { HttpRequestParser } from "src/http-extension/http-request-parser.service";
 
 import { restClass } from "./rest.decorator";
 import {
   RestActionMetaValidated,
   RestResourceMetaValidated,
 } from "./rest.meta";
+import { RestResource } from "./rest-resource";
 
 export class RestActionRouteParameterResolver
   implements RouteParameterResolver
@@ -27,7 +33,7 @@ export class RestActionRouteParameterResolver
   }
 }
 
-export class RestActionContext<Entity = unknown> {
+export class RestActionContext<Entity = any> {
   static build(context: RouteParameterResolverContext): RestActionContext {
     const { controller: resourceType, module } = context.route.action;
     if (!module) throw new Error("Cannot read resource module");
@@ -65,5 +71,54 @@ export class RestActionContext<Entity = unknown> {
 
   private constructor(data: RestActionContext<Entity>) {
     Object.assign(this, data);
+  }
+}
+
+export class RestActionContextReader {
+  constructor(
+    private injector: HttpInjectorContext,
+    private requestParser: HttpRequestParser,
+  ) {}
+
+  getResource<Entity>(
+    context: RestActionContext<Entity>,
+  ): RestResource<Entity> {
+    return this.injector.get(context.resourceMeta.classType, context.module);
+  }
+
+  getResourceSchema(context: RestActionContext): ReflectionClass<any> {
+    return ReflectionClass.from(context.resourceMeta.classType);
+  }
+
+  getEntitySchema(context: RestActionContext): ReflectionClass<any> {
+    return ReflectionClass.from(context.resourceMeta.entityType);
+  }
+
+  async parseBody<T extends object = Record<string, unknown>>(
+    context: RestActionContext,
+    type?: ReceiveType<T>,
+  ): Promise<T> {
+    const { request } = context;
+    request.body ??= await this.requestParser.parseBody(request);
+    return type ? purify<T>(request.body) : (request.body as T);
+  }
+
+  parseQueries<T extends object = Record<string, unknown>>(
+    context: RestActionContext,
+    type?: ReceiveType<T>,
+  ): T {
+    const { request } = context;
+    const { queries } = this.requestParser.parseUrl(request.getUrl());
+    return type ? purify<T>(queries) : (queries as T);
+  }
+
+  getLookupInfo<Entity>(
+    context: RestActionContext<Entity>,
+  ): [name: FieldName<Entity>, value: unknown, type: Type] {
+    const lookup = context.resourceMeta.lookup;
+    if (!lookup) throw new Error("Lookup not specified");
+    const type = this.getEntitySchema(context).getProperty(lookup).type;
+    const value = context.actionParameters[lookup];
+    return [lookup, value, type];
   }
 }

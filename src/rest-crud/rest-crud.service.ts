@@ -4,9 +4,10 @@ import * as orm from "@deepkit/orm"; // temporary workaround: we have to use nam
 import { FieldName } from "@deepkit/orm";
 import { ReflectionClass } from "@deepkit/type";
 import { purify } from "src/common/type";
-import { HttpInjectorContext } from "src/http-extension/http-common";
-import { HttpRequestParser } from "src/http-extension/http-request-parser.service";
-import { RestActionContext } from "src/rest/rest-action";
+import {
+  RestActionContext,
+  RestActionContextReader,
+} from "src/rest/rest-action";
 
 import { RestCrudFilterMapFactory } from "./models/rest-crud-filter-map-factory";
 import { RestCrudList, RestCrudPagination } from "./models/rest-crud-list";
@@ -15,29 +16,24 @@ import { RestCrudResource } from "./rest-crud.interface";
 
 export class RestCrudService {
   constructor(
-    private injector: HttpInjectorContext,
+    private contextReader: RestActionContextReader,
     private filterMapFactory: RestCrudFilterMapFactory,
     private orderMapFactory: RestCrudOrderMapFactory,
-    private requestParser: HttpRequestParser,
   ) {}
 
   async list<Entity>(
     context: RestActionContext<Entity>,
   ): Promise<RestCrudList<Entity>> {
-    const {
-      request,
-      resourceMeta: { entityType, classType: resourceType },
-      module,
-    } = context;
+    const { entityType } = context.resourceMeta;
 
     const filterMapSchema = this.filterMapFactory.build(entityType);
     const orderMapSchema = this.orderMapFactory.build(entityType);
-    const { queries } = this.requestParser.parseUrl(request.getUrl());
+    const queries = this.contextReader.parseQueries(context);
     const filterMap = purify(queries["filter"] ?? {}, filterMapSchema.type);
     const orderMap = purify(queries["order"] ?? {}, orderMapSchema.type);
     const pagination = purify<RestCrudPagination>(queries);
 
-    const resource = this.injector.get(resourceType, module);
+    const resource = this.contextReader.getResource(context);
     let query = resource.query();
     query = this.applyFilterMap(query, entityType, filterMap as object);
     const total = await query.count();
@@ -49,17 +45,15 @@ export class RestCrudService {
   }
 
   async retrieve<Entity>(context: RestActionContext<Entity>): Promise<Entity> {
-    const { resourceMeta, actionMeta, actionParameters, module } = context;
-    const instance = this.injector.get(resourceMeta.classType, module);
-    const resource: RestCrudResource<Entity> = instance;
+    const { actionMeta } = context;
+    const resource: RestCrudResource<Entity> =
+      this.contextReader.getResource(context);
     if (!actionMeta.detailed) throw new Error("Not a detailed action");
-    const fieldName = resourceMeta.lookup;
-    if (!fieldName) throw new Error("Lookup not specified");
-    const entitySchema = ReflectionClass.from(resourceMeta.entityType);
-    const fieldType = entitySchema.getProperty(fieldName).type;
+    const [fieldName, fieldValueRaw] =
+      this.contextReader.getLookupInfo(context);
     const fieldValue: any = resource.resolveLookup
-      ? resource.resolveLookup(actionParameters[fieldName])
-      : purify(actionParameters[fieldName], fieldType);
+      ? resource.resolveLookup(fieldValueRaw)
+      : fieldValueRaw;
     const result = await resource
       .query()
       .addFilter(fieldName, fieldValue)
