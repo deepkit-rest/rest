@@ -14,11 +14,11 @@ import {
   NoContentResponse,
 } from "src/http-extension/http-common";
 import { HttpRangeParser } from "src/http-extension/http-range-parser.service";
-import { RestList } from "src/rest/models/rest-list";
-import { rest } from "src/rest/rest.decorator";
-import { RestActionContext } from "src/rest/rest-action";
-import { RestCrudService } from "src/rest/rest-crud.service";
-import { RestResource } from "src/rest/rest-resource";
+import { rest } from "src/rest/core/rest.decorator";
+import { RestActionContext } from "src/rest/core/rest-action";
+import { RestResource } from "src/rest/core/rest-resource";
+import { RestCrudService } from "src/rest/crud/rest-crud.service";
+import { RestList } from "src/rest/crud-models/rest-list";
 import { User } from "src/user/user.entity";
 
 import { FileRecord } from "./file-record.entity";

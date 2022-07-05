@@ -7,12 +7,12 @@ import { purify } from "src/common/type";
 import {
   RestActionContext,
   RestActionContextReader,
-} from "src/rest/rest-action";
+} from "src/rest/core/rest-action";
 
-import { RestFilterMapFactory } from "./models/rest-filter-map";
-import { RestList, RestPagination } from "./models/rest-list";
-import { RestOrderMapFactory } from "./models/rest-order-map";
-import { RestResource } from "./rest-resource";
+import { RestResource } from "../core/rest-resource";
+import { RestFilterMapFactory } from "../crud-models/rest-filter-map";
+import { RestList, RestPagination } from "../crud-models/rest-list";
+import { RestOrderMapFactory } from "../crud-models/rest-order-map";
 
 export class RestCrudService {
   constructor(

@@ -14,12 +14,12 @@ import * as orm from "@deepkit/orm"; // temporary workaround: we have to use nam
 import { AutoIncrement, entity, PrimaryKey } from "@deepkit/type";
 import { HttpExtensionModule } from "src/http-extension/http-extension.module";
 
+import { rest, restClass } from "./core/rest.decorator";
+import { RestActionMeta, RestMetaConfigurator } from "./core/rest.meta";
+import { RestActionContext } from "./core/rest-action";
+import { RestResource } from "./core/rest-resource";
 import { RestConfig } from "./rest.config";
-import { rest, restClass } from "./rest.decorator";
-import { RestActionMeta, RestMetaConfigurator } from "./rest.meta";
 import { RestModule } from "./rest.module";
-import { RestActionContext } from "./rest-action";
-import { RestResource } from "./rest-resource";
 
 describe("REST", () => {
   let facade: TestingFacade<App<any>>;

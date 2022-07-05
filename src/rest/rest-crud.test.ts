@@ -15,15 +15,15 @@ import {
 } from "@deepkit/type";
 import { purify } from "src/common/type";
 import { HttpExtensionModule } from "src/http-extension/http-extension.module";
-import { rest } from "src/rest/rest.decorator";
+import { RestActionContext } from "src/rest/core/rest-action";
 import { RestModule } from "src/rest/rest.module";
-import { RestActionContext } from "src/rest/rest-action";
-import { RestResource } from "src/rest/rest-resource";
 
-import { Filterable } from "./models/rest-filter-map";
-import { RestList } from "./models/rest-list";
-import { Orderable } from "./models/rest-order-map";
-import { RestCrudService } from "./rest-crud.service";
+import { rest } from "./core/rest.decorator";
+import { RestResource } from "./core/rest-resource";
+import { RestCrudService } from "./crud/rest-crud.service";
+import { Filterable } from "./crud-models/rest-filter-map";
+import { RestList } from "./crud-models/rest-list";
+import { Orderable } from "./crud-models/rest-order-map";
 
 describe("REST CRUD", () => {
   let facade: TestingFacade<App<any>>;

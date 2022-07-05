@@ -10,14 +10,14 @@ import { purify } from "src/common/type";
 import { RequestContext } from "src/core/request-context";
 import { InjectDatabaseSession } from "src/database/database.tokens";
 import { NoContentResponse } from "src/http-extension/http-common";
-import { RestList } from "src/rest/models/rest-list";
-import { rest } from "src/rest/rest.decorator";
-import { RestActionContext } from "src/rest/rest-action";
+import { rest } from "src/rest/core/rest.decorator";
+import { RestActionContext } from "src/rest/core/rest-action";
+import { RestResource } from "src/rest/core/rest-resource";
 import {
   RestCrudCustomizations,
   RestCrudService,
-} from "src/rest/rest-crud.service";
-import { RestResource } from "src/rest/rest-resource";
+} from "src/rest/crud/rest-crud.service";
+import { RestList } from "src/rest/crud-models/rest-list";
 
 import { User } from "./user.entity";
 import { UserVerificationService } from "./user-verification.service";

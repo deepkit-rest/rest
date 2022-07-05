@@ -4,7 +4,7 @@ import { http } from "@deepkit/http";
 import * as orm from "@deepkit/orm"; // temporary workaround: we have to use namespace import here as a temporary workaround, otherwise the application will not be able to bootstrap. This will be fixed in the next release
 import { join } from "path";
 
-import { RestConfig } from "./rest.config";
+import { RestConfig } from "../rest.config";
 import { restClass } from "./rest.decorator";
 import { RestActionMetaValidated, RestResourceMeta } from "./rest.meta";
 import {
