@@ -12,8 +12,15 @@ import {
   RestResourceRegistry,
 } from "./core/rest-resource";
 import { RestCrudService } from "./crud/rest-crud.service";
-import { RestFilterMapFactory } from "./crud-models/rest-filter-map";
-import { RestOrderMapFactory } from "./crud-models/rest-order-map";
+import {
+  RestFilterMapApplier,
+  RestFilterMapFactory,
+} from "./crud-models/rest-filter-map";
+import { RestPaginationApplier } from "./crud-models/rest-list";
+import {
+  RestOrderMapApplier,
+  RestOrderMapFactory,
+} from "./crud-models/rest-order-map";
 import { RestConfig } from "./rest.config";
 
 export class RestModule extends createModule(
@@ -23,7 +30,10 @@ export class RestModule extends createModule(
       { provide: RestActionContextReader, scope: "http" },
       { provide: RestCrudService, scope: "http" },
       RestFilterMapFactory,
+      RestFilterMapApplier,
       RestOrderMapFactory,
+      RestOrderMapApplier,
+      RestPaginationApplier,
     ],
     listeners: [RestListener],
     forRoot: true,

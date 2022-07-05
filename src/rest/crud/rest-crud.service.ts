@@ -1,8 +1,4 @@
-import { ClassType } from "@deepkit/core";
 import { HttpNotFoundError } from "@deepkit/http";
-import * as orm from "@deepkit/orm"; // temporary workaround: we have to use namespace import here as a temporary workaround, otherwise the application will not be able to bootstrap. This will be fixed in the next release
-import { FieldName } from "@deepkit/orm";
-import { ReflectionClass } from "@deepkit/type";
 import { purify } from "src/common/type";
 import {
   RestActionContext,
@@ -10,15 +6,28 @@ import {
 } from "src/rest/core/rest-action";
 
 import { RestResource } from "../core/rest-resource";
-import { RestFilterMapFactory } from "../crud-models/rest-filter-map";
-import { RestList, RestPagination } from "../crud-models/rest-list";
-import { RestOrderMapFactory } from "../crud-models/rest-order-map";
+import {
+  RestFilterMapApplier,
+  RestFilterMapFactory,
+} from "../crud-models/rest-filter-map";
+import {
+  RestList,
+  RestPagination,
+  RestPaginationApplier,
+} from "../crud-models/rest-list";
+import {
+  RestOrderMapApplier,
+  RestOrderMapFactory,
+} from "../crud-models/rest-order-map";
 
 export class RestCrudService {
   constructor(
     private contextReader: RestActionContextReader,
     private filterMapFactory: RestFilterMapFactory,
+    private filterMapApplier: RestFilterMapApplier,
     private orderMapFactory: RestOrderMapFactory,
+    private orderMapApplier: RestOrderMapApplier,
+    private paginationApplier: RestPaginationApplier,
   ) {}
 
   async list<Entity>(
@@ -35,10 +44,10 @@ export class RestCrudService {
 
     const resource = this.contextReader.getResource(context);
     let query = resource.query();
-    query = this.applyFilterMap(query, entityType, filterMap as object);
+    query = this.filterMapApplier.apply(query, entityType, filterMap as object);
     const total = await query.count();
-    query = this.applyPagination(query, pagination);
-    query = this.applyOrderMap(query, orderMap as object);
+    query = this.paginationApplier.apply(query, pagination);
+    query = this.orderMapApplier.apply(query, orderMap as object);
     const items = await query.find();
 
     return { total, items };
@@ -60,50 +69,6 @@ export class RestCrudService {
       .findOneOrUndefined();
     if (!result) throw new HttpNotFoundError();
     return result;
-  }
-
-  applyPagination<Entity>(
-    query: orm.Query<Entity>,
-    { limit, offset }: RestPagination,
-  ): orm.Query<Entity> {
-    if (limit) query = query.limit(limit);
-    if (offset) query = query.skip(offset);
-    return query;
-  }
-
-  applyFilterMap<Entity>(
-    query: orm.Query<Entity>,
-    entityType: ClassType<Entity>,
-    filterMap: object,
-  ): orm.Query<Entity> {
-    const database = query["session"]; // hack
-    const entitySchema = ReflectionClass.from(entityType);
-    Object.entries(filterMap).forEach(([field, condition]) => {
-      const fieldSchema = entitySchema.getProperty(field);
-      if (fieldSchema.isReference() || fieldSchema.isBackReference()) {
-        const foreignSchema = fieldSchema.getResolvedReflectionClass();
-        const getReference = (v: any) =>
-          database.getReference(foreignSchema, v);
-        Object.keys(condition).forEach((operator) => {
-          condition[operator] =
-            condition[operator] instanceof Array
-              ? condition[operator].map(getReference)
-              : getReference(condition[operator]);
-        });
-      }
-      query = query.addFilter(field as FieldName<Entity>, condition);
-    });
-    return query;
-  }
-
-  applyOrderMap<Entity>(
-    query: orm.Query<Entity>,
-    orderMap: object,
-  ): orm.Query<Entity> {
-    Object.entries(orderMap).forEach(([field, order]) => {
-      query = query.orderBy(field as FieldName<Entity>, order);
-    });
-    return query;
   }
 }
 
