@@ -40,7 +40,7 @@ export class FileResource implements RestCrudResource<FileRecord> {
   }
 
   @rest.action("GET")
-  @http.serialization({ groupsExclude: ["hidden"] }).group("protected")
+  @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   async list(
     context: RestActionContext<FileRecord>,
   ): Promise<RestCrudList<FileRecord>> {
@@ -48,7 +48,7 @@ export class FileResource implements RestCrudResource<FileRecord> {
   }
 
   @rest.action("POST")
-  @http.serialization({ groupsExclude: ["hidden"] }).group("protected")
+  @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   async create(
     payload: HttpBody<FileRecordCreationPayload>,
   ): Promise<FileRecord> {
@@ -64,13 +64,13 @@ export class FileResource implements RestCrudResource<FileRecord> {
   }
 
   @rest.action("GET").detailed()
-  @http.serialization({ groupsExclude: ["hidden"] }).group("protected")
+  @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   async retrieve(context: RestActionContext<FileRecord>): Promise<FileRecord> {
     return this.crud.retrieve(context);
   }
 
   @rest.action("PATCH").detailed()
-  @http.serialization({ groupsExclude: ["hidden"] }).group("protected")
+  @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   async update(
     context: RestActionContext<FileRecord>,
     payload: HttpBody<FileRecordUpdatePayload>,
@@ -80,7 +80,7 @@ export class FileResource implements RestCrudResource<FileRecord> {
   }
 
   @rest.action("DELETE").detailed()
-  @http.serialization({ groupsExclude: ["hidden"] }).group("protected")
+  @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   async delete(
     context: RestActionContext<FileRecord>,
   ): Promise<NoContentResponse> {
@@ -90,7 +90,7 @@ export class FileResource implements RestCrudResource<FileRecord> {
   }
 
   @rest.action("PUT").detailed().path("content")
-  @http.serialization({ groupsExclude: ["hidden"] }).group("protected")
+  @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   async upload(
     context: RestActionContext<FileRecord>,
     request: HttpRequest,
@@ -108,7 +108,7 @@ export class FileResource implements RestCrudResource<FileRecord> {
   }
 
   @rest.action("GET").detailed().path("content")
-  @http.serialization({ groupsExclude: ["hidden"] }).group("protected")
+  @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   async download(
     context: RestActionContext<FileRecord>,
     response: HttpResponse,
@@ -139,7 +139,7 @@ export class FileResource implements RestCrudResource<FileRecord> {
   }
 
   @rest.action("GET").detailed().path("integrity")
-  @http.serialization({ groupsExclude: ["hidden"] }).group("protected")
+  @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   @http
     .response(204, "File integrity verified")
     .response(404, "File broken or not uploaded")

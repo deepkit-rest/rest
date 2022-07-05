@@ -8,7 +8,7 @@ export class AuthGuard implements Guard {
   constructor(private tokenService: AuthTokenService) {}
 
   async guard(context: GuardContext): Promise<void> {
-    if (!context.route.groups.includes("protected")) return;
+    if (!context.route.groups.includes("auth-required")) return;
 
     const authorization = context.request.headers["authorization"];
     if (!authorization) throw new HttpUnauthorizedError();

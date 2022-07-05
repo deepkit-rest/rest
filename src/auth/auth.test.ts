@@ -35,7 +35,7 @@ describe("Auth", () => {
       @http.controller()
       class TestingController {
         constructor(private context: RequestContext) {}
-        @http.GET().group("protected")
+        @http.GET().group("auth-required")
         handle(): void {
           expect(this.context.user).toBe("user");
         }
@@ -56,7 +56,7 @@ describe("Auth", () => {
     it("should forbid anonymous requests for protected routes", async () => {
       @http.controller()
       class TestingController {
-        @http.GET().group("protected")
+        @http.GET().group("auth-required")
         handle(): void {}
       }
       app.appModule.addController(TestingController);

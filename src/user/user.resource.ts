@@ -37,19 +37,19 @@ export class UserResource implements RestCrudResource<User> {
   }
 
   @rest.action("GET")
-  @http.serialization({ groupsExclude: ["hidden"] }).group("protected")
+  @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   async list(context: RestActionContext<User>): Promise<RestCrudList<User>> {
     return this.crud.list(context);
   }
 
   @rest.action("GET").detailed()
-  @http.serialization({ groupsExclude: ["hidden"] }).group("protected")
+  @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   async retrieve(context: RestActionContext<User>): Promise<User> {
     return this.crud.retrieve(context);
   }
 
   @rest.action("PATCH").detailed()
-  @http.serialization({ groupsExclude: ["hidden"] }).group("protected")
+  @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   async update(
     context: RestActionContext<User>,
     id: User["id"],
@@ -61,7 +61,7 @@ export class UserResource implements RestCrudResource<User> {
   }
 
   @rest.action("PUT").detailed().path("verification")
-  @http.serialization({ groupsExclude: ["hidden"] }).group("protected")
+  @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   @http
     .response(204, "Verification requested")
     .response(403, "Duplicate verification request")
@@ -76,7 +76,7 @@ export class UserResource implements RestCrudResource<User> {
   }
 
   @rest.action("GET").detailed().path("verification")
-  @http.serialization({ groupsExclude: ["hidden"] }).group("protected")
+  @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   @http
     .response(204, "Pending verification exists")
     .response(404, "No pending verification")
@@ -88,7 +88,7 @@ export class UserResource implements RestCrudResource<User> {
   }
 
   @rest.action("PUT").detailed().path("verification/confirmation")
-  @http.serialization({ groupsExclude: ["hidden"] }).group("protected")
+  @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   @http
     .response(204, "Verified")
     .response(400, "Code not match")

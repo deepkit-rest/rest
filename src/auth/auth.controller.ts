@@ -56,7 +56,7 @@ export class AuthController {
   @http
     .POST("logout")
     .serialization({ groupsExclude: ["hidden"] })
-    .group("protected")
+    .group("auth-required")
   // TODO: implement token revoking
   async logout(): Promise<void> {
     throw new HttpAccessDeniedError("Not implemented");
