@@ -1,3 +1,4 @@
+import { ClassType } from "@deepkit/core";
 import * as orm from "@deepkit/orm"; // temporary workaround: we have to use namespace import here as a temporary workaround, otherwise the application will not be able to bootstrap. This will be fixed in the next release
 import { Maximum, Positive, PositiveNoZero } from "@deepkit/type";
 
@@ -7,7 +8,7 @@ import {
 } from "../core/rest-action";
 
 export interface RestPaginationCustomizations {
-  paginator?: RestPaginator;
+  paginator?: ClassType<RestPaginator>;
 }
 
 export interface RestPaginator {

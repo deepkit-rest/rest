@@ -41,7 +41,10 @@ export class RestListService {
 
     query = this.filterMapApplier.apply(query, entityType, filterMap as object);
     const total = await query.count();
-    query = resource.paginator?.paginate(context, query) ?? query;
+    if (resource.paginator)
+      query = this.contextReader
+        .getProvider(context, resource.paginator)
+        .paginate(context, query);
     query = this.orderMapApplier.apply(query, orderMap as object);
     const items = await query.find();
 

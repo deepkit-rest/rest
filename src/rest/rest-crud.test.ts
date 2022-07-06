@@ -83,7 +83,7 @@ describe("REST CRUD", () => {
         extends MyResource
         implements RestPaginationCustomizations
       {
-        paginator!: Inject<RestOffsetLimitPaginator>;
+        paginator = RestOffsetLimitPaginator;
         @rest.action("GET")
         list(context: RestActionContext) {
           return this.crud.list(context);
@@ -107,7 +107,7 @@ describe("REST CRUD", () => {
         extends MyResource
         implements RestPaginationCustomizations
       {
-        paginator!: Inject<RestOffsetLimitPaginator>;
+        paginator = RestOffsetLimitPaginator;
         @rest.action("GET")
         list(context: RestActionContext) {
           return this.crud.list(context);
@@ -180,7 +180,7 @@ describe("REST CRUD", () => {
         extends MyResource
         implements RestLookupCustomizations
       {
-        lookupBackend!: Inject<TestingLookupBackend>;
+        lookupBackend = TestingLookupBackend;
         @rest.action("GET").detailed()
         retrieve(context: RestActionContext) {
           return this.crud.retrieve(context);

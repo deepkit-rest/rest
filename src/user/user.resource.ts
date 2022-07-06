@@ -5,7 +5,6 @@ import {
   HttpBody,
   HttpNotFoundError,
 } from "@deepkit/http";
-import { Inject } from "@deepkit/injector";
 import * as orm from "@deepkit/orm"; // temporary workaround: we have to use namespace import here as a temporary workaround, otherwise the application will not be able to bootstrap. This will be fixed in the next release
 import { Type } from "@deepkit/type";
 import { RequestContext } from "src/core/request-context";
@@ -38,8 +37,8 @@ export class UserResource
     RestLookupCustomizations,
     RestPaginationCustomizations
 {
-  paginator!: Inject<RestOffsetLimitPaginator>;
-  lookupBackend!: Inject<UserLookupBackend>;
+  paginator = RestOffsetLimitPaginator;
+  lookupBackend = UserLookupBackend;
 
   constructor(
     private context: RequestContext,

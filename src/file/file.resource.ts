@@ -5,7 +5,6 @@ import {
   HttpRequest,
   HttpResponse,
 } from "@deepkit/http";
-import { Inject } from "@deepkit/injector";
 import * as orm from "@deepkit/orm"; // temporary workaround: we have to use namespace import here as a temporary workaround, otherwise the application will not be able to bootstrap. This will be fixed in the next release
 import { RequestContext } from "src/core/request-context";
 import { InjectDatabaseSession } from "src/database/database.tokens";
@@ -33,7 +32,7 @@ import { FileStreamUtils } from "./file-stream.utils";
 export class FileResource
   implements RestResource<FileRecord>, RestPaginationCustomizations
 {
-  paginator!: Inject<RestOffsetLimitPaginator>;
+  paginator = RestOffsetLimitPaginator;
 
   constructor(
     private database: InjectDatabaseSession,
