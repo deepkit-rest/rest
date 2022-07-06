@@ -6,7 +6,7 @@ import {
   RestActionContextReader,
 } from "../core/rest-action";
 
-export interface RestPaginatorCustomizations {
+export interface RestPaginationCustomizations {
   paginator?: RestPaginator;
 }
 

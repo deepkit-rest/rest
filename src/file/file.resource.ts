@@ -5,6 +5,7 @@ import {
   HttpRequest,
   HttpResponse,
 } from "@deepkit/http";
+import { Inject } from "@deepkit/injector";
 import * as orm from "@deepkit/orm"; // temporary workaround: we have to use namespace import here as a temporary workaround, otherwise the application will not be able to bootstrap. This will be fixed in the next release
 import { RequestContext } from "src/core/request-context";
 import { InjectDatabaseSession } from "src/database/database.tokens";
@@ -19,13 +20,21 @@ import { RestActionContext } from "src/rest/core/rest-action";
 import { RestResource } from "src/rest/core/rest-resource";
 import { RestCrudService } from "src/rest/crud/rest-crud";
 import { RestList } from "src/rest/crud/rest-list";
+import {
+  RestOffsetLimitPaginator,
+  RestPaginationCustomizations,
+} from "src/rest/crud/rest-pagination";
 import { User } from "src/user/user.entity";
 
 import { FileRecord } from "./file-record.entity";
 import { FileStreamUtils } from "./file-stream.utils";
 
 @rest.resource(FileRecord, "files").lookup("id")
-export class FileResource implements RestResource<FileRecord> {
+export class FileResource
+  implements RestResource<FileRecord>, RestPaginationCustomizations
+{
+  paginator!: Inject<RestOffsetLimitPaginator>;
+
   constructor(
     private database: InjectDatabaseSession,
     private context: RequestContext,

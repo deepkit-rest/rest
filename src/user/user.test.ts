@@ -70,6 +70,20 @@ describe("User", () => {
         ],
       });
     });
+
+    it("should paginate", async () => {
+      await database.persist(
+        new User({
+          name: "test2",
+          email: "test2@test.com",
+          password: "password",
+        }),
+      );
+      const response = await requester.request(
+        HttpRequest.GET("/users?limit=1"),
+      );
+      expect(response.json).toEqual({ total: 2, items: expect.any(Array) });
+    });
   });
 
   describe("GET /users/:id", () => {

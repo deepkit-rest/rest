@@ -24,7 +24,7 @@ import { RestCrudService } from "./crud/rest-crud";
 import { RestList } from "./crud/rest-list";
 import {
   RestOffsetLimitPaginator,
-  RestPaginatorCustomizations,
+  RestPaginationCustomizations,
 } from "./crud/rest-pagination";
 import { Filterable } from "./crud-models/rest-filter-map";
 import { Orderable } from "./crud-models/rest-order-map";
@@ -77,7 +77,7 @@ describe("REST CRUD", () => {
       @rest.resource(MyEntity, "api")
       class TestingResource
         extends MyResource
-        implements RestPaginatorCustomizations
+        implements RestPaginationCustomizations
       {
         paginator!: Inject<RestOffsetLimitPaginator>;
         @rest.action("GET")
@@ -101,7 +101,7 @@ describe("REST CRUD", () => {
       @rest.resource(MyEntity, "api")
       class TestingResource
         extends MyResource
-        implements RestPaginatorCustomizations
+        implements RestPaginationCustomizations
       {
         paginator!: Inject<RestOffsetLimitPaginator>;
         @rest.action("GET")

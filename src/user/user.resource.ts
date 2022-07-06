@@ -5,6 +5,7 @@ import {
   HttpBody,
   HttpNotFoundError,
 } from "@deepkit/http";
+import { Inject } from "@deepkit/injector";
 import * as orm from "@deepkit/orm"; // temporary workaround: we have to use namespace import here as a temporary workaround, otherwise the application will not be able to bootstrap. This will be fixed in the next release
 import { purify } from "src/common/type";
 import { RequestContext } from "src/core/request-context";
@@ -15,6 +16,10 @@ import { RestActionContext } from "src/rest/core/rest-action";
 import { RestResource } from "src/rest/core/rest-resource";
 import { RestCrudService } from "src/rest/crud/rest-crud";
 import { RestList } from "src/rest/crud/rest-list";
+import {
+  RestOffsetLimitPaginator,
+  RestPaginationCustomizations,
+} from "src/rest/crud/rest-pagination";
 import { RestRetrieveCustomizations } from "src/rest/crud/rest-retrieve";
 
 import { User } from "./user.entity";
@@ -22,8 +27,13 @@ import { UserVerificationService } from "./user-verification.service";
 
 @rest.resource(User).lookup("id")
 export class UserResource
-  implements RestResource<User>, RestRetrieveCustomizations
+  implements
+    RestResource<User>,
+    RestRetrieveCustomizations,
+    RestPaginationCustomizations
 {
+  paginator!: Inject<RestOffsetLimitPaginator>;
+
   constructor(
     private context: RequestContext,
     private database: InjectDatabaseSession,

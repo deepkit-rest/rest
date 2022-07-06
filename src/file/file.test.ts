@@ -107,6 +107,28 @@ describe("File", () => {
       });
     });
 
+    it("should paginate", async () => {
+      await database.persist(
+        new FileRecord({
+          owner: user,
+          name: "test1.txt",
+          path: "/dir",
+        }),
+        new FileRecord({
+          owner: user,
+          name: "test2.txt",
+          path: "/dir",
+        }),
+      );
+      const response = await requester.request(
+        HttpRequest.GET("/files?limit=1"),
+      );
+      expect(response.json).toEqual({
+        total: 2,
+        items: expect.any(Array),
+      });
+    });
+
     it("should filter query", async () => {
       const user2 = new User({
         name: "name",

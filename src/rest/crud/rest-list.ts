@@ -16,7 +16,7 @@ import {
 } from "../crud-models/rest-order-map";
 import {
   RestNoopPaginator,
-  RestPaginatorCustomizations,
+  RestPaginationCustomizations,
 } from "./rest-pagination";
 
 export class RestListService {
@@ -40,7 +40,7 @@ export class RestListService {
     const filterMap = purify(queries["filter"] ?? {}, filterMapSchema.type);
     const orderMap = purify(queries["order"] ?? {}, orderMapSchema.type);
 
-    const resource: RestResource<Entity> & RestPaginatorCustomizations =
+    const resource: RestResource<Entity> & RestPaginationCustomizations =
       this.contextReader.getResource(context);
     let query = resource.query();
 
