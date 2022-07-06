@@ -10,6 +10,8 @@ import { ReflectionClassAddPropertyOptions } from "src/common/type";
 
 import { RestQueryModelFactory } from "./rest-query-model";
 
+// TODO: move to a better place
+
 export type Filterable = Data<"filterable", true>;
 
 export class RestFilterMapFactory extends RestQueryModelFactory {

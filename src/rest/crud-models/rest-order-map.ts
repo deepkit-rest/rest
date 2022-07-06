@@ -8,6 +8,8 @@ import { ReflectionClassAddPropertyOptions } from "src/common/type";
 
 import { RestQueryModelFactory } from "./rest-query-model";
 
+// TODO: move to a better place
+
 export type Orderable = Data<"orderable", true>;
 
 export class RestOrderMapFactory extends RestQueryModelFactory {

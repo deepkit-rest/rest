@@ -17,7 +17,6 @@ import { RestCrudService, RestList } from "./crud/rest-crud";
 import {
   RestFilteringCustomizations,
   RestGenericFilter,
-  RestGenericSorter,
 } from "./crud/rest-filtering";
 import {
   RestOffsetLimitPaginator,
@@ -27,6 +26,10 @@ import {
   RestRetriever,
   RestRetrievingCustomizations,
 } from "./crud/rest-retrieving";
+import {
+  RestGenericSorter,
+  RestSortingCustomizations,
+} from "./crud/rest-sorting";
 import { Filterable } from "./crud-models/rest-filter-map";
 import { Orderable } from "./crud-models/rest-order-map";
 
@@ -156,7 +159,7 @@ describe("REST CRUD", () => {
       });
     });
 
-    describe("Filter", () => {
+    describe("Filtering", () => {
       describe("RestGenericFilter", () => {
         class Entity1 {
           id: number & AutoIncrement & PrimaryKey & Filterable = 0;
@@ -205,17 +208,23 @@ describe("REST CRUD", () => {
           expect(response.json).toEqual({ total, items });
         });
       });
+    });
 
+    describe("Sorting", () => {
       describe("RestGenericSorter", () => {
         class TestingEntity {
           id: number & AutoIncrement & PrimaryKey & Orderable = 0;
         }
         @rest.resource(TestingEntity, "api")
-        class TestingResource
-          extends MyResource
-          implements RestFilteringCustomizations
-        {
-          filters = [RestGenericSorter];
+        class TestingResource implements RestSortingCustomizations {
+          sorters = [RestGenericSorter];
+          constructor(
+            private database: Inject<orm.Database, "database">,
+            private crud: RestCrudService,
+          ) {}
+          query(): orm.Query<TestingEntity> {
+            return this.database.query(TestingEntity);
+          }
           @rest.action("GET")
           list(context: RestActionContext<TestingEntity>) {
             return this.crud.list(context);

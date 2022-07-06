@@ -5,6 +5,8 @@ import {
 } from "@deepkit/type";
 import { ReflectionClassAddPropertyOptions } from "src/common/type";
 
+// TODO: move to a better place
+
 class RestQueryModel {}
 
 export abstract class RestQueryModelFactory {

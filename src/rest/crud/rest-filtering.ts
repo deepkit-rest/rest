@@ -8,7 +8,6 @@ import {
   RestActionContextReader,
 } from "../core/rest-action";
 import { RestFilterMapFactory } from "../crud-models/rest-filter-map";
-import { RestOrderMapFactory } from "../crud-models/rest-order-map";
 
 export interface RestFilteringCustomizations {
   filters?: ClassType<RestFilter>[];
@@ -60,37 +59,6 @@ export class RestGenericFilter implements RestFilter {
           });
         }
         query = query.addFilter(field as FieldName<Entity>, condition);
-      });
-
-    return query;
-  }
-}
-
-export class RestGenericSorter implements RestFilter {
-  readonly param = "order";
-
-  constructor(
-    protected contextReader: RestActionContextReader,
-    protected orderMapFactory: RestOrderMapFactory,
-  ) {}
-
-  filter<Entity>(
-    context: RestActionContext<any>,
-    query: orm.Query<Entity>,
-  ): orm.Query<Entity> {
-    const { entityType } = context.resourceMeta;
-
-    const orderMapSchema = this.orderMapFactory.build(entityType).type;
-    const orderMapParam = this.param;
-    interface Queries {
-      [orderMapParam]?: InlineRuntimeType<typeof orderMapSchema>;
-    }
-    const orderMap: object | undefined =
-      this.contextReader.parseQueries<Queries>(context)[orderMapParam];
-
-    if (orderMap)
-      Object.entries(orderMap).forEach(([field, order]) => {
-        query = query.orderBy(field as FieldName<Entity>, order as any);
       });
 
     return query;

@@ -12,9 +12,10 @@ import {
   RestResourceRegistry,
 } from "./core/rest-resource";
 import { RestCrudService } from "./crud/rest-crud";
-import { RestGenericFilter, RestGenericSorter } from "./crud/rest-filtering";
+import { RestGenericFilter } from "./crud/rest-filtering";
 import { RestOffsetLimitPaginator } from "./crud/rest-pagination";
 import { RestFieldBasedRetriever } from "./crud/rest-retrieving";
+import { RestGenericSorter } from "./crud/rest-sorting";
 import { RestFilterMapFactory } from "./crud-models/rest-filter-map";
 import { RestOrderMapFactory } from "./crud-models/rest-order-map";
 import { RestConfig } from "./rest.config";

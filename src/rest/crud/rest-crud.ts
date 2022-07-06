@@ -11,6 +11,7 @@ import {
   RestFieldBasedRetriever,
   RestRetrievingCustomizations,
 } from "./rest-retrieving";
+import { RestSortingCustomizations } from "./rest-sorting";
 
 export class RestCrudService {
   constructor(private contextReader: RestActionContextReader) {}
@@ -20,19 +21,31 @@ export class RestCrudService {
   ): Promise<RestList<Entity>> {
     const resource: RestResource<Entity> &
       RestPaginationCustomizations &
-      RestFilteringCustomizations = this.contextReader.getResource(context);
+      RestFilteringCustomizations &
+      RestSortingCustomizations = this.contextReader.getResource(context);
 
     let query = resource.query();
-    resource.filters?.forEach((type) => {
-      query = this.contextReader
-        .getProvider(context, type)
-        .filter(context, query);
-    });
+
+    if (resource.filters)
+      resource.filters.forEach((type) => {
+        query = this.contextReader
+          .getProvider(context, type)
+          .filter(context, query);
+      });
+
     const total = await query.count();
+
+    if (resource.sorters)
+      resource.sorters.forEach((type) => {
+        query = this.contextReader
+          .getProvider(context, type)
+          .sort(context, query);
+      });
     if (resource.paginator)
       query = this.contextReader
         .getProvider(context, resource.paginator)
         .paginate(context, query);
+
     const items = await query.find();
 
     return { total, items };
