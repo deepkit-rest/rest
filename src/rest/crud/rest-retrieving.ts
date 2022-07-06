@@ -9,7 +9,7 @@ import {
 } from "../core/rest-action";
 
 export interface RestRetrievingCustomizations {
-  lookupBackend?: ClassType<RestRetriever>;
+  retriever?: ClassType<RestRetriever>;
 }
 
 export interface RestRetriever {

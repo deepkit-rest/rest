@@ -13,13 +13,12 @@ import { RestModule } from "src/rest/rest.module";
 
 import { rest } from "./core/rest.decorator";
 import { RestResource } from "./core/rest-resource";
-import { RestCrudService } from "./crud/rest-crud";
+import { RestCrudService, RestList } from "./crud/rest-crud";
 import {
   RestFilteringCustomizations,
   RestGenericFilter,
   RestGenericSorter,
 } from "./crud/rest-filtering";
-import { RestList } from "./crud/rest-list";
 import {
   RestOffsetLimitPaginator,
   RestPaginationCustomizations,
@@ -266,7 +265,7 @@ describe("REST CRUD", () => {
         extends MyResource
         implements RestRetrievingCustomizations
       {
-        lookupBackend = TestingLookupBackend;
+        retriever = TestingLookupBackend;
         @rest.action("GET").detailed()
         retrieve(context: RestActionContext) {
           return this.crud.retrieve(context);

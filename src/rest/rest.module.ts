@@ -13,9 +13,7 @@ import {
 } from "./core/rest-resource";
 import { RestCrudService } from "./crud/rest-crud";
 import { RestGenericFilter, RestGenericSorter } from "./crud/rest-filtering";
-import { RestListService } from "./crud/rest-list";
 import { RestOffsetLimitPaginator } from "./crud/rest-pagination";
-import { RestRetrieveService } from "./crud/rest-retrieve";
 import { RestFieldBasedRetriever } from "./crud/rest-retrieving";
 import { RestFilterMapFactory } from "./crud-models/rest-filter-map";
 import { RestOrderMapFactory } from "./crud-models/rest-order-map";
@@ -26,8 +24,6 @@ export class RestModule extends createModule(
     config: RestConfig,
     providers: [
       { provide: RestActionContextReader, scope: "http" },
-      { provide: RestListService, scope: "http" },
-      { provide: RestRetrieveService, scope: "http" },
       { provide: RestCrudService, scope: "http" },
       RestFilterMapFactory,
       RestOrderMapFactory,

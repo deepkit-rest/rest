@@ -17,8 +17,7 @@ import { HttpRangeParser } from "src/http-extension/http-range-parser.service";
 import { rest } from "src/rest/core/rest.decorator";
 import { RestActionContext } from "src/rest/core/rest-action";
 import { RestResource } from "src/rest/core/rest-resource";
-import { RestCrudService } from "src/rest/crud/rest-crud";
-import { RestList } from "src/rest/crud/rest-list";
+import { RestCrudService, RestList } from "src/rest/crud/rest-crud";
 import {
   RestOffsetLimitPaginator,
   RestPaginationCustomizations,

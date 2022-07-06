@@ -16,8 +16,7 @@ import {
   RestActionContextReader,
 } from "src/rest/core/rest-action";
 import { RestResource } from "src/rest/core/rest-resource";
-import { RestCrudService } from "src/rest/crud/rest-crud";
-import { RestList } from "src/rest/crud/rest-list";
+import { RestCrudService, RestList } from "src/rest/crud/rest-crud";
 import {
   RestOffsetLimitPaginator,
   RestPaginationCustomizations,
@@ -38,7 +37,7 @@ export class UserResource
     RestPaginationCustomizations
 {
   paginator = RestOffsetLimitPaginator;
-  lookupBackend = UserLookupBackend;
+  retriever = UserLookupBackend;
 
   constructor(
     private context: RequestContext,
