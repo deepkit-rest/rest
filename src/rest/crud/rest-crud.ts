@@ -1,6 +1,5 @@
 import { RestActionContext } from "../core/rest-action";
-import { RestList } from "../crud-models/rest-list";
-import { RestListService } from "./rest-list";
+import { RestList, RestListService } from "./rest-list";
 import { RestRetrieveService } from "./rest-retrieve";
 
 export class RestCrudService

@@ -14,8 +14,8 @@ import { rest } from "src/rest/core/rest.decorator";
 import { RestActionContext } from "src/rest/core/rest-action";
 import { RestResource } from "src/rest/core/rest-resource";
 import { RestCrudService } from "src/rest/crud/rest-crud";
+import { RestList } from "src/rest/crud/rest-list";
 import { RestRetrieveCustomizations } from "src/rest/crud/rest-retrieve";
-import { RestList } from "src/rest/crud-models/rest-list";
 
 import { User } from "./user.entity";
 import { UserVerificationService } from "./user-verification.service";

@@ -100,7 +100,7 @@ export class RestActionContextReader {
   ): Promise<T> {
     const { request } = context;
     request.body ??= await this.requestParser.parseBody(request);
-    return type ? purify<T>(request.body) : (request.body as T);
+    return type ? purify<T>(request.body, type) : (request.body as T); // TODO: is it a bug to require passing `type` here?
   }
 
   parseQueries<T extends object = Record<string, unknown>>(
@@ -109,7 +109,7 @@ export class RestActionContextReader {
   ): T {
     const { request } = context;
     const { queries } = this.requestParser.parseUrl(request.getUrl());
-    return type ? purify<T>(queries) : (queries as T);
+    return type ? purify<T>(queries, type) : (queries as T); // TODO: is it a bug to require passing `type` here?
   }
 
   getLookupInfo<Entity>(

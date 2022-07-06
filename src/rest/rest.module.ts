@@ -13,12 +13,15 @@ import {
 } from "./core/rest-resource";
 import { RestCrudService } from "./crud/rest-crud";
 import { RestListService } from "./crud/rest-list";
+import {
+  RestNoopPaginator,
+  RestOffsetLimitPaginator,
+} from "./crud/rest-pagination";
 import { RestRetrieveService } from "./crud/rest-retrieve";
 import {
   RestFilterMapApplier,
   RestFilterMapFactory,
 } from "./crud-models/rest-filter-map";
-import { RestPaginationApplier } from "./crud-models/rest-list";
 import {
   RestOrderMapApplier,
   RestOrderMapFactory,
@@ -37,7 +40,8 @@ export class RestModule extends createModule(
       RestFilterMapApplier,
       RestOrderMapFactory,
       RestOrderMapApplier,
-      RestPaginationApplier,
+      { provide: RestNoopPaginator, scope: "http" },
+      { provide: RestOffsetLimitPaginator, scope: "http" },
     ],
     listeners: [RestListener],
     forRoot: true,

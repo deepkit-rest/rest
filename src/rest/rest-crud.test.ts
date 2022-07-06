@@ -21,8 +21,12 @@ import { RestModule } from "src/rest/rest.module";
 import { rest } from "./core/rest.decorator";
 import { RestResource } from "./core/rest-resource";
 import { RestCrudService } from "./crud/rest-crud";
+import { RestList } from "./crud/rest-list";
+import {
+  RestOffsetLimitPaginator,
+  RestPaginatorCustomizations,
+} from "./crud/rest-pagination";
 import { Filterable } from "./crud-models/rest-filter-map";
-import { RestList } from "./crud-models/rest-list";
 import { Orderable } from "./crud-models/rest-order-map";
 
 describe("REST CRUD", () => {
@@ -56,6 +60,100 @@ describe("REST CRUD", () => {
     await facade.startServer();
   }
 
+  class MyEntity {
+    id: number & AutoIncrement & PrimaryKey = 0;
+  }
+  @rest.resource(MyEntity, "api")
+  class MyResource implements RestResource<MyEntity> {
+    protected db!: Inject<orm.Database, "database">;
+    protected crud!: Inject<RestCrudService>;
+    query(): orm.Query<MyEntity> {
+      return this.db.query(MyEntity);
+    }
+  }
+
+  describe("List", () => {
+    describe("Basic", () => {
+      @rest.resource(MyEntity, "api")
+      class TestingResource
+        extends MyResource
+        implements RestPaginatorCustomizations
+      {
+        paginator!: Inject<RestOffsetLimitPaginator>;
+        @rest.action("GET")
+        list(context: RestActionContext) {
+          return this.crud.list(context);
+        }
+      }
+      it("should work", async () => {
+        await prepare(TestingResource, [MyEntity]);
+        await database.persist(new MyEntity());
+        const response = await requester.request(HttpRequest.GET("/api"));
+        expect(response.statusCode).toBe(200);
+        expect(response.json).toEqual({
+          total: 1,
+          items: [{ id: 1 }],
+        });
+      });
+    });
+
+    describe("Pagination", () => {
+      @rest.resource(MyEntity, "api")
+      class TestingResource
+        extends MyResource
+        implements RestPaginatorCustomizations
+      {
+        paginator!: Inject<RestOffsetLimitPaginator>;
+        @rest.action("GET")
+        list(context: RestActionContext) {
+          return this.crud.list(context);
+        }
+      }
+
+      beforeEach(async () => {
+        await prepare(TestingResource, [MyEntity]);
+      });
+
+      it.each`
+        limit | offset | items
+        ${1}  | ${0}   | ${[{ id: 1 }]}
+        ${1}  | ${1}   | ${[{ id: 2 }]}
+        ${2}  | ${1}   | ${[{ id: 2 }, { id: 3 }]}
+        ${1}  | ${2}   | ${[{ id: 3 }]}
+      `(
+        "should work when limit is $limit and offset is $offset",
+        async ({ limit, offset, items }) => {
+          await database.persist(
+            new MyEntity(),
+            new MyEntity(),
+            new MyEntity(),
+          );
+          const response = await requester.request(
+            HttpRequest.GET("/api").query({ limit, offset }),
+          );
+          expect(response.json).toEqual({ total: 3, items });
+        },
+      );
+
+      it.each`
+        limit  | offset
+        ${0}   | ${1}
+        ${-1}  | ${1}
+        ${1}   | ${-1}
+        ${"a"} | ${"b"}
+      `(
+        "should fail when limit is $limit and offset is $offset",
+        async ({ limit, offset }) => {
+          const response = await requester.request(
+            HttpRequest.GET("/api").query({ limit, offset }),
+          );
+          expect(response.statusCode).toBe(400);
+        },
+      );
+    });
+  });
+
+  // TODO: refactor tests below
   describe("CRUD", () => {
     @entity.name("my-entity")
     class MyEntity {
@@ -90,15 +188,6 @@ describe("REST CRUD", () => {
       await prepare(MyResource, [MyEntity]);
     });
 
-    describe("List", () => {
-      it("should respect filter conditions", async () => {
-        await database.persist(new MyEntity(), new MyEntity(false));
-        const response = await requester.request(HttpRequest.GET("/name"));
-        expect(response.statusCode).toBe(200);
-        expect(response.json.total).toBe(1);
-      });
-    });
-
     describe("Retrieve", () => {
       it("should work", async () => {
         await database.persist(new MyEntity(), new MyEntity(false));
@@ -119,69 +208,6 @@ describe("REST CRUD", () => {
   });
 
   describe("Params", () => {
-    describe("Pagination", () => {
-      @entity.name("my-entity")
-      class MyEntity {
-        id: number & AutoIncrement & PrimaryKey = 0;
-      }
-
-      @rest.resource(MyEntity, "path")
-      class MyResource implements RestResource<MyEntity> {
-        constructor(
-          private db: Inject<orm.Database, "database">,
-          private crud: RestCrudService,
-        ) {}
-        query(): orm.Query<MyEntity> {
-          return this.db.query(MyEntity);
-        }
-        @rest.action("GET")
-        handle(context: RestActionContext<MyEntity>) {
-          return this.crud.list(context);
-        }
-      }
-
-      beforeEach(async () => {
-        await prepare(MyResource, [MyEntity]);
-      });
-
-      it.each`
-        limit | offset | items
-        ${1}  | ${0}   | ${[{ id: 1 }]}
-        ${1}  | ${1}   | ${[{ id: 2 }]}
-        ${2}  | ${1}   | ${[{ id: 2 }, { id: 3 }]}
-        ${1}  | ${2}   | ${[{ id: 3 }]}
-      `(
-        "should work when limit is $limit and offset is $offset",
-        async ({ limit, offset, items }) => {
-          await database.persist(
-            new MyEntity(),
-            new MyEntity(),
-            new MyEntity(),
-          );
-          const response = await requester.request(
-            HttpRequest.GET("/path").query({ limit, offset }),
-          );
-          expect(response.json).toEqual({ total: 3, items });
-        },
-      );
-
-      it.each`
-        limit  | offset
-        ${0}   | ${1}
-        ${-1}  | ${1}
-        ${1}   | ${-1}
-        ${"a"} | ${"b"}
-      `(
-        "should fail when limit is $limit and offset is $offset",
-        async ({ limit, offset }) => {
-          const response = await requester.request(
-            HttpRequest.GET("/path").query({ limit, offset }),
-          );
-          expect(response.statusCode).toBe(400);
-        },
-      );
-    });
-
     describe("Filter", () => {
       @entity.name("user")
       class User {
