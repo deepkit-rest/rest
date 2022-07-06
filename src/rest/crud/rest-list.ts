@@ -1,5 +1,4 @@
 import { purify } from "src/common/type";
-import { HttpInjectorContext } from "src/http-extension/http-common";
 
 import {
   RestActionContext,
@@ -14,14 +13,10 @@ import {
   RestOrderMapApplier,
   RestOrderMapFactory,
 } from "../crud-models/rest-order-map";
-import {
-  RestNoopPaginator,
-  RestPaginationCustomizations,
-} from "./rest-pagination";
+import { RestPaginationCustomizations } from "./rest-pagination";
 
 export class RestListService {
   constructor(
-    private injector: HttpInjectorContext,
     private contextReader: RestActionContextReader,
     private filterMapFactory: RestFilterMapFactory,
     private filterMapApplier: RestFilterMapApplier,
@@ -44,12 +39,9 @@ export class RestListService {
       this.contextReader.getResource(context);
     let query = resource.query();
 
-    const paginator =
-      resource.paginator ?? this.injector.get(RestNoopPaginator);
-
     query = this.filterMapApplier.apply(query, entityType, filterMap as object);
     const total = await query.count();
-    query = paginator.paginate(context, query);
+    query = resource.paginator?.paginate(context, query) ?? query;
     query = this.orderMapApplier.apply(query, orderMap as object);
     const items = await query.find();
 

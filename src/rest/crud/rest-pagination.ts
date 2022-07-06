@@ -17,15 +17,6 @@ export interface RestPaginator {
   ): orm.Query<Entity>;
 }
 
-export class RestNoopPaginator implements RestPaginator {
-  paginate<Entity>(
-    context: RestActionContext<any>,
-    query: orm.Query<Entity>,
-  ): orm.Query<Entity> {
-    return query;
-  }
-}
-
 export class RestOffsetLimitPaginator implements RestPaginator {
   readonly limitDefault = 30;
   readonly limitMax = 50;
