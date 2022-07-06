@@ -6,13 +6,7 @@ import { Inject, InjectorContext, ProviderWithScope } from "@deepkit/injector";
 import { Logger, MemoryLoggerTransport } from "@deepkit/logger";
 import * as orm from "@deepkit/orm"; // temporary workaround: we have to use namespace import here as a temporary workaround, otherwise the application will not be able to bootstrap. This will be fixed in the next release
 import { SQLiteDatabaseAdapter } from "@deepkit/sqlite";
-import {
-  AutoIncrement,
-  BackReference,
-  entity,
-  PrimaryKey,
-  Reference,
-} from "@deepkit/type";
+import { AutoIncrement, PrimaryKey, Reference } from "@deepkit/type";
 import { HttpExtensionModule } from "src/http-extension/http-extension.module";
 import { RestActionContext } from "src/rest/core/rest-action";
 import { RestModule } from "src/rest/rest.module";
@@ -20,6 +14,11 @@ import { RestModule } from "src/rest/rest.module";
 import { rest } from "./core/rest.decorator";
 import { RestResource } from "./core/rest-resource";
 import { RestCrudService } from "./crud/rest-crud";
+import {
+  RestFilterCustomizations,
+  RestGenericFilterBackend,
+  RestGenericOrderingBackend,
+} from "./crud/rest-filter";
 import { RestList } from "./crud/rest-list";
 import {
   RestLookupBackend,
@@ -102,58 +101,145 @@ describe("REST CRUD", () => {
     });
 
     describe("Pagination", () => {
-      @rest.resource(MyEntity, "api")
-      class TestingResource
-        extends MyResource
-        implements RestPaginationCustomizations
-      {
-        paginator = RestOffsetLimitPaginator;
-        @rest.action("GET")
-        list(context: RestActionContext) {
-          return this.crud.list(context);
+      describe("RestLimitOffsetPaginator", () => {
+        @rest.resource(MyEntity, "api")
+        class TestingResource
+          extends MyResource
+          implements RestPaginationCustomizations
+        {
+          paginator = RestOffsetLimitPaginator;
+          @rest.action("GET")
+          list(context: RestActionContext): Promise<RestList<MyEntity>> {
+            return this.crud.list(context);
+          }
         }
-      }
 
-      beforeEach(async () => {
-        await prepare(TestingResource, [MyEntity]);
+        beforeEach(async () => {
+          await prepare(TestingResource, [MyEntity]);
+        });
+
+        it.each`
+          limit | offset | items
+          ${1}  | ${0}   | ${[{ id: 1 }]}
+          ${1}  | ${1}   | ${[{ id: 2 }]}
+          ${2}  | ${1}   | ${[{ id: 2 }, { id: 3 }]}
+          ${1}  | ${2}   | ${[{ id: 3 }]}
+        `(
+          "should work when limit is $limit and offset is $offset",
+          async ({ limit, offset, items }) => {
+            await database.persist(
+              new MyEntity(),
+              new MyEntity(),
+              new MyEntity(),
+            );
+            const response = await requester.request(
+              HttpRequest.GET("/api").query({ limit, offset }),
+            );
+            expect(response.json).toEqual({ total: 3, items });
+          },
+        );
+
+        it.each`
+          limit  | offset
+          ${0}   | ${1}
+          ${-1}  | ${1}
+          ${1}   | ${-1}
+          ${"a"} | ${"b"}
+        `(
+          "should fail when limit is $limit and offset is $offset",
+          async ({ limit, offset }) => {
+            const response = await requester.request(
+              HttpRequest.GET("/api").query({ limit, offset }),
+            );
+            expect(response.statusCode).toBe(400);
+          },
+        );
+      });
+    });
+
+    describe("Filter", () => {
+      describe("RestGenericFilterBackend", () => {
+        class Entity1 {
+          id: number & AutoIncrement & PrimaryKey & Filterable = 0;
+          ref!: Entity2 & Reference & Filterable;
+        }
+        class Entity2 {
+          id: number & AutoIncrement & PrimaryKey = 0;
+        }
+        @rest.resource(Entity1, "api")
+        class TestingResource
+          implements RestResource<Entity1>, RestFilterCustomizations
+        {
+          filterBackends = [RestGenericFilterBackend];
+          constructor(
+            private database: Inject<orm.Database, "database">,
+            private crud: RestCrudService,
+          ) {}
+          query(): orm.Query<Entity1> {
+            return this.database.query(Entity1);
+          }
+          @rest.action("GET")
+          list(context: RestActionContext): Promise<RestList<Entity1>> {
+            return this.crud.list(context);
+          }
+        }
+
+        beforeEach(async () => {
+          await prepare(TestingResource, [Entity1, Entity2]);
+        });
+
+        it.each`
+          query                                          | total | items
+          ${null}                                        | ${3}  | ${[{ id: 1, ref: expect.any(Number) }, { id: 2, ref: expect.any(Number) }, { id: 3, ref: expect.any(Number) }]}
+          ${"filter[id][$eq]=1"}                         | ${1}  | ${[{ id: 1, ref: expect.any(Number) }]}
+          ${"filter[id][$gt]=1"}                         | ${2}  | ${[{ id: 2, ref: expect.any(Number) }, { id: 3, ref: expect.any(Number) }]}
+          ${"filter[ref][$eq]=1"}                        | ${1}  | ${[{ id: 1, ref: expect.any(Number) }]}
+          ${"filter[ref][$in][]=1"}                      | ${1}  | ${[{ id: 1, ref: expect.any(Number) }]}
+          ${"filter[ref][$in][]=1&filter[ref][$in][]=2"} | ${2}  | ${[{ id: 1, ref: expect.any(Number) }, { id: 2, ref: expect.any(Number) }]}
+        `("should work with query $query", async ({ query, total, items }) => {
+          const entities = new Array(3).fill(1).map(() => new Entity1());
+          entities.forEach((entity) => (entity.ref = new Entity2()));
+          await database.persist(...entities);
+          const request = HttpRequest.GET("/api");
+          if (query) request["queryPath"] = query;
+          const response = await requester.request(request);
+          expect(response.json).toEqual({ total, items });
+        });
       });
 
-      it.each`
-        limit | offset | items
-        ${1}  | ${0}   | ${[{ id: 1 }]}
-        ${1}  | ${1}   | ${[{ id: 2 }]}
-        ${2}  | ${1}   | ${[{ id: 2 }, { id: 3 }]}
-        ${1}  | ${2}   | ${[{ id: 3 }]}
-      `(
-        "should work when limit is $limit and offset is $offset",
-        async ({ limit, offset, items }) => {
-          await database.persist(
-            new MyEntity(),
-            new MyEntity(),
-            new MyEntity(),
-          );
-          const response = await requester.request(
-            HttpRequest.GET("/api").query({ limit, offset }),
-          );
-          expect(response.json).toEqual({ total: 3, items });
-        },
-      );
+      describe("RestGenericOrderingBackend", () => {
+        class TestingEntity {
+          id: number & AutoIncrement & PrimaryKey & Orderable = 0;
+        }
+        @rest.resource(TestingEntity, "api")
+        class TestingResource
+          extends MyResource
+          implements RestFilterCustomizations
+        {
+          filterBackends = [RestGenericOrderingBackend];
+          @rest.action("GET")
+          list(context: RestActionContext<TestingEntity>) {
+            return this.crud.list(context);
+          }
+        }
 
-      it.each`
-        limit  | offset
-        ${0}   | ${1}
-        ${-1}  | ${1}
-        ${1}   | ${-1}
-        ${"a"} | ${"b"}
-      `(
-        "should fail when limit is $limit and offset is $offset",
-        async ({ limit, offset }) => {
-          const response = await requester.request(
-            HttpRequest.GET("/api").query({ limit, offset }),
-          );
-          expect(response.statusCode).toBe(400);
-        },
-      );
+        beforeEach(async () => {
+          await prepare(TestingResource, [TestingEntity]);
+        });
+
+        it.each`
+          query               | items
+          ${null}             | ${[{ id: 1 }, { id: 2 }]}
+          ${"order[id]=asc"}  | ${[{ id: 1 }, { id: 2 }]}
+          ${"order[id]=desc"} | ${[{ id: 2 }, { id: 1 }]}
+        `("should work with query $query", async ({ query, items }) => {
+          await database.persist(new TestingEntity(), new TestingEntity());
+          const request = HttpRequest.GET("/api");
+          if (query) request["queryPath"] = query;
+          const response = await requester.request(request);
+          expect(response.json).toEqual({ total: 2, items });
+        });
+      });
     });
   });
 
@@ -205,105 +291,6 @@ describe("REST CRUD", () => {
         const response = await requester.request(HttpRequest.GET("/api/any"));
         expect(response.statusCode).toBe(200);
         expect(response.json["id"]).toBe(1);
-      });
-    });
-  });
-
-  describe("Params", () => {
-    describe("Filter", () => {
-      @entity.name("user")
-      class User {
-        id: number & AutoIncrement & PrimaryKey = 0;
-        books: Book[] & BackReference = [];
-      }
-      @entity.name("book")
-      class Book {
-        id: number & AutoIncrement & PrimaryKey & Filterable = 0;
-        owner!: User & Reference & Filterable;
-      }
-
-      @rest.resource(Book, "path")
-      class BookResource implements RestResource<Book> {
-        constructor(
-          private db: Inject<orm.Database, "database">,
-          private crud: RestCrudService,
-        ) {}
-        query(): orm.Query<Book> {
-          return this.db.query(Book);
-        }
-        @rest.action("GET")
-        async handle(
-          context: RestActionContext<Book>,
-        ): Promise<RestList<Book>> {
-          return this.crud.list(context);
-        }
-      }
-
-      beforeEach(async () => {
-        await prepare(BookResource, [Book, User]);
-      });
-
-      it.each`
-        query                                              | total | items
-        ${null}                                            | ${3}  | ${[{ id: 1, owner: expect.any(Number) }, { id: 2, owner: expect.any(Number) }, { id: 3, owner: expect.any(Number) }]}
-        ${"filter[id][$eq]=1"}                             | ${1}  | ${[{ id: 1, owner: expect.any(Number) }]}
-        ${"filter[id][$gt]=1"}                             | ${2}  | ${[{ id: 2, owner: expect.any(Number) }, { id: 3, owner: expect.any(Number) }]}
-        ${"filter[owner][$eq]=1"}                          | ${1}  | ${[{ id: 1, owner: expect.any(Number) }]}
-        ${"filter[owner][$in][]=1"}                        | ${1}  | ${[{ id: 1, owner: expect.any(Number) }]}
-        ${"filter[owner][$in][]=1&filter[owner][$in][]=2"} | ${2}  | ${[{ id: 1, owner: expect.any(Number) }, { id: 2, owner: expect.any(Number) }]}
-      `("should work with query $query", async ({ query, total, items }) => {
-        const books = [new Book(), new Book(), new Book()];
-        books.forEach((book) => (book.owner = new User()));
-        await database.persist(...books);
-        const request = HttpRequest.GET("/path");
-        if (query) request["queryPath"] = query;
-        const response = await requester.request(request);
-        expect(response.json).toEqual({ total, items });
-      });
-    });
-
-    describe("Order", () => {
-      @entity.name("user")
-      class User {
-        id: number & AutoIncrement & PrimaryKey & Orderable = 0;
-        books: Book[] & BackReference = [];
-      }
-      @entity.name("book")
-      class Book {
-        id: number & AutoIncrement & PrimaryKey = 0;
-        owner!: User & Reference;
-      }
-
-      @rest.resource(User, "path")
-      class UserResource implements RestResource<User> {
-        constructor(
-          private db: Inject<orm.Database, "database">,
-          private crud: RestCrudService,
-        ) {}
-        query(): orm.Query<User> {
-          return this.db.query(User);
-        }
-        @rest.action("GET")
-        handle(context: RestActionContext<User>) {
-          return this.crud.list(context);
-        }
-      }
-
-      beforeEach(async () => {
-        await prepare(UserResource, [User, Book]);
-      });
-
-      it.each`
-        query               | items
-        ${null}             | ${[{ id: 1 }, { id: 2 }]}
-        ${"order[id]=asc"}  | ${[{ id: 1 }, { id: 2 }]}
-        ${"order[id]=desc"} | ${[{ id: 2 }, { id: 1 }]}
-      `("should work with query $query", async ({ query, items }) => {
-        await database.persist(new User(), new User());
-        const request = HttpRequest.GET("/path");
-        if (query) request["queryPath"] = query;
-        const response = await requester.request(request);
-        expect(response.json).toEqual({ total: 2, items });
       });
     });
   });

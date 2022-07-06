@@ -1,5 +1,3 @@
-import * as orm from "@deepkit/orm"; // temporary workaround: we have to use namespace import here as a temporary workaround, otherwise the application will not be able to bootstrap. This will be fixed in the next release
-import { FieldName } from "@deepkit/orm";
 import {
   Data,
   ReflectionClass,
@@ -34,14 +32,5 @@ export class RestOrderMapFactory extends RestQueryModelFactory {
       },
       optional: true,
     };
-  }
-}
-
-export class RestOrderMapApplier {
-  apply<Entity>(query: orm.Query<Entity>, orderMap: object): orm.Query<Entity> {
-    Object.entries(orderMap).forEach(([field, order]) => {
-      query = query.orderBy(field as FieldName<Entity>, order);
-    });
-    return query;
   }
 }
