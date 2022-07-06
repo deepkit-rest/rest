@@ -7,20 +7,26 @@ import {
 } from "@deepkit/http";
 import { Inject } from "@deepkit/injector";
 import * as orm from "@deepkit/orm"; // temporary workaround: we have to use namespace import here as a temporary workaround, otherwise the application will not be able to bootstrap. This will be fixed in the next release
-import { purify } from "src/common/type";
+import { Type } from "@deepkit/type";
 import { RequestContext } from "src/core/request-context";
 import { InjectDatabaseSession } from "src/database/database.tokens";
 import { NoContentResponse } from "src/http-extension/http-common";
 import { rest } from "src/rest/core/rest.decorator";
-import { RestActionContext } from "src/rest/core/rest-action";
+import {
+  RestActionContext,
+  RestActionContextReader,
+} from "src/rest/core/rest-action";
 import { RestResource } from "src/rest/core/rest-resource";
 import { RestCrudService } from "src/rest/crud/rest-crud";
 import { RestList } from "src/rest/crud/rest-list";
 import {
+  RestFieldLookupBackend,
+  RestLookupCustomizations,
+} from "src/rest/crud/rest-lookup";
+import {
   RestOffsetLimitPaginator,
   RestPaginationCustomizations,
 } from "src/rest/crud/rest-pagination";
-import { RestRetrieveCustomizations } from "src/rest/crud/rest-retrieve";
 
 import { User } from "./user.entity";
 import { UserVerificationService } from "./user-verification.service";
@@ -29,10 +35,11 @@ import { UserVerificationService } from "./user-verification.service";
 export class UserResource
   implements
     RestResource<User>,
-    RestRetrieveCustomizations,
+    RestLookupCustomizations,
     RestPaginationCustomizations
 {
   paginator!: Inject<RestOffsetLimitPaginator>;
+  lookupBackend!: Inject<UserLookupBackend>;
 
   constructor(
     private context: RequestContext,
@@ -43,10 +50,6 @@ export class UserResource
 
   query(): orm.Query<User> {
     return this.database.query(User);
-  }
-
-  lookup(raw: unknown): unknown {
-    return raw === "me" ? this.context.user.id : purify<User["id"]>(raw);
   }
 
   @rest.action("GET")
@@ -119,5 +122,19 @@ export class UserResource
     if (!verified) throw new HttpBadRequestError("Code not match");
     user.verifiedAt = new Date();
     return new NoContentResponse();
+  }
+}
+
+export class UserLookupBackend extends RestFieldLookupBackend {
+  constructor(
+    private requestContext: RequestContext,
+    contextReader: RestActionContextReader,
+  ) {
+    super(contextReader);
+  }
+
+  protected override transformValue(raw: unknown, type: Type): unknown {
+    if (raw === "me") return this.requestContext.user.id;
+    return super.transformValue(raw, type);
   }
 }

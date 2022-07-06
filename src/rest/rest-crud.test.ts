@@ -2,7 +2,7 @@ import { App } from "@deepkit/app";
 import { ClassType } from "@deepkit/core";
 import { createTestingApp, TestingFacade } from "@deepkit/framework";
 import { HttpKernel, HttpRequest } from "@deepkit/http";
-import { Inject, InjectorContext } from "@deepkit/injector";
+import { Inject, InjectorContext, ProviderWithScope } from "@deepkit/injector";
 import { Logger, MemoryLoggerTransport } from "@deepkit/logger";
 import * as orm from "@deepkit/orm"; // temporary workaround: we have to use namespace import here as a temporary workaround, otherwise the application will not be able to bootstrap. This will be fixed in the next release
 import { SQLiteDatabaseAdapter } from "@deepkit/sqlite";
@@ -13,7 +13,6 @@ import {
   PrimaryKey,
   Reference,
 } from "@deepkit/type";
-import { purify } from "src/common/type";
 import { HttpExtensionModule } from "src/http-extension/http-extension.module";
 import { RestActionContext } from "src/rest/core/rest-action";
 import { RestModule } from "src/rest/rest.module";
@@ -22,6 +21,10 @@ import { rest } from "./core/rest.decorator";
 import { RestResource } from "./core/rest-resource";
 import { RestCrudService } from "./crud/rest-crud";
 import { RestList } from "./crud/rest-list";
+import {
+  RestLookupBackend,
+  RestLookupCustomizations,
+} from "./crud/rest-lookup";
 import {
   RestOffsetLimitPaginator,
   RestPaginationCustomizations,
@@ -37,6 +40,7 @@ describe("REST CRUD", () => {
   async function prepare<Entity>(
     resource: ClassType<RestResource<Entity>>,
     entities: ClassType[] = [],
+    providers: ProviderWithScope[] = [],
   ) {
     facade = createTestingApp({
       imports: [
@@ -49,6 +53,7 @@ describe("REST CRUD", () => {
           provide: "database",
           useValue: new orm.Database(new SQLiteDatabaseAdapter(), entities),
         },
+        ...providers,
       ],
     });
     requester = facade.app.get(HttpKernel);
@@ -63,7 +68,6 @@ describe("REST CRUD", () => {
   class MyEntity {
     id: number & AutoIncrement & PrimaryKey = 0;
   }
-  @rest.resource(MyEntity, "api")
   class MyResource implements RestResource<MyEntity> {
     protected db!: Inject<orm.Database, "database">;
     protected crud!: Inject<RestCrudService>;
@@ -153,54 +157,52 @@ describe("REST CRUD", () => {
     });
   });
 
-  // TODO: refactor tests below
-  describe("CRUD", () => {
-    @entity.name("my-entity")
-    class MyEntity {
-      id: number & AutoIncrement & PrimaryKey = 0;
-      constructor(public included: boolean = true) {}
-    }
-
-    @rest.resource(MyEntity, "name").lookup("id")
-    class MyResource implements RestResource<MyEntity> {
-      constructor(
-        private db: Inject<orm.Database, "database">,
-        private crud: RestCrudService,
-      ) {}
-      query(): orm.Query<MyEntity> {
-        return this.db.query(MyEntity).filter({ included: true });
+  describe("Retrieve", () => {
+    describe("Basic", () => {
+      @rest.resource(MyEntity, "api").lookup("id")
+      class TestingResource extends MyResource {
+        @rest.action("GET").detailed()
+        retrieve(context: RestActionContext) {
+          return this.crud.retrieve(context);
+        }
       }
-      lookup(raw: unknown): unknown {
-        return raw === "first" ? 1 : purify<MyEntity["id"]>(raw);
-      }
-      @rest.action("GET")
-      list(context: RestActionContext<MyEntity>): Promise<RestList<MyEntity>> {
-        return this.crud.list(context);
-      }
-
-      @rest.action("GET").detailed()
-      retrieve(context: RestActionContext<MyEntity>): Promise<MyEntity> {
-        return this.crud.retrieve(context);
-      }
-    }
-
-    beforeEach(async () => {
-      await prepare(MyResource, [MyEntity]);
+      it("should work", async () => {
+        await prepare(TestingResource, [MyEntity]);
+        await database.persist(new MyEntity());
+        const response = await requester.request(HttpRequest.GET("/api/1"));
+        expect(response.statusCode).toBe(200);
+      });
     });
 
-    describe("Retrieve", () => {
+    describe("Custom Lookup", () => {
+      @rest.resource(MyEntity, "api").lookup("test")
+      class TestingResource
+        extends MyResource
+        implements RestLookupCustomizations
+      {
+        lookupBackend!: Inject<TestingLookupBackend>;
+        @rest.action("GET").detailed()
+        retrieve(context: RestActionContext) {
+          return this.crud.retrieve(context);
+        }
+      }
+      class TestingLookupBackend implements RestLookupBackend {
+        lookup<Entity>(
+          context: RestActionContext<any>,
+          query: orm.Query<Entity>,
+        ): orm.Query<Entity> {
+          return query.addFilter("id" as any, 1);
+        }
+      }
+
       it("should work", async () => {
-        await database.persist(new MyEntity(), new MyEntity(false));
-        const response1 = await requester.request(HttpRequest.GET("/name/1"));
-        expect(response1.statusCode).toBe(200);
-        const response2 = await requester.request(HttpRequest.GET("/name/2"));
-        expect(response2.statusCode).toBe(404);
-      });
-      it("should respect custom lookup resolving", async () => {
-        await database.persist(new MyEntity(), new MyEntity());
-        const response = await requester.request(
-          HttpRequest.GET("/name/first"),
+        await prepare(
+          TestingResource,
+          [MyEntity],
+          [{ provide: TestingLookupBackend, scope: "http" }],
         );
+        await database.persist(new MyEntity());
+        const response = await requester.request(HttpRequest.GET("/api/any"));
         expect(response.statusCode).toBe(200);
         expect(response.json["id"]).toBe(1);
       });

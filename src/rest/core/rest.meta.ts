@@ -10,7 +10,7 @@ export class RestResourceMeta<Entity = any> {
   name?: string;
   entityType?: ClassType<Entity>;
   version?: number;
-  lookup?: FieldName<Entity>;
+  lookup?: FieldName<Entity>; // TODO: use `string` as type
   actions: Record<string, RestActionMeta> = {};
 
   private validated = false;
