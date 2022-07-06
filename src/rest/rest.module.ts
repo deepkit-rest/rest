@@ -12,14 +12,11 @@ import {
   RestResourceRegistry,
 } from "./core/rest-resource";
 import { RestCrudService } from "./crud/rest-crud";
-import {
-  RestGenericFilterBackend,
-  RestGenericOrderingBackend,
-} from "./crud/rest-filter";
+import { RestGenericFilter, RestGenericSorter } from "./crud/rest-filtering";
 import { RestListService } from "./crud/rest-list";
-import { RestFieldLookupBackend } from "./crud/rest-lookup";
 import { RestOffsetLimitPaginator } from "./crud/rest-pagination";
 import { RestRetrieveService } from "./crud/rest-retrieve";
+import { RestFieldBasedRetriever } from "./crud/rest-retrieving";
 import { RestFilterMapFactory } from "./crud-models/rest-filter-map";
 import { RestOrderMapFactory } from "./crud-models/rest-order-map";
 import { RestConfig } from "./rest.config";
@@ -35,9 +32,9 @@ export class RestModule extends createModule(
       RestFilterMapFactory,
       RestOrderMapFactory,
       { provide: RestOffsetLimitPaginator, scope: "http" },
-      { provide: RestFieldLookupBackend, scope: "http" },
-      { provide: RestGenericFilterBackend, scope: "http" },
-      { provide: RestGenericOrderingBackend, scope: "http" },
+      { provide: RestFieldBasedRetriever, scope: "http" },
+      { provide: RestGenericFilter, scope: "http" },
+      { provide: RestGenericSorter, scope: "http" },
     ],
     listeners: [RestListener],
     forRoot: true,

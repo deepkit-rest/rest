@@ -3,7 +3,7 @@ import {
   RestActionContextReader,
 } from "../core/rest-action";
 import { RestResource } from "../core/rest-resource";
-import { RestFilterCustomizations } from "./rest-filter";
+import { RestFilteringCustomizations } from "./rest-filtering";
 import { RestPaginationCustomizations } from "./rest-pagination";
 
 export class RestListService {
@@ -14,10 +14,10 @@ export class RestListService {
   ): Promise<RestList<Entity>> {
     const resource: RestResource<Entity> &
       RestPaginationCustomizations &
-      RestFilterCustomizations = this.contextReader.getResource(context);
+      RestFilteringCustomizations = this.contextReader.getResource(context);
 
     let query = resource.query();
-    resource.filterBackends?.forEach((type) => {
+    resource.filters?.forEach((type) => {
       query = this.contextReader
         .getProvider(context, type)
         .filter(context, query);

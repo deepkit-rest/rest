@@ -10,18 +10,18 @@ import {
 import { RestFilterMapFactory } from "../crud-models/rest-filter-map";
 import { RestOrderMapFactory } from "../crud-models/rest-order-map";
 
-export interface RestFilterCustomizations {
-  filterBackends?: ClassType<RestFilterBackend>[];
+export interface RestFilteringCustomizations {
+  filters?: ClassType<RestFilter>[];
 }
 
-export interface RestFilterBackend {
+export interface RestFilter {
   filter<Entity>(
     context: RestActionContext,
     query: orm.Query<Entity>,
   ): orm.Query<Entity>;
 }
 
-export class RestGenericFilterBackend implements RestFilterBackend {
+export class RestGenericFilter implements RestFilter {
   readonly param = "filter";
 
   constructor(
@@ -66,7 +66,7 @@ export class RestGenericFilterBackend implements RestFilterBackend {
   }
 }
 
-export class RestGenericOrderingBackend implements RestFilterBackend {
+export class RestGenericSorter implements RestFilter {
   readonly param = "order";
 
   constructor(

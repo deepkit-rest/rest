@@ -15,19 +15,19 @@ import { rest } from "./core/rest.decorator";
 import { RestResource } from "./core/rest-resource";
 import { RestCrudService } from "./crud/rest-crud";
 import {
-  RestFilterCustomizations,
-  RestGenericFilterBackend,
-  RestGenericOrderingBackend,
-} from "./crud/rest-filter";
+  RestFilteringCustomizations,
+  RestGenericFilter,
+  RestGenericSorter,
+} from "./crud/rest-filtering";
 import { RestList } from "./crud/rest-list";
-import {
-  RestLookupBackend,
-  RestLookupCustomizations,
-} from "./crud/rest-lookup";
 import {
   RestOffsetLimitPaginator,
   RestPaginationCustomizations,
 } from "./crud/rest-pagination";
+import {
+  RestRetriever,
+  RestRetrievingCustomizations,
+} from "./crud/rest-retrieving";
 import { Filterable } from "./crud-models/rest-filter-map";
 import { Orderable } from "./crud-models/rest-order-map";
 
@@ -158,7 +158,7 @@ describe("REST CRUD", () => {
     });
 
     describe("Filter", () => {
-      describe("RestGenericFilterBackend", () => {
+      describe("RestGenericFilter", () => {
         class Entity1 {
           id: number & AutoIncrement & PrimaryKey & Filterable = 0;
           ref!: Entity2 & Reference & Filterable;
@@ -168,9 +168,9 @@ describe("REST CRUD", () => {
         }
         @rest.resource(Entity1, "api")
         class TestingResource
-          implements RestResource<Entity1>, RestFilterCustomizations
+          implements RestResource<Entity1>, RestFilteringCustomizations
         {
-          filterBackends = [RestGenericFilterBackend];
+          filters = [RestGenericFilter];
           constructor(
             private database: Inject<orm.Database, "database">,
             private crud: RestCrudService,
@@ -207,16 +207,16 @@ describe("REST CRUD", () => {
         });
       });
 
-      describe("RestGenericOrderingBackend", () => {
+      describe("RestGenericSorter", () => {
         class TestingEntity {
           id: number & AutoIncrement & PrimaryKey & Orderable = 0;
         }
         @rest.resource(TestingEntity, "api")
         class TestingResource
           extends MyResource
-          implements RestFilterCustomizations
+          implements RestFilteringCustomizations
         {
-          filterBackends = [RestGenericOrderingBackend];
+          filters = [RestGenericSorter];
           @rest.action("GET")
           list(context: RestActionContext<TestingEntity>) {
             return this.crud.list(context);
@@ -264,7 +264,7 @@ describe("REST CRUD", () => {
       @rest.resource(MyEntity, "api").lookup("test")
       class TestingResource
         extends MyResource
-        implements RestLookupCustomizations
+        implements RestRetrievingCustomizations
       {
         lookupBackend = TestingLookupBackend;
         @rest.action("GET").detailed()
@@ -272,8 +272,8 @@ describe("REST CRUD", () => {
           return this.crud.retrieve(context);
         }
       }
-      class TestingLookupBackend implements RestLookupBackend {
-        lookup<Entity>(
+      class TestingLookupBackend implements RestRetriever {
+        retrieve<Entity>(
           context: RestActionContext<any>,
           query: orm.Query<Entity>,
         ): orm.Query<Entity> {

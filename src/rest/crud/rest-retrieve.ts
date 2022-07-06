@@ -6,9 +6,9 @@ import {
 
 import { RestResource } from "../core/rest-resource";
 import {
-  RestFieldLookupBackend,
-  RestLookupCustomizations,
-} from "./rest-lookup";
+  RestFieldBasedRetriever,
+  RestRetrievingCustomizations,
+} from "./rest-retrieving";
 
 export class RestRetrieveService {
   constructor(private contextReader: RestActionContextReader) {}
@@ -16,11 +16,11 @@ export class RestRetrieveService {
   async retrieve<Entity>(context: RestActionContext<Entity>): Promise<Entity> {
     const { actionMeta } = context;
     if (!actionMeta.detailed) throw new Error("Not a detailed action");
-    const resource: RestResource<Entity> & RestLookupCustomizations =
+    const resource: RestResource<Entity> & RestRetrievingCustomizations =
       this.contextReader.getResource(context);
-    const backendType = resource.lookupBackend ?? RestFieldLookupBackend;
+    const backendType = resource.lookupBackend ?? RestFieldBasedRetriever;
     const backend = this.contextReader.getProvider(context, backendType);
-    const query = backend.lookup(context, resource.query());
+    const query = backend.retrieve(context, resource.query());
     const result = await query.findOneOrUndefined();
     if (!result) throw new HttpNotFoundError();
     return result;

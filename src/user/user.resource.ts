@@ -19,13 +19,13 @@ import { RestResource } from "src/rest/core/rest-resource";
 import { RestCrudService } from "src/rest/crud/rest-crud";
 import { RestList } from "src/rest/crud/rest-list";
 import {
-  RestFieldLookupBackend,
-  RestLookupCustomizations,
-} from "src/rest/crud/rest-lookup";
-import {
   RestOffsetLimitPaginator,
   RestPaginationCustomizations,
 } from "src/rest/crud/rest-pagination";
+import {
+  RestFieldBasedRetriever,
+  RestRetrievingCustomizations,
+} from "src/rest/crud/rest-retrieving";
 
 import { User } from "./user.entity";
 import { UserVerificationService } from "./user-verification.service";
@@ -34,7 +34,7 @@ import { UserVerificationService } from "./user-verification.service";
 export class UserResource
   implements
     RestResource<User>,
-    RestLookupCustomizations,
+    RestRetrievingCustomizations,
     RestPaginationCustomizations
 {
   paginator = RestOffsetLimitPaginator;
@@ -124,7 +124,7 @@ export class UserResource
   }
 }
 
-export class UserLookupBackend extends RestFieldLookupBackend {
+export class UserLookupBackend extends RestFieldBasedRetriever {
   constructor(
     private requestContext: RequestContext,
     contextReader: RestActionContextReader,

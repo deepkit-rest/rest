@@ -8,21 +8,21 @@ import {
   RestActionContextReader,
 } from "../core/rest-action";
 
-export interface RestLookupCustomizations {
-  lookupBackend?: ClassType<RestLookupBackend>;
+export interface RestRetrievingCustomizations {
+  lookupBackend?: ClassType<RestRetriever>;
 }
 
-export interface RestLookupBackend {
-  lookup<Entity>(
+export interface RestRetriever {
+  retrieve<Entity>(
     context: RestActionContext,
     query: orm.Query<Entity>,
   ): orm.Query<Entity>;
 }
 
-export class RestFieldLookupBackend implements RestLookupBackend {
+export class RestFieldBasedRetriever implements RestRetriever {
   constructor(protected contextReader: RestActionContextReader) {}
 
-  lookup<Entity>(
+  retrieve<Entity>(
     context: RestActionContext<Entity>,
     query: orm.Query<Entity>,
   ): orm.Query<Entity> {
