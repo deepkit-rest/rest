@@ -19,9 +19,17 @@ import { RestActionContext } from "src/rest/core/rest-action";
 import { RestResource } from "src/rest/core/rest-resource";
 import { RestCrudService, RestList } from "src/rest/crud/rest-crud";
 import {
+  RestFilteringCustomizations,
+  RestGenericFilter,
+} from "src/rest/crud/rest-filtering";
+import {
   RestOffsetLimitPaginator,
   RestPaginationCustomizations,
 } from "src/rest/crud/rest-pagination";
+import {
+  RestGenericSorter,
+  RestSortingCustomizations,
+} from "src/rest/crud/rest-sorting";
 import { User } from "src/user/user.entity";
 
 import { FileRecord } from "./file-record.entity";
@@ -29,9 +37,15 @@ import { FileStreamUtils } from "./file-stream.utils";
 
 @rest.resource(FileRecord, "files").lookup("id")
 export class FileResource
-  implements RestResource<FileRecord>, RestPaginationCustomizations
+  implements
+    RestResource<FileRecord>,
+    RestPaginationCustomizations,
+    RestFilteringCustomizations,
+    RestSortingCustomizations
 {
   paginator = RestOffsetLimitPaginator;
+  filters = [RestGenericFilter];
+  sorters = [RestGenericSorter];
 
   constructor(
     private database: InjectDatabaseSession,

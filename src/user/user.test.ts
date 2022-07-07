@@ -55,10 +55,21 @@ describe("User", () => {
   });
 
   describe("GET /users", () => {
-    it("should work", async () => {
+    let user2: User;
+
+    beforeEach(async () => {
+      user2 = new User({
+        name: "test2",
+        email: "test2@test.com",
+        password: "password",
+      });
+      await database.persist(user2);
+    });
+
+    test("response", async () => {
       const response = await requester.request(HttpRequest.GET("/users"));
       expect(response.json).toEqual({
-        total: 1,
+        total: 2,
         items: [
           {
             id: user.id,
@@ -67,22 +78,33 @@ describe("User", () => {
             createdAt: user.createdAt.toISOString(),
             verifiedAt: null,
           },
+          expect.any(Object),
         ],
       });
     });
 
-    it("should paginate", async () => {
-      await database.persist(
-        new User({
-          name: "test2",
-          email: "test2@test.com",
-          password: "password",
-        }),
-      );
+    test("pagination", async () => {
       const response = await requester.request(
         HttpRequest.GET("/users?limit=1"),
       );
       expect(response.json).toEqual({ total: 2, items: expect.any(Array) });
+    });
+
+    test("filter", async () => {
+      const response = await requester.request(
+        HttpRequest.GET(`/users?filter[id][$eq]=${user.id}`),
+      );
+      expect(response.json).toEqual({ total: 1, items: expect.any(Array) });
+    });
+
+    test("order", async () => {
+      const response = await requester.request(
+        HttpRequest.GET("/users?order[name]=desc"),
+      );
+      expect(response.json).toMatchObject({
+        total: 2,
+        items: [{ id: user2.id }, { id: user.id }],
+      });
     });
   });
 

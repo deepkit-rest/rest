@@ -18,6 +18,10 @@ import {
 import { RestResource } from "src/rest/core/rest-resource";
 import { RestCrudService, RestList } from "src/rest/crud/rest-crud";
 import {
+  RestFilteringCustomizations,
+  RestGenericFilter,
+} from "src/rest/crud/rest-filtering";
+import {
   RestOffsetLimitPaginator,
   RestPaginationCustomizations,
 } from "src/rest/crud/rest-pagination";
@@ -25,6 +29,10 @@ import {
   RestFieldBasedRetriever,
   RestRetrievingCustomizations,
 } from "src/rest/crud/rest-retrieving";
+import {
+  RestGenericSorter,
+  RestSortingCustomizations,
+} from "src/rest/crud/rest-sorting";
 
 import { User } from "./user.entity";
 import { UserVerificationService } from "./user-verification.service";
@@ -34,10 +42,14 @@ export class UserResource
   implements
     RestResource<User>,
     RestRetrievingCustomizations,
-    RestPaginationCustomizations
+    RestPaginationCustomizations,
+    RestFilteringCustomizations,
+    RestSortingCustomizations
 {
+  retriever = UserRetriever;
   paginator = RestOffsetLimitPaginator;
-  retriever = UserLookupBackend;
+  filters = [RestGenericFilter];
+  sorters = [RestGenericSorter];
 
   constructor(
     private context: RequestContext,
@@ -123,7 +135,7 @@ export class UserResource
   }
 }
 
-export class UserLookupBackend extends RestFieldBasedRetriever {
+export class UserRetriever extends RestFieldBasedRetriever {
   constructor(
     private requestContext: RequestContext,
     contextReader: RestActionContextReader,

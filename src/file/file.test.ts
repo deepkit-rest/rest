@@ -81,13 +81,15 @@ describe("File", () => {
   });
 
   describe("GET /files", () => {
-    it("should work", async () => {
+    test("response", async () => {
+      const user2 = new User({
+        name: "name",
+        email: "email@email.com",
+        password: "password",
+      });
       await database.persist(
-        new FileRecord({
-          owner: user,
-          name: "test.txt",
-          path: "/dir",
-        }),
+        new FileRecord({ owner: user, name: "test.txt", path: "/dir" }),
+        new FileRecord({ owner: user2, name: "test2.txt", path: "/dir" }),
       );
       const response = await requester.request(HttpRequest.GET("/files"));
       expect(response.json).toEqual({
@@ -107,7 +109,7 @@ describe("File", () => {
       });
     });
 
-    it("should paginate", async () => {
+    test("pagination", async () => {
       await database.persist(
         new FileRecord({
           owner: user,
@@ -129,20 +131,33 @@ describe("File", () => {
       });
     });
 
-    it("should filter query", async () => {
-      const user2 = new User({
-        name: "name",
-        email: "email@email.com",
-        password: "password",
-      });
-      const record = new FileRecord({
-        owner: user2,
-        name: "test.txt",
-        path: "/dir",
-      });
-      await database.persist(user2, record);
-      const response = await requester.request(HttpRequest.GET("/files"));
+    test("filter", async () => {
+      await database.persist(
+        new FileRecord({
+          owner: user,
+          name: "test1.txt",
+          path: "/dir",
+        }),
+      );
+      const response = await requester.request(
+        HttpRequest.GET("/files?filter[id][$eq]=notfound"),
+      );
       expect(response.json).toEqual({ total: 0, items: [] });
+    });
+
+    test("order", async () => {
+      const records = [
+        new FileRecord({ owner: user, name: "test1.txt", path: "/dir" }),
+        new FileRecord({ owner: user, name: "test2.txt", path: "/dir" }),
+      ];
+      await database.persist(...records);
+      const response = await requester.request(
+        HttpRequest.GET("/files?order[name]=desc"),
+      );
+      expect(response.json).toMatchObject({
+        total: 2,
+        items: [{ id: records[1].id }, { id: records[0].id }],
+      });
     });
   });
 
