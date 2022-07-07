@@ -1,4 +1,5 @@
 import { HttpNotFoundError } from "@deepkit/http";
+import { HttpInjectorContext } from "src/http-extension/http-common";
 
 import {
   RestActionContext,
@@ -14,11 +15,15 @@ import {
 import { RestSortingCustomizations } from "./rest-sorting";
 
 export class RestCrudService {
-  constructor(private contextReader: RestActionContextReader) {}
+  constructor(
+    private injector: HttpInjectorContext,
+    private contextReader: RestActionContextReader,
+  ) {}
 
   async list<Entity>(
     context: RestActionContext<Entity>,
   ): Promise<RestList<Entity>> {
+    const { module } = context;
     const resource: RestResource<Entity> &
       RestPaginationCustomizations &
       RestFilteringCustomizations &
@@ -27,23 +32,19 @@ export class RestCrudService {
     let query = resource.query();
 
     if (resource.filters)
-      resource.filters.forEach((type) => {
-        query = this.contextReader
-          .getProvider(context, type)
-          .filter(context, query);
-      });
+      resource.filters
+        .map((type) => this.injector.resolve(module, type)())
+        .forEach((filter) => (query = filter.filter(context, query)));
 
     const total = await query.count();
 
     if (resource.sorters)
-      resource.sorters.forEach((type) => {
-        query = this.contextReader
-          .getProvider(context, type)
-          .sort(context, query);
-      });
+      resource.sorters
+        .map((type) => this.injector.resolve(module, type)())
+        .forEach((sorter) => (query = sorter.sort(context, query)));
     if (resource.paginator)
-      query = this.contextReader
-        .getProvider(context, resource.paginator)
+      query = this.injector
+        .resolve(module, resource.paginator)()
         .paginate(context, query);
 
     const items = await query.find();
@@ -52,12 +53,12 @@ export class RestCrudService {
   }
 
   async retrieve<Entity>(context: RestActionContext<Entity>): Promise<Entity> {
-    const { actionMeta } = context;
+    const { module, actionMeta } = context;
     if (!actionMeta.detailed) throw new Error("Not a detailed action");
     const resource: RestResource<Entity> & RestRetrievingCustomizations =
       this.contextReader.getResource(context);
     const retrieverType = resource.retriever ?? RestFieldBasedRetriever;
-    const retriever = this.contextReader.getProvider(context, retrieverType);
+    const retriever = this.injector.resolve(module, retrieverType)();
     const query = retriever.retrieve(context, resource.query());
     const result = await query.findOneOrUndefined();
     if (!result) throw new HttpNotFoundError();

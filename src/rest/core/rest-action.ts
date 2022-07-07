@@ -4,12 +4,7 @@ import {
   RouteParameterResolver,
   RouteParameterResolverContext,
 } from "@deepkit/http";
-import {
-  InjectorModule,
-  ResolveToken,
-  ServiceNotFoundError,
-  Token,
-} from "@deepkit/injector";
+import { InjectorModule } from "@deepkit/injector";
 import { FieldName } from "@deepkit/orm";
 import { ReceiveType, ReflectionClass, Type } from "@deepkit/type";
 import { purify } from "src/common/type";
@@ -84,20 +79,6 @@ export class RestActionContextReader {
     private injector: HttpInjectorContext,
     private requestParser: HttpRequestParser,
   ) {}
-
-  getProvider<T>(
-    context: RestActionContext,
-    token: ReceiveType<T> | Token<T>,
-  ): ResolveToken<T> {
-    const { module } = context;
-    try {
-      return this.injector.get(token, module);
-    } catch (error) {
-      if (error instanceof ServiceNotFoundError && module.parent)
-        return this.injector.get(token, module.parent);
-      throw error;
-    }
-  }
 
   getResource<Entity>(
     context: RestActionContext<Entity>,
