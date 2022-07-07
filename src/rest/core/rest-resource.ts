@@ -40,7 +40,7 @@ export class RestResourceInstaller {
     const resourceMeta = this.getMetaOrThrow(type).validate();
     const actionMeta = resourceMeta.actions[name].validate();
     let path = actionMeta.detailed ? `:${resourceMeta.lookup}` : "";
-    if (actionMeta.path) path = join(path, actionMeta.path);
+    if (actionMeta.suffix) path = join(path, actionMeta.suffix);
     http[actionMeta.method](path)(type.prototype, name);
     this.setupActionParameterResolver(actionMeta);
     actionMeta.configurators.forEach((configurator) => {

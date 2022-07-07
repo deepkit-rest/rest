@@ -110,7 +110,7 @@ export class FileResource
     return new NoContentResponse();
   }
 
-  @rest.action("PUT").detailed().path("content")
+  @rest.action("PUT").detailed().suffix("content")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   async upload(
     context: RestActionContext<FileRecord>,
@@ -128,7 +128,7 @@ export class FileResource
     return new NoContentResponse();
   }
 
-  @rest.action("GET").detailed().path("content")
+  @rest.action("GET").detailed().suffix("content")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   async download(
     context: RestActionContext<FileRecord>,
@@ -138,6 +138,7 @@ export class FileResource
     const record = await this.crud.retrieve(context);
     if (!record.isContentDefined()) throw new HttpNotFoundError();
 
+    // TODO: move to parameter resolver
     if (request.headers["range"]) {
       const ranges = this.rangeParser.parse(
         request.headers["range"],
@@ -159,7 +160,7 @@ export class FileResource
     return stream.pipe(response);
   }
 
-  @rest.action("GET").detailed().path("integrity")
+  @rest.action("GET").detailed().suffix("integrity")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   @http
     .response(204, "File integrity verified")

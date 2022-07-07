@@ -86,7 +86,7 @@ export class UserResource
     return user.assign(payload);
   }
 
-  @rest.action("PUT").detailed().path("verification")
+  @rest.action("PUT").detailed().suffix("verification")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   @http
     .response(204, "Verification requested")
@@ -101,7 +101,7 @@ export class UserResource
     return new NoContentResponse();
   }
 
-  @rest.action("GET").detailed().path("verification")
+  @rest.action("GET").detailed().suffix("verification")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   @http
     .response(204, "Pending verification exists")
@@ -113,7 +113,7 @@ export class UserResource
     return new NoContentResponse();
   }
 
-  @rest.action("PUT").detailed().path("verification/confirmation")
+  @rest.action("PUT").detailed().suffix("verification/confirmation")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   @http
     .response(204, "Verified")

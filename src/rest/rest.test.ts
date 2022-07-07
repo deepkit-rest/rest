@@ -70,9 +70,9 @@ describe("REST", () => {
       route1() {}
       @rest.action("GET").detailed()
       route2() {}
-      @rest.action("DELETE").path("suffix")
+      @rest.action("DELETE").suffix("suffix")
       route3() {}
-      @rest.action("PATCH").detailed().path("suffix")
+      @rest.action("PATCH").detailed().suffix("suffix")
       route4() {}
     }
     await setup({ prefix: "prefix", versioning: false }, [TestingResource]);
@@ -163,17 +163,17 @@ describe("REST", () => {
   test("meta configurator", async () => {
     class MyConfigurator implements RestMetaConfigurator<RestActionMeta> {
       configure(meta: RestActionMeta): void {
-        meta.path = "v2";
+        meta.suffix = "v2";
       }
     }
     @rest.resource(User)
     class MyResource extends UserRestResource {
-      @rest.action("GET").useConfigurator(new MyConfigurator()).path("v1")
+      @rest.action("GET").useConfigurator(new MyConfigurator()).suffix("v1")
       action() {}
     }
-    expect(restClass._fetch(MyResource)?.actions?.["action"].path).toBe("v1");
+    expect(restClass._fetch(MyResource)?.actions?.["action"].suffix).toBe("v1");
     await setup({ prefix: "prefix", versioning: false }, [MyResource]);
-    expect(restClass._fetch(MyResource)?.actions?.["action"].path).toBe("v2");
+    expect(restClass._fetch(MyResource)?.actions?.["action"].suffix).toBe("v2");
   });
 
   test("http scope injection", async () => {
