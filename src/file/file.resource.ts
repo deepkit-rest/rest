@@ -138,25 +138,18 @@ export class FileResource
     const record = await this.crud.retrieve(context);
     if (!record.isContentDefined()) throw new HttpNotFoundError();
 
-    // TODO: move to parameter resolver
-    if (request.headers["range"]) {
-      const ranges = this.rangeParser.parse(
-        request.headers["range"],
-        record.contentSize,
-      );
-
-      // TODO: implement multiple chunks downloading
-      if (ranges.length !== 1) throw new HttpRangeNotSatisfiableError();
-
-      const stream = await this.engine.retrieve(record.contentKey, {
-        start: ranges[0][0],
-        end: ranges[0][1],
-      });
-      stream.pipe(response);
-      response.writeHead(206); // `.status()` would accidentally `.end()` the response, and will be removed in the future, so we call writeHead() here.
-      return response;
+    if (!request.headers["range"]) {
+      const stream = await this.engine.retrieve(record.contentKey);
+      return stream.pipe(response);
     }
-    const stream = await this.engine.retrieve(record.contentKey);
+
+    const rangesRaw = request.headers["range"];
+    const { contentKey, contentSize } = record;
+    const ranges = this.rangeParser.parse(rangesRaw, contentSize);
+    if (ranges.length > 1) throw new HttpRangeNotSatisfiableError();
+    const [[start, end]] = ranges;
+    const stream = await this.engine.retrieve(contentKey, { start, end });
+    response.writeHead(206); // temporary workaround: `.status()` would accidentally `.end()` the response, and will be removed in the future, so we call `writeHead()` here.
     return stream.pipe(response);
   }
 
@@ -185,6 +178,7 @@ interface FileRecordCreationPayload {
 interface FileRecordUpdatePayload extends Partial<FileRecordCreationPayload> {}
 
 function getContentLength(request: HttpRequest): number {
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  return +request.headers["content-length"]!;
+  const result = request.headers["content-length"];
+  if (!result) throw new Error("Content-Length header is missing");
+  return +result;
 }
