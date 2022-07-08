@@ -1,42 +1,27 @@
 # Cridium Server
 
-This is the server of Cridium, written in TypeScript with the [DeepKit](https://deepkit.io) framework.
+Backend implementation of [Cridium](https://github.com/Cridium) built with [DeepKit](https://deepkit.io).
 
-## How to debug
+WIP: missing features and not ready for deployment.
 
-### Prerequisites
+## Installation
 
-1. Git and Nodejs 16+ installed.
-2. `python3` and `build-essential` installed if you're on Linux, or follow [`node-gyp`'s guideline](https://github.com/nodejs/node-gyp#on-windows) if you're on Windows.
+1. ```sh
+   git clone https://github.com/Cridium/cridium-server.git
+   cd cridium-server
+   npm install
+   cp .env.example .env
+   ```
+1. Configure application settings in `.env`
 
-### Steps
+## Usage
 
-1. Clone the repository, and install the dependencies
+- `npm run app` would bootstrap the application without any further instructions, which would print a list of CLI commands available in the application. You can follow the printed information to run certain commands like `npm run app migration:create`.
+- `npm run dev` would start the application as a server and watch file system changes in the workspace for developing.
 
-```bash
-git clone https://github.com/Cridium/cridium-server.git
-cd cridium-server
-npm install
-```
+## Known Issues
 
-`npm install` will install all the dependencies and rebuild native packages with `node-gyp`, if it fails, recheck step 2 in prerequisites.
+Because of some known issues of the current release of DeepKit, some features are temporarily not available:
 
-2. Copy the example configuration file `.env.example` to `.env` and modify the following
-
-```ini
-APP_FRAMEWORK_DEBUG=false
-```
-
-to
-
-```ini
-APP_FRAMEWORK_DEBUG=true
-```
-
-3. Run `npm run dev`
-
-And it's running! Go to your browser and open `http://localhost:8080/_debug` (if you use WSL, the port will be automatically forwarded to the host, so you can use `localhost` as well), you'll see the DeepKit Debugger.
-
-## License
-
-Apache License 2.0
+- When enabling `APP_FRAMEWORK_DEBUG`, the ORM part of the DeepKit Debugger is not available.
+- Database related features like `APP_FRAMEWORK_MIGRATE_ON_STARTUP` and `npm run app migration` will not work as expected. (thus the server will not work properly without manual database migrations)
