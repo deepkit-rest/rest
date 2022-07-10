@@ -10,12 +10,6 @@ import { User } from "src/user/user.entity";
 
 import { AuthTokenService } from "./auth-token.service";
 
-// TODO: determine whether to use alternative:
-// - login: POST /sessions
-// - refresh: PATCH /sessions/current
-// - logout: DELETE /sessions/current
-// - register: POST /users
-
 @http.controller("api/auth")
 export class AuthController {
   constructor(
