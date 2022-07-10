@@ -10,11 +10,11 @@ import { ReflectionProperty } from "@deepkit/type";
 import { RequestContext } from "src/core/request-context";
 import { InjectDatabaseSession } from "src/database/database.tokens";
 import { NoContentResponse } from "src/http-extension/http-common";
-import { rest } from "src/rest/core/rest.decorator";
 import {
   RestActionContext,
   RestActionContextReader,
 } from "src/rest/core/rest-action";
+import { rest } from "src/rest/core/rest-decoration";
 import { RestResource } from "src/rest/core/rest-resource";
 import { RestCrudService, RestList } from "src/rest/crud/rest-crud";
 import {

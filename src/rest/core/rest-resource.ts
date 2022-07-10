@@ -5,12 +5,12 @@ import * as orm from "@deepkit/orm"; // temporary workaround: we have to use nam
 import { join } from "path";
 
 import { RestConfig } from "../rest.config";
-import { restClass } from "./rest.decorator";
-import { RestActionMetaValidated, RestResourceMeta } from "./rest.meta";
 import {
   RestActionContext,
   RestActionRouteParameterResolver,
 } from "./rest-action";
+import { restClass } from "./rest-decoration";
+import { RestActionMetaValidated, RestResourceMeta } from "./rest-meta";
 
 export interface RestResource<Entity> {
   query(): orm.Query<Entity>;

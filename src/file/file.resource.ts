@@ -14,8 +14,8 @@ import {
   NoContentResponse,
 } from "src/http-extension/http-common";
 import { HttpRangeParser } from "src/http-extension/http-range-parser.service";
-import { rest } from "src/rest/core/rest.decorator";
 import { RestActionContext } from "src/rest/core/rest-action";
+import { rest } from "src/rest/core/rest-decoration";
 import { RestResource } from "src/rest/core/rest-resource";
 import { RestCrudService, RestList } from "src/rest/crud/rest-crud";
 import {

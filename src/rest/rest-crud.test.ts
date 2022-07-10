@@ -11,7 +11,7 @@ import { HttpExtensionModule } from "src/http-extension/http-extension.module";
 import { RestActionContext } from "src/rest/core/rest-action";
 import { RestModule } from "src/rest/rest.module";
 
-import { rest } from "./core/rest.decorator";
+import { rest } from "./core/rest-decoration";
 import { RestResource } from "./core/rest-resource";
 import { RestCrudService, RestList } from "./crud/rest-crud";
 import {

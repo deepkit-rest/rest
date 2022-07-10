@@ -2,7 +2,7 @@ import { eventDispatcher } from "@deepkit/event";
 import { onServerMainBootstrap } from "@deepkit/framework";
 import { Router } from "@deepkit/http";
 
-import { RestResourceRegistry } from "./rest-resource";
+import { RestResourceRegistry } from "./core/rest-resource";
 
 export class RestListener {
   constructor(private registry: RestResourceRegistry, private router: Router) {}

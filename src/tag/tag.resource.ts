@@ -3,8 +3,8 @@ import * as orm from "@deepkit/orm"; // temporary workaround: we have to use nam
 import { RequestContext } from "src/core/request-context";
 import { InjectDatabaseSession } from "src/database/database.tokens";
 import { NoContentResponse } from "src/http-extension/http-common";
-import { rest } from "src/rest/core/rest.decorator";
 import { RestActionContext } from "src/rest/core/rest-action";
+import { rest } from "src/rest/core/rest-decoration";
 import { RestResource } from "src/rest/core/rest-resource";
 import { RestCrudService, RestList } from "src/rest/crud/rest-crud";
 import {

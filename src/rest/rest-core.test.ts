@@ -14,9 +14,9 @@ import * as orm from "@deepkit/orm"; // temporary workaround: we have to use nam
 import { AutoIncrement, entity, PrimaryKey } from "@deepkit/type";
 import { HttpExtensionModule } from "src/http-extension/http-extension.module";
 
-import { rest, restClass } from "./core/rest.decorator";
-import { RestActionMeta, RestMetaConfigurator } from "./core/rest.meta";
 import { RestActionContext } from "./core/rest-action";
+import { rest, restClass } from "./core/rest-decoration";
+import { RestActionMeta, RestMetaConfigurator } from "./core/rest-meta";
 import { RestResource } from "./core/rest-resource";
 import { RestConfig } from "./rest.config";
 import { RestModule } from "./rest.module";

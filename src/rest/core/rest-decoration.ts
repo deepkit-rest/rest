@@ -13,7 +13,7 @@ import {
   RestActionMeta,
   RestMetaConfigurator,
   RestResourceMeta,
-} from "./rest.meta";
+} from "./rest-meta";
 import { RestResource } from "./rest-resource";
 
 export class RestClassDecoratorApi extends PrettifiedDecoratorApi<RestResourceMeta> {

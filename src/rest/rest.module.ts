@@ -1,12 +1,11 @@
 import { AppModule, createModule } from "@deepkit/app";
 import { ClassType } from "@deepkit/core";
 
-import { restClass } from "./core/rest.decorator";
-import { RestListener } from "./core/rest.listener";
 import {
   RestActionContextReader,
   RestActionRouteParameterResolver,
 } from "./core/rest-action";
+import { restClass } from "./core/rest-decoration";
 import {
   RestResourceInstaller,
   RestResourceRegistry,
@@ -19,6 +18,7 @@ import { RestGenericSorter } from "./crud/rest-sorting";
 import { RestFilterMapFactory } from "./crud-models/rest-filter-map";
 import { RestOrderMapFactory } from "./crud-models/rest-order-map";
 import { RestConfig } from "./rest.config";
+import { RestListener } from "./rest.listener";
 
 export class RestModule extends createModule(
   {

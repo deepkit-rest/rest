@@ -14,11 +14,11 @@ import {
 } from "src/http-extension/http-common";
 import { HttpRequestParser } from "src/http-extension/http-request-parser.service";
 
-import { restClass } from "./rest.decorator";
+import { restClass } from "./rest-decoration";
 import {
   RestActionMetaValidated,
   RestResourceMetaValidated,
-} from "./rest.meta";
+} from "./rest-meta";
 import { RestResource } from "./rest-resource";
 
 export class RestActionRouteParameterResolver
