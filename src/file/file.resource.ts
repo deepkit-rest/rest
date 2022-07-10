@@ -110,7 +110,7 @@ export class FileResource
     return new NoContentResponse();
   }
 
-  @rest.action("PUT").detailed().suffix("content")
+  @rest.action("PUT").detailed().path("content")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   async upload(
     context: RestActionContext<FileRecord>,
@@ -128,7 +128,7 @@ export class FileResource
     return new NoContentResponse();
   }
 
-  @rest.action("GET").detailed().suffix("content")
+  @rest.action("GET").detailed().path("content")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   async download(
     context: RestActionContext<FileRecord>,
@@ -153,7 +153,7 @@ export class FileResource
     return stream.pipe(response);
   }
 
-  @rest.action("GET").detailed().suffix("integrity")
+  @rest.action("GET").detailed().path("integrity")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   @http
     .response(204, "File integrity verified")

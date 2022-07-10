@@ -41,7 +41,7 @@ export class RestActionMeta {
   name?: string;
   detailed = false;
   method?: HttpMethod;
-  suffix?: string;
+  path?: string;
   configurators: RestMetaConfigurator<RestActionMeta>[] = [];
 
   private validated = false;

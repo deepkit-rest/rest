@@ -67,8 +67,8 @@ export class RestPropertyDecoratorApi extends PrettifiedDecoratorApi<RestActionM
     this.meta.detailed = true;
   }
 
-  suffix(suffix: string): void {
-    this.meta.suffix = suffix;
+  path(suffixPath: string): void {
+    this.meta.path = suffixPath;
   }
 }
 
