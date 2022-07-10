@@ -46,10 +46,10 @@ export class UserResource
     RestFilteringCustomizations,
     RestSortingCustomizations
 {
-  retriever = UserRetriever;
-  paginator = RestOffsetLimitPaginator;
-  filters = [RestGenericFilter];
-  sorters = [RestGenericSorter];
+  readonly retriever = UserRetriever;
+  readonly paginator = RestOffsetLimitPaginator;
+  readonly filters = [RestGenericFilter];
+  readonly sorters = [RestGenericSorter];
 
   constructor(
     private context: RequestContext,

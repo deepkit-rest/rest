@@ -31,9 +31,9 @@ export class TagResource
     RestFilteringCustomizations,
     RestSortingCustomizations
 {
-  paginator = RestOffsetLimitPaginator;
-  filters = [RestGenericFilter];
-  sorters = [RestGenericSorter];
+  readonly paginator = RestOffsetLimitPaginator;
+  readonly filters = [RestGenericFilter];
+  readonly sorters = [RestGenericSorter];
 
   constructor(
     private context: RequestContext,

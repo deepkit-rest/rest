@@ -87,7 +87,7 @@ describe("REST CRUD", () => {
         extends MyResource
         implements RestPaginationCustomizations
       {
-        paginator = RestOffsetLimitPaginator;
+        readonly paginator = RestOffsetLimitPaginator;
         @rest.action("GET")
         list(context: RestActionContext) {
           return this.crud.list(context);
@@ -112,7 +112,7 @@ describe("REST CRUD", () => {
           extends MyResource
           implements RestPaginationCustomizations
         {
-          paginator = RestOffsetLimitPaginator;
+          readonly paginator = RestOffsetLimitPaginator;
           @rest.action("GET")
           list(context: RestActionContext): Promise<RestList<MyEntity>> {
             return this.crud.list(context);
@@ -175,7 +175,7 @@ describe("REST CRUD", () => {
         class TestingResource
           implements RestResource<Entity1>, RestFilteringCustomizations
         {
-          filters = [RestGenericFilter];
+          readonly filters = [RestGenericFilter];
           constructor(
             private database: Inject<orm.Database, "database">,
             private crud: RestCrudService,
@@ -220,7 +220,7 @@ describe("REST CRUD", () => {
         }
         @rest.resource(TestingEntity, "api")
         class TestingResource implements RestSortingCustomizations {
-          sorters = [RestGenericSorter];
+          readonly sorters = [RestGenericSorter];
           constructor(
             private database: Inject<orm.Database, "database">,
             private crud: RestCrudService,
@@ -278,7 +278,7 @@ describe("REST CRUD", () => {
           extends MyResource
           implements RestRetrievingCustomizations
         {
-          retriever = RestFieldBasedRetriever;
+          readonly retriever = RestFieldBasedRetriever;
           @rest.action("GET").detailed()
           retrieve(context: RestActionContext) {
             return this.crud.retrieve(context);
@@ -296,7 +296,7 @@ describe("REST CRUD", () => {
           extends MyResource
           implements RestRetrievingCustomizations
         {
-          retriever = RestFieldBasedRetriever;
+          readonly retriever = RestFieldBasedRetriever;
           @rest.action("GET").detailed()
           retrieve(context: RestActionContext) {
             return this.crud.retrieve(context);
@@ -336,7 +336,7 @@ describe("REST CRUD", () => {
         extends MyResource
         implements RestRetrievingCustomizations
       {
-        retriever = TestingLookupBackend;
+        readonly retriever = TestingLookupBackend;
         @rest.action("GET").detailed()
         retrieve(context: RestActionContext) {
           return this.crud.retrieve(context);
