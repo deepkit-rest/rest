@@ -6,7 +6,7 @@ import {
   HttpNotFoundError,
 } from "@deepkit/http";
 import * as orm from "@deepkit/orm"; // temporary workaround: we have to use namespace import here as a temporary workaround, otherwise the application will not be able to bootstrap. This will be fixed in the next release
-import { Type } from "@deepkit/type";
+import { ReflectionProperty } from "@deepkit/type";
 import { RequestContext } from "src/core/request-context";
 import { InjectDatabaseSession } from "src/database/database.tokens";
 import { NoContentResponse } from "src/http-extension/http-common";
@@ -143,8 +143,11 @@ export class UserRetriever extends RestFieldBasedRetriever {
     super(contextReader);
   }
 
-  protected override transformValue(raw: unknown, type: Type): unknown {
+  protected override transformValue(
+    raw: unknown,
+    schema: ReflectionProperty,
+  ): unknown {
     if (raw === "me") return this.requestContext.user.id;
-    return super.transformValue(raw, type);
+    return super.transformValue(raw, schema);
   }
 }

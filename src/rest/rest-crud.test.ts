@@ -23,6 +23,8 @@ import {
   RestPaginationCustomizations,
 } from "./crud/rest-pagination";
 import {
+  RestFieldBasedRetriever,
+  RestFieldBasedRetrieverCustomizations,
   RestRetriever,
   RestRetrievingCustomizations,
 } from "./crud/rest-retrieving";
@@ -68,6 +70,7 @@ describe("REST CRUD", () => {
 
   class MyEntity {
     id: number & AutoIncrement & PrimaryKey = 0;
+    constructor(public name: string = "") {}
   }
   class MyResource implements RestResource<MyEntity> {
     protected db!: Inject<orm.Database, "database">;
@@ -97,7 +100,7 @@ describe("REST CRUD", () => {
         expect(response.statusCode).toBe(200);
         expect(response.json).toEqual({
           total: 1,
-          items: [{ id: 1 }],
+          items: [{ id: 1, name: expect.any(String) }],
         });
       });
     });
@@ -122,10 +125,10 @@ describe("REST CRUD", () => {
 
         it.each`
           limit | offset | items
-          ${1}  | ${0}   | ${[{ id: 1 }]}
-          ${1}  | ${1}   | ${[{ id: 2 }]}
-          ${2}  | ${1}   | ${[{ id: 2 }, { id: 3 }]}
-          ${1}  | ${2}   | ${[{ id: 3 }]}
+          ${1}  | ${1}   | ${[{ id: 2, name: expect.any(String) }]}
+          ${1}  | ${0}   | ${[{ id: 1, name: expect.any(String) }]}
+          ${2}  | ${1}   | ${[{ id: 2, name: expect.any(String) }, { id: 3, name: expect.any(String) }]}
+          ${1}  | ${2}   | ${[{ id: 3, name: expect.any(String) }]}
         `(
           "should work when limit is $limit and offset is $offset",
           async ({ limit, offset, items }) => {
@@ -265,6 +268,65 @@ describe("REST CRUD", () => {
         await database.persist(new MyEntity());
         const response = await requester.request(HttpRequest.GET("/api/1"));
         expect(response.statusCode).toBe(200);
+      });
+    });
+
+    describe("RestFieldBasedRetriever", () => {
+      test("lookup name as target field", async () => {
+        @rest.resource(MyEntity, "api").lookup("id")
+        class TestingResource
+          extends MyResource
+          implements RestRetrievingCustomizations
+        {
+          retriever = RestFieldBasedRetriever;
+          @rest.action("GET").detailed()
+          retrieve(context: RestActionContext) {
+            return this.crud.retrieve(context);
+          }
+        }
+        await prepare(TestingResource, [MyEntity]);
+        await database.persist(new MyEntity());
+        const response = await requester.request(HttpRequest.GET("/api/1"));
+        expect(response.json).toMatchObject({ id: 1 });
+      });
+
+      test("primary key as target field", async () => {
+        @rest.resource(MyEntity, "api").lookup("invalidFieldName")
+        class TestingResource
+          extends MyResource
+          implements RestRetrievingCustomizations
+        {
+          retriever = RestFieldBasedRetriever;
+          @rest.action("GET").detailed()
+          retrieve(context: RestActionContext) {
+            return this.crud.retrieve(context);
+          }
+        }
+        await prepare(TestingResource, [MyEntity]);
+        await database.persist(new MyEntity());
+        const response = await requester.request(HttpRequest.GET("/api/1"));
+        expect(response.json).toMatchObject({ id: 1 });
+      });
+
+      test("custom field as target field", async () => {
+        @rest.resource(MyEntity, "api").lookup("id")
+        class TestingResource
+          extends MyResource
+          implements
+            RestRetrievingCustomizations,
+            RestFieldBasedRetrieverCustomizations<MyEntity>
+        {
+          readonly retriever = RestFieldBasedRetriever;
+          readonly retrievesOn = "name";
+          @rest.action("GET").detailed()
+          retrieve(context: RestActionContext) {
+            return this.crud.retrieve(context);
+          }
+        }
+        await prepare(TestingResource, [MyEntity]);
+        await database.persist(new MyEntity("name"));
+        const response = await requester.request(HttpRequest.GET("/api/name"));
+        expect(response.json).toMatchObject({ id: 1 });
       });
     });
 
