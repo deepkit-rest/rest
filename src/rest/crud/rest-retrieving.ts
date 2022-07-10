@@ -27,22 +27,14 @@ export class RestFieldBasedRetriever implements RestRetriever {
     context: RestActionContext<Entity>,
     query: orm.Query<Entity>,
   ): orm.Query<Entity> {
-    const [name, valueRaw, type] = this.contextReader.getLookupInfo(context);
-    if (!this.isField(name, context.resourceMeta.entityType))
-      throw new Error("Invalid lookup value");
-    const value = this.transformValue(valueRaw, type);
-    return query.addFilter(name, value as any);
+    const [name, valueRaw] = this.contextReader.getLookupInfo(context);
+    const entitySchema = ReflectionClass.from(context.resourceMeta.entityType);
+    const propertySchema = entitySchema.getProperty(name);
+    const value = this.transformValue(valueRaw, propertySchema.type);
+    return query.addFilter(name as FieldName<Entity>, value as any);
   }
 
   protected transformValue(raw: unknown, type: Type): unknown {
     return purify(raw, type);
-  }
-
-  protected isField<Entity>(
-    name: string,
-    entityType: ClassType<Entity>,
-  ): name is FieldName<Entity> {
-    const schema = ReflectionClass.from(entityType);
-    return schema.hasProperty(name);
   }
 }
