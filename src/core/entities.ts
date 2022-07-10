@@ -4,14 +4,9 @@ import { FileRecord } from "src/file/file-record.entity";
 import { Tag } from "src/tag/tag.entity";
 import { User } from "src/user/user.entity";
 
-import { FileRecordTagPivot } from "./entity-pivots";
+import { FileRecordToTag } from "./entity-pivots";
 
-export const entities: ClassType[] = [
-  User,
-  FileRecord,
-  Tag,
-  FileRecordTagPivot,
-];
+export const entities: ClassType[] = [User, FileRecord, Tag, FileRecordToTag];
 
 // temporary workaround: reflection result will be cached. We must call
 // `ReflectionClass.from()` directly before any other calls to ensure the

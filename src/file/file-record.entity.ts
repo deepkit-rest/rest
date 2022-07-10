@@ -8,7 +8,7 @@ import {
 } from "@deepkit/type";
 import { Entity } from "src/common/entity";
 import { PartialRequired } from "src/common/utilities";
-import { FileRecordTagPivot } from "src/core/entity-pivots";
+import { FileRecordToTag } from "src/core/entity-pivots";
 import { Filterable } from "src/rest/crud-models/rest-filter-map";
 import { Orderable } from "src/rest/crud-models/rest-order-map";
 import { Tag } from "src/tag/tag.entity";
@@ -20,7 +20,7 @@ export class FileRecord extends Entity<FileRecord, "owner" | "name" | "path"> {
   owner!: User & Reference & Filterable & Orderable;
   name!: string & Filterable & Orderable;
   path!: string & Filterable & Orderable;
-  tags: Tag[] & BackReference<{ via: typeof FileRecordTagPivot }> = [];
+  tags: Tag[] & BackReference<{ via: typeof FileRecordToTag }> = [];
   contentKey?: string;
   contentIntegrity?: string;
   contentSize?: integer & Positive & Filterable & Orderable;
