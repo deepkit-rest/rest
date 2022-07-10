@@ -1,16 +1,15 @@
 import { ClassType } from "@deepkit/core";
-import { FieldName } from "@deepkit/orm";
 import { PartialRequired } from "src/common/utilities";
 import { HttpMethod } from "src/http-extension/http-common";
 
 import { RestResource } from "./rest-resource";
 
-export class RestResourceMeta<Entity = any> {
+export class RestResourceMeta<Entity = unknown> {
   classType?: ClassType<RestResource<Entity>>;
   name?: string;
   entityType?: ClassType<Entity>;
   version?: number;
-  lookup?: FieldName<Entity>; // TODO: use `string` as type
+  lookup?: string;
   actions: Record<string, RestActionMeta> = {};
 
   private validated = false;
@@ -31,7 +30,7 @@ export class RestResourceMeta<Entity = any> {
   }
 }
 
-export interface RestResourceMetaValidated<Entity = any>
+export interface RestResourceMetaValidated<Entity = unknown>
   extends PartialRequired<
     RestResourceMeta<Entity>,
     "classType" | "name" | "entityType"

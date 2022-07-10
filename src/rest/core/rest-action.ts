@@ -5,7 +5,6 @@ import {
   RouteParameterResolverContext,
 } from "@deepkit/http";
 import { InjectorModule } from "@deepkit/injector";
-import { FieldName } from "@deepkit/orm";
 import { ReceiveType, ReflectionClass, Type } from "@deepkit/type";
 import { purify } from "src/common/type";
 import {
@@ -114,7 +113,7 @@ export class RestActionContextReader {
 
   getLookupInfo<Entity>(
     context: RestActionContext<Entity>,
-  ): [name: FieldName<Entity>, value: unknown, type: Type] {
+  ): [name: string, value: unknown, type: Type] {
     const lookup = context.resourceMeta.lookup;
     if (!lookup) throw new Error("Lookup not specified");
     const type = this.getEntitySchema(context).getProperty(lookup).type;
