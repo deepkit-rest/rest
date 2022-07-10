@@ -11,7 +11,7 @@ describe("HttpRequestParser", () => {
 
   describe("parseUrl", () => {
     it("should work", async () => {
-      const { path, queries: params } = parser.parseUrl(
+      const [path, params] = parser.parseUrl(
         "/url?array[]=value1&array[]=value2&object[key]=value",
       );
       expect(path).toBe("/url");

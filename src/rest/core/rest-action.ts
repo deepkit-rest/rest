@@ -107,7 +107,7 @@ export class RestActionContextReader {
     type?: ReceiveType<T>,
   ): T {
     const { request } = context;
-    const { queries } = this.requestParser.parseUrl(request.getUrl());
+    const [, queries] = this.requestParser.parseUrl(request.getUrl());
     return type ? purify<T>(queries, type) : (queries as T);
   }
 
