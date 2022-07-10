@@ -3,12 +3,12 @@ import formidable from "formidable";
 import qs from "qs";
 
 export class HttpRequestParser {
-  parseUrl(url: string): { path: string; queries: Record<string, unknown> } {
+  parseUrl(url: string): [path: string, queries: Record<string, unknown>] {
     const indexOfQueryMark = url.indexOf("?");
     const path = url.slice(0, indexOfQueryMark);
     const queriesStr = url.slice(indexOfQueryMark + 1);
     const queries = qs.parse(queriesStr);
-    return { path, queries };
+    return [path, queries];
   }
 
   async parseBody(request: HttpRequest): Promise<Record<string, unknown>> {
