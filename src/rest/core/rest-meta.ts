@@ -4,7 +4,21 @@ import { HttpMethod } from "src/http-extension/http-common";
 
 import { RestResource } from "./rest-resource";
 
-export class RestResourceMeta<Entity = unknown> {
+abstract class RestMeta<Validated extends RestMeta<Validated>> {
+  protected validated = false;
+  validate(): Validated {
+    if (!this.validated) {
+      this.validated = true;
+      this.validateInternal();
+    }
+    return this as unknown as Validated;
+  }
+  protected abstract validateInternal(): void;
+}
+
+export class RestResourceMeta<
+  Entity = unknown,
+> extends RestMeta<RestResourceMetaValidated> {
   classType?: ClassType<RestResource<Entity>>;
   name?: string;
   entityType?: ClassType<Entity>;
@@ -12,21 +26,15 @@ export class RestResourceMeta<Entity = unknown> {
   lookup?: string;
   actions: Record<string, RestActionMeta> = {};
 
-  private validated = false;
-
-  validate(): RestResourceMetaValidated {
-    if (!this.validated) {
-      if (!this.classType || !this.name || !this.entityType)
-        throw new Error("Resource not properly decorated");
-      if (!this.lookup) {
-        const actions = Object.values(this.actions);
-        const hasDetailed = actions.some((meta) => meta.detailed);
-        if (hasDetailed)
-          throw new Error("Lookup is required for detailed actions");
-      }
+  protected validateInternal(): void {
+    if (!this.classType || !this.name || !this.entityType)
+      throw new Error("Resource not properly decorated");
+    if (!this.lookup) {
+      const actions = Object.values(this.actions);
+      const hasDetailed = actions.some((meta) => meta.detailed);
+      if (hasDetailed)
+        throw new Error("Lookup is required for detailed actions");
     }
-    this.validated = true;
-    return this as RestResourceMetaValidated;
   }
 }
 
@@ -36,7 +44,7 @@ export interface RestResourceMetaValidated<Entity = unknown>
     "classType" | "name" | "entityType"
   > {}
 
-export class RestActionMeta {
+export class RestActionMeta extends RestMeta<RestActionMetaValidated> {
   resource?: RestResourceMeta;
   name?: string;
   detailed = false;
@@ -44,14 +52,9 @@ export class RestActionMeta {
   path?: string;
   configurators: RestMetaConfigurator<RestActionMeta>[] = [];
 
-  private validated = false;
-
-  validate(): RestActionMetaValidated {
-    if (!this.validated)
-      if (!this.resource || !this.name || !this.method)
-        throw new Error("Action not properly decorated");
-    this.validated = true;
-    return this as RestActionMetaValidated;
+  protected validateInternal(): void {
+    if (!this.resource || !this.name || !this.method)
+      throw new Error("Action not properly decorated");
   }
 }
 
