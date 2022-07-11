@@ -1,11 +1,14 @@
 import { eventDispatcher } from "@deepkit/event";
 import { onServerMainBootstrap } from "@deepkit/framework";
-import { Router } from "@deepkit/http";
+import { HttpRouter } from "@deepkit/http";
 
 import { RestResourceRegistry } from "./core/rest-resource";
 
 export class RestListener {
-  constructor(private registry: RestResourceRegistry, private router: Router) {}
+  constructor(
+    private registry: RestResourceRegistry,
+    private router: HttpRouter,
+  ) {}
 
   @eventDispatcher.listen(onServerMainBootstrap)
   onServerMainBootstrap(): void {
@@ -15,7 +18,7 @@ export class RestListener {
       // prettier-ignore
       const isRegistered = this.router
         .getRoutes()
-        .some(({ action }) => action.module === module && action.controller === type);
+        .some(({ action }) => action.module === module && action.type   === 'controller' && action.controller === type);
       if (isRegistered) return;
       this.router.addRouteForController(type, module);
     });

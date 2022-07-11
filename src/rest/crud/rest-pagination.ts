@@ -1,5 +1,5 @@
 import { ClassType } from "@deepkit/core";
-import * as orm from "@deepkit/orm"; // temporary workaround: we have to use namespace import here as a temporary workaround, otherwise the application will not be able to bootstrap. This will be fixed in the next release
+import { Query } from "@deepkit/orm";
 import { Maximum, Positive, PositiveNoZero } from "@deepkit/type";
 
 import {
@@ -14,8 +14,8 @@ export interface RestPaginationCustomizations {
 export interface RestPaginator {
   paginate<Entity>(
     context: RestActionContext,
-    query: orm.Query<Entity>,
-  ): orm.Query<Entity>;
+    query: Query<Entity>,
+  ): Query<Entity>;
 }
 
 export class RestOffsetLimitPaginator implements RestPaginator {
@@ -29,8 +29,8 @@ export class RestOffsetLimitPaginator implements RestPaginator {
 
   paginate<Entity>(
     context: RestActionContext<any>,
-    query: orm.Query<Entity>,
-  ): orm.Query<Entity> {
+    query: Query<Entity>,
+  ): Query<Entity> {
     const { limitDefault, limitMax, limitParam, offsetMax, offsetParam } = this;
 
     class PaginationQueries {

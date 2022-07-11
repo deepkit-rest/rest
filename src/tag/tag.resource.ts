@@ -1,5 +1,5 @@
 import { http, HttpBody } from "@deepkit/http";
-import * as orm from "@deepkit/orm"; // temporary workaround: we have to use namespace import here as a temporary workaround, otherwise the application will not be able to bootstrap. This will be fixed in the next release
+import { Query } from "@deepkit/orm";
 import { RequestContext } from "src/core/request-context";
 import { InjectDatabaseSession } from "src/database/database.tokens";
 import { NoContentResponse } from "src/http-extension/http-common";
@@ -41,7 +41,7 @@ export class TagResource
     private crud: RestCrudService,
   ) {}
 
-  query(): orm.Query<Tag> {
+  query(): Query<Tag> {
     const userRef = this.database.getReference(User, this.context.user.id);
     return this.database.query(Tag).filter({ owner: userRef });
   }
@@ -58,12 +58,7 @@ export class TagResource
     const owner = this.database.getReference(User, this.context.user.id);
     const tag = new Tag({ ...payload, owner });
     this.database.add(tag);
-    // temporary workaround: serialization result is different between manually
-    // instantiated entities and queried entities, so we have to retrieve it
-    // again from the database
-    await this.database.flush();
-    this.database.identityMap.clear();
-    return this.query().filter({ id: tag.id }).findOne();
+    return tag;
   }
 
   @rest.action("GET").detailed()

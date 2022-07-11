@@ -1,6 +1,5 @@
 import { ClassType } from "@deepkit/core";
-import * as orm from "@deepkit/orm"; // temporary workaround: we have to use namespace import here as a temporary workaround, otherwise the application will not be able to bootstrap. This will be fixed in the next release
-import { FieldName } from "@deepkit/orm";
+import { FieldName, Query } from "@deepkit/orm";
 import { ReflectionProperty } from "@deepkit/type";
 import { purify } from "src/common/type";
 
@@ -17,8 +16,8 @@ export interface RestRetrievingCustomizations {
 export interface RestRetriever {
   retrieve<Entity>(
     context: RestActionContext,
-    query: orm.Query<Entity>,
-  ): orm.Query<Entity>;
+    query: Query<Entity>,
+  ): Query<Entity>;
 }
 
 export class RestFieldBasedRetriever implements RestRetriever {
@@ -26,14 +25,14 @@ export class RestFieldBasedRetriever implements RestRetriever {
 
   retrieve<Entity>(
     context: RestActionContext<Entity>,
-    query: orm.Query<Entity>,
-  ): orm.Query<Entity> {
+    query: Query<Entity>,
+  ): Query<Entity> {
     const [, valueRaw] = this.contextReader.getLookupInfo(context);
     const entitySchema = this.contextReader.getEntitySchema(context);
     const fieldName = this.getFieldName(context);
     const fieldSchema = entitySchema.getProperty(fieldName);
     const value = this.transformValue(valueRaw, fieldSchema);
-    return query.addFilter(fieldName, value as any);
+    return query.filterField(fieldName, value as any);
   }
 
   protected transformValue(raw: unknown, schema: ReflectionProperty): unknown {

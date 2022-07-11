@@ -1,6 +1,5 @@
 import { ClassType } from "@deepkit/core";
-import * as orm from "@deepkit/orm"; // temporary workaround: we have to use namespace import here as a temporary workaround, otherwise the application will not be able to bootstrap. This will be fixed in the next release
-import { FieldName } from "@deepkit/orm";
+import { FieldName, Query } from "@deepkit/orm";
 import { InlineRuntimeType, ReflectionClass } from "@deepkit/type";
 
 import {
@@ -16,8 +15,8 @@ export interface RestFilteringCustomizations {
 export interface RestFilter {
   filter<Entity>(
     context: RestActionContext,
-    query: orm.Query<Entity>,
-  ): orm.Query<Entity>;
+    query: Query<Entity>,
+  ): Query<Entity>;
 }
 
 export class RestGenericFilter implements RestFilter {
@@ -30,8 +29,8 @@ export class RestGenericFilter implements RestFilter {
 
   filter<Entity>(
     context: RestActionContext<any>,
-    query: orm.Query<Entity>,
-  ): orm.Query<Entity> {
+    query: Query<Entity>,
+  ): Query<Entity> {
     const database = query["session"]; // hack
     const entityType = context.resourceMeta.entityType;
     const entitySchema = ReflectionClass.from(entityType);
@@ -58,7 +57,7 @@ export class RestGenericFilter implements RestFilter {
                 : getReference(condition[operator]);
           });
         }
-        query = query.addFilter(field as FieldName<Entity>, condition);
+        query = query.filterField(field as FieldName<Entity>, condition);
       });
 
     return query;

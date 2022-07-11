@@ -108,10 +108,11 @@ describe("Auth", () => {
         const user = await database.query(User).findOne();
         const { id, name, email } = user;
         const createdAt = user.createdAt.toISOString();
-        const userResponse = { id, name, email, createdAt, files: [] };
-        expect(response.json["user"]).toEqual(userResponse);
-        expect(response.json).toHaveProperty("accessToken");
-        expect(response.json).toHaveProperty("refreshToken");
+        expect(response.json).toEqual({
+          user: { id, name, email, createdAt, verifiedAt: null },
+          accessToken: expect.any(String),
+          refreshToken: expect.any(String),
+        });
       });
     });
   });

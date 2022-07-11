@@ -3,7 +3,6 @@ import { onServerBootstrap } from "@deepkit/framework";
 import { httpWorkflow } from "@deepkit/http";
 import { DatabaseSession } from "@deepkit/orm";
 
-import { DATABASE_SESSION } from "./database.tokens";
 import { DatabaseInitializer } from "./database-initializer.service";
 
 export class DatabaseListener {
@@ -18,8 +17,7 @@ export class DatabaseListener {
   async afterHttpController(
     event: typeof httpWorkflow.onController.event,
   ): Promise<void> {
-    const session =
-      event.injectorContext.get<DatabaseSession<any>>(DATABASE_SESSION);
+    const session = event.injectorContext.get(DatabaseSession);
     await session.commit();
   }
 }

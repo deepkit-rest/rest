@@ -5,7 +5,7 @@ import {
   HttpRequest,
   HttpResponse,
 } from "@deepkit/http";
-import * as orm from "@deepkit/orm"; // temporary workaround: we have to use namespace import here as a temporary workaround, otherwise the application will not be able to bootstrap. This will be fixed in the next release
+import { Query } from "@deepkit/orm";
 import { RequestContext } from "src/core/request-context";
 import { InjectDatabaseSession } from "src/database/database.tokens";
 import { FileEngine } from "src/file-engine/file-engine.interface";
@@ -55,7 +55,7 @@ export class FileResource
     private rangeParser: HttpRangeParser,
   ) {}
 
-  query(): orm.Query<FileRecord> {
+  query(): Query<FileRecord> {
     const userRef = this.database.getReference(User, this.context.user.id);
     return this.database.query(FileRecord).filter({ owner: userRef });
   }
@@ -76,12 +76,7 @@ export class FileResource
     const owner = this.database.getReference(User, this.context.user.id);
     const record = new FileRecord({ owner, ...payload });
     this.database.add(record);
-    // temporary workaround: serialization result is different between manually
-    // instantiated entities and queried entities, so we have to retrieve it
-    // again from the database
-    await this.database.flush();
-    this.database.identityMap.clear();
-    return this.query().addFilter("id", record.id).findOne();
+    return record;
   }
 
   @rest.action("GET").detailed()
@@ -149,7 +144,7 @@ export class FileResource
     if (ranges.length > 1) throw new HttpRangeNotSatisfiableError();
     const [[start, end]] = ranges;
     const stream = await this.engine.retrieve(contentKey, { start, end });
-    response.writeHead(206); // temporary workaround: `.status()` would accidentally `.end()` the response, and will be removed in the future, so we call `writeHead()` here.
+    response.writeHead(206); // `.status()` would accidentally `.end()` the response, and will be removed in the future, so we call `writeHead()` here.
     return stream.pipe(response);
   }
 

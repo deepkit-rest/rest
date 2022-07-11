@@ -1,32 +1,25 @@
 import { createModule } from "@deepkit/app";
 import { ClassType } from "@deepkit/core";
-import * as orm from "@deepkit/orm"; // temporary workaround: we have to use namespace import here as a temporary workaround, otherwise the application will not be able to bootstrap. This will be fixed in the next release
+import { Database, DatabaseSession } from "@deepkit/orm";
 
 import { DatabaseConfig } from "./database.config";
 import { DatabaseListener } from "./database.listener";
 import { SQLiteDatabase } from "./database.provider";
-import {
-  DATABASE,
-  DATABASE_SESSION,
-  DatabaseFactoryToken,
-} from "./database.tokens";
 import { DatabaseInitializer } from "./database-initializer.service";
 
 export class DatabaseModule extends createModule(
   {
     providers: [
-      { provide: DATABASE, useClass: SQLiteDatabase },
-      { provide: DatabaseFactoryToken, useExisting: DATABASE },
+      { provide: Database, useClass: SQLiteDatabase },
       {
-        provide: DATABASE_SESSION,
-        useFactory: (db: DatabaseFactoryToken) =>
-          (db as orm.Database).createSession(),
+        provide: DatabaseSession,
+        useFactory: (db: Database) => db.createSession(),
         scope: "http",
       },
       DatabaseInitializer,
     ],
+    exports: [Database, DatabaseSession],
     listeners: [DatabaseListener],
-    exports: [DATABASE, DATABASE_SESSION],
     config: DatabaseConfig,
   },
   "database",

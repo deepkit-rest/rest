@@ -5,12 +5,12 @@ import {
   http,
   HttpKernel,
   HttpRequest,
+  HttpRouter,
   RouteConfig,
-  Router,
 } from "@deepkit/http";
 import { Inject, InjectorContext, ProviderWithScope } from "@deepkit/injector";
 import { Logger, MemoryLoggerTransport } from "@deepkit/logger";
-import * as orm from "@deepkit/orm"; // temporary workaround: we have to use namespace import here as a temporary workaround, otherwise the application will not be able to bootstrap. This will be fixed in the next release
+import { Database, MemoryDatabaseAdapter, Query } from "@deepkit/orm";
 import { AutoIncrement, entity, PrimaryKey } from "@deepkit/type";
 import { HttpExtensionModule } from "src/http-extension/http-extension.module";
 
@@ -24,7 +24,7 @@ import { RestModule } from "./rest.module";
 describe("REST", () => {
   let facade: TestingFacade<App<any>>;
   let requester: HttpKernel;
-  let database: orm.Database;
+  let database: Database;
 
   async function setup(
     config: Partial<RestConfig>,
@@ -37,17 +37,15 @@ describe("REST", () => {
       providers: [
         {
           provide: "DATABASE",
-          useValue: new orm.Database(new orm.MemoryDatabaseAdapter()),
+          useValue: new Database(new MemoryDatabaseAdapter()),
         },
         ...providers,
       ],
     });
     requester = facade.app.get(HttpKernel);
-    database = facade.app.get(InjectorContext).get<orm.Database>("DATABASE");
+    database = facade.app.get(InjectorContext).get<Database>("DATABASE");
     await database.migrate();
-    // temporary workaround: transport setup is not working, so we have to
-    // manually set it up
-    facade.app.get(Logger).setTransport([new MemoryLoggerTransport()]);
+    facade.app.get(Logger).setTransport([new MemoryLoggerTransport()]); // temporary workaround: transport setup is not working, so we have to manually set it up
     await facade.startServer();
   }
 
@@ -57,8 +55,8 @@ describe("REST", () => {
   }
 
   class UserRestResource implements RestResource<User> {
-    constructor(private database: Inject<orm.Database, "DATABASE">) {}
-    query(): orm.Query<User> {
+    constructor(private database: Inject<Database, "DATABASE">) {}
+    query(): Query<User> {
       return this.database.query(User);
     }
   }
@@ -76,7 +74,7 @@ describe("REST", () => {
       route4() {}
     }
     await setup({ prefix: "prefix", versioning: false }, [TestingResource]);
-    const routes = facade.app.get(Router).getRoutes();
+    const routes = facade.app.get(HttpRouter).getRoutes();
     expect(routes).toMatchObject<Partial<RouteConfig>[]>([
       { baseUrl: "prefix/users", path: "", httpMethods: ["POST"] },
       { baseUrl: "prefix/users", path: ":id", httpMethods: ["GET"] },
@@ -92,7 +90,7 @@ describe("REST", () => {
       route1() {}
     }
     await setup({ prefix: "prefix", versioning: false }, [TestingResource]);
-    const routes = facade.app.get(Router).getRoutes();
+    const routes = facade.app.get(HttpRouter).getRoutes();
     expect(routes).toMatchObject<Partial<RouteConfig>[]>([
       { baseUrl: "prefix/name", path: "", httpMethods: ["GET"] },
     ]);
@@ -113,7 +111,7 @@ describe("REST", () => {
       TestingResourceV1,
       TestingResourceV2,
     ]);
-    const routes = facade.app.get(Router).getRoutes();
+    const routes = facade.app.get(HttpRouter).getRoutes();
     expect(routes).toMatchObject<Partial<RouteConfig>[]>([
       { baseUrl: "prefix/v1/name", path: "", httpMethods: ["GET"] },
       { baseUrl: "prefix/v2/name", path: "", httpMethods: ["POST"] },
@@ -130,7 +128,7 @@ describe("REST", () => {
       action2() {}
     }
     await setup({ prefix: "prefix", versioning: false }, [MyResource as any]);
-    const routes = facade.app.get(Router).getRoutes();
+    const routes = facade.app.get(HttpRouter).getRoutes();
     expect(routes).toHaveLength(2);
     expect(routes).toMatchObject<Partial<RouteConfig>[]>([
       { baseUrl: "prefix/users", path: "http", httpMethods: ["GET"] },
@@ -179,10 +177,7 @@ describe("REST", () => {
   test("http scope injection", async () => {
     @rest.resource(User)
     class MyResource extends UserRestResource {
-      constructor(
-        private dep: Dep,
-        database: Inject<orm.Database, "DATABASE">,
-      ) {
+      constructor(private dep: Dep, database: Inject<Database, "DATABASE">) {
         super(database);
       }
 

@@ -5,7 +5,7 @@ import {
   HttpBody,
   HttpNotFoundError,
 } from "@deepkit/http";
-import * as orm from "@deepkit/orm"; // temporary workaround: we have to use namespace import here as a temporary workaround, otherwise the application will not be able to bootstrap. This will be fixed in the next release
+import { Query } from "@deepkit/orm";
 import { ReflectionProperty } from "@deepkit/type";
 import { RequestContext } from "src/core/request-context";
 import { InjectDatabaseSession } from "src/database/database.tokens";
@@ -58,7 +58,7 @@ export class UserResource
     private verificationService: UserVerificationService,
   ) {}
 
-  query(): orm.Query<User> {
+  query(): Query<User> {
     return this.database.query(User);
   }
 

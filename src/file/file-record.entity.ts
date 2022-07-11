@@ -1,10 +1,10 @@
 import {
   BackReference,
   entity,
+  Group,
   integer,
   Positive,
   Reference,
-  uuid,
 } from "@deepkit/type";
 import { Entity } from "src/common/entity";
 import { PartialRequired } from "src/common/utilities";
@@ -14,17 +14,17 @@ import { Orderable } from "src/rest/crud-models/rest-order-map";
 import { Tag } from "src/tag/tag.entity";
 import { User } from "src/user/user.entity";
 
+type BackRefViaPivot = BackReference<{ via: typeof FileRecordToTag }>;
+
 @entity.name("file-record").collection("file-records")
 export class FileRecord extends Entity<FileRecord, "owner" | "name" | "path"> {
-  override id: Entity["id"] & Filterable & Orderable = uuid(); // temporary workaround: type info is lost during class inheritances (https://github.com/deepkit/deepkit-framework/issues/238)
   owner!: User & Reference & Filterable & Orderable;
   name!: string & Filterable & Orderable;
   path!: string & Filterable & Orderable;
-  tags: Tag[] & BackReference<{ via: typeof FileRecordToTag }> = [];
-  contentKey?: string;
-  contentIntegrity?: string;
-  contentSize?: integer & Positive & Filterable & Orderable;
-  override createdAt: Entity["createdAt"] & Filterable & Orderable = new Date(); // temporary workaround: type info is lost during class inheritances (https://github.com/deepkit/deepkit-framework/issues/238)
+  tags: Tag[] & BackRefViaPivot & Group<"hidden"> = [];
+  contentKey?: string = undefined;
+  contentIntegrity?: string = undefined;
+  contentSize?: integer & Positive & Filterable & Orderable = undefined;
 
   isContentDefined(): this is FileRecordContentDefined {
     return !!this.contentKey && !!this.contentIntegrity && !!this.contentSize;

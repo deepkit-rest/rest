@@ -25,7 +25,6 @@ export class RestActionRouteParameterResolver
   implements RouteParameterResolver
 {
   resolve(context: RouteParameterResolverContext): unknown {
-    context.route = (context as any).routeConfig; // temporary workaround
     const actionContext = RestActionContext.build(context);
     if (context.token === RestActionContext) return actionContext;
     throw new Error(`Unsupported parameter name ${context.name}`);
@@ -34,6 +33,8 @@ export class RestActionRouteParameterResolver
 
 export class RestActionContext<Entity = any> {
   static build(context: RouteParameterResolverContext): RestActionContext {
+    if (context.route.action.type === "function")
+      throw new Error("Function routes are not yet supported");
     const { controller: resourceType, module } = context.route.action;
     if (!module) throw new Error("Cannot read resource module");
 

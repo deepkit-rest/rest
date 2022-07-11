@@ -1,6 +1,5 @@
 import { ClassType } from "@deepkit/core";
-import * as orm from "@deepkit/orm"; // temporary workaround: we have to use namespace import here as a temporary workaround, otherwise the application will not be able to bootstrap. This will be fixed in the next release
-import { FieldName } from "@deepkit/orm";
+import { FieldName, Query } from "@deepkit/orm";
 import { InlineRuntimeType } from "@deepkit/type";
 
 import {
@@ -14,10 +13,7 @@ export interface RestSortingCustomizations {
 }
 
 export interface RestSorter {
-  sort<Entity>(
-    context: RestActionContext,
-    query: orm.Query<Entity>,
-  ): orm.Query<Entity>;
+  sort<Entity>(context: RestActionContext, query: Query<Entity>): Query<Entity>;
 }
 
 export class RestGenericSorter implements RestSorter {
@@ -30,8 +26,8 @@ export class RestGenericSorter implements RestSorter {
 
   sort<Entity>(
     context: RestActionContext<any>,
-    query: orm.Query<Entity>,
-  ): orm.Query<Entity> {
+    query: Query<Entity>,
+  ): Query<Entity> {
     const { entityType } = context.resourceMeta;
 
     const orderMapSchema = this.orderMapFactory.build(entityType).type;

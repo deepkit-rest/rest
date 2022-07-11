@@ -4,7 +4,7 @@ import { createTestingApp, TestingFacade } from "@deepkit/framework";
 import { HttpKernel, HttpRequest } from "@deepkit/http";
 import { Inject, InjectorContext, ProviderWithScope } from "@deepkit/injector";
 import { Logger, MemoryLoggerTransport } from "@deepkit/logger";
-import * as orm from "@deepkit/orm"; // temporary workaround: we have to use namespace import here as a temporary workaround, otherwise the application will not be able to bootstrap. This will be fixed in the next release
+import { Database, Query } from "@deepkit/orm";
 import { SQLiteDatabaseAdapter } from "@deepkit/sqlite";
 import { AutoIncrement, PrimaryKey, Reference } from "@deepkit/type";
 import { HttpExtensionModule } from "src/http-extension/http-extension.module";
@@ -38,7 +38,7 @@ import { Orderable } from "./crud-models/rest-order-map";
 describe("REST CRUD", () => {
   let facade: TestingFacade<App<any>>;
   let requester: HttpKernel;
-  let database: orm.Database;
+  let database: Database;
 
   async function prepare<Entity>(
     resource: ClassType<RestResource<Entity>>,
@@ -54,17 +54,15 @@ describe("REST CRUD", () => {
       providers: [
         {
           provide: "database",
-          useValue: new orm.Database(new SQLiteDatabaseAdapter(), entities),
+          useValue: new Database(new SQLiteDatabaseAdapter(), entities),
         },
         ...providers,
       ],
     });
     requester = facade.app.get(HttpKernel);
-    database = facade.app.get(InjectorContext).get<orm.Database>("database");
+    database = facade.app.get(InjectorContext).get<Database>("database");
     await database.migrate();
-    // temporary workaround: transport setup is not working, so we have to
-    // manually set it up
-    facade.app.get(Logger).setTransport([new MemoryLoggerTransport()]);
+    facade.app.get(Logger).setTransport([new MemoryLoggerTransport()]); // temporary workaround: transport setup is not working, so we have to manually set it up
     await facade.startServer();
   }
 
@@ -73,9 +71,9 @@ describe("REST CRUD", () => {
     constructor(public name: string = "") {}
   }
   class MyResource implements RestResource<MyEntity> {
-    protected db!: Inject<orm.Database, "database">;
+    protected db!: Inject<Database, "database">;
     protected crud!: Inject<RestCrudService>;
-    query(): orm.Query<MyEntity> {
+    query(): Query<MyEntity> {
       return this.db.query(MyEntity);
     }
   }
@@ -177,10 +175,10 @@ describe("REST CRUD", () => {
         {
           readonly filters = [RestGenericFilter];
           constructor(
-            private database: Inject<orm.Database, "database">,
+            private database: Inject<Database, "database">,
             private crud: RestCrudService,
           ) {}
-          query(): orm.Query<Entity1> {
+          query(): Query<Entity1> {
             return this.database.query(Entity1);
           }
           @rest.action("GET")
@@ -222,10 +220,10 @@ describe("REST CRUD", () => {
         class TestingResource implements RestSortingCustomizations {
           readonly sorters = [RestGenericSorter];
           constructor(
-            private database: Inject<orm.Database, "database">,
+            private database: Inject<Database, "database">,
             private crud: RestCrudService,
           ) {}
-          query(): orm.Query<TestingEntity> {
+          query(): Query<TestingEntity> {
             return this.database.query(TestingEntity);
           }
           @rest.action("GET")
@@ -345,9 +343,9 @@ describe("REST CRUD", () => {
       class TestingLookupBackend implements RestRetriever {
         retrieve<Entity>(
           context: RestActionContext<any>,
-          query: orm.Query<Entity>,
-        ): orm.Query<Entity> {
-          return query.addFilter("id" as any, 1);
+          query: Query<Entity>,
+        ): Query<Entity> {
+          return query.filterField("id" as any, 1);
         }
       }
 
