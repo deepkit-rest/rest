@@ -21,7 +21,7 @@ import { RestResource } from "./core/rest-resource";
 import { RestConfig } from "./rest.config";
 import { RestModule } from "./rest.module";
 
-describe("REST", () => {
+describe("REST Core", () => {
   let facade: TestingFacade<App<any>>;
   let requester: HttpKernel;
   let database: Database;
@@ -76,10 +76,10 @@ describe("REST", () => {
     await setup({ prefix: "prefix", versioning: false }, [TestingResource]);
     const routes = facade.app.get(HttpRouter).getRoutes();
     expect(routes).toMatchObject<Partial<RouteConfig>[]>([
-      { baseUrl: "prefix/users", path: "", httpMethods: ["POST"] },
-      { baseUrl: "prefix/users", path: ":id", httpMethods: ["GET"] },
-      { baseUrl: "prefix/users", path: "suffix", httpMethods: ["DELETE"] },
-      { baseUrl: "prefix/users", path: ":id/suffix", httpMethods: ["PATCH"] },
+      { baseUrl: "", path: "prefix/users", httpMethods: ["POST"] },
+      { baseUrl: "", path: "prefix/users/:id", httpMethods: ["GET"] },
+      { baseUrl: "", path: "prefix/users/suffix", httpMethods: ["DELETE"] },
+      { baseUrl: "", path: "prefix/users/:id/suffix", httpMethods: ["PATCH"] },
     ]);
   });
 
@@ -92,7 +92,7 @@ describe("REST", () => {
     await setup({ prefix: "prefix", versioning: false }, [TestingResource]);
     const routes = facade.app.get(HttpRouter).getRoutes();
     expect(routes).toMatchObject<Partial<RouteConfig>[]>([
-      { baseUrl: "prefix/name", path: "", httpMethods: ["GET"] },
+      { baseUrl: "", path: "prefix/name", httpMethods: ["GET"] },
     ]);
   });
 
@@ -113,8 +113,8 @@ describe("REST", () => {
     ]);
     const routes = facade.app.get(HttpRouter).getRoutes();
     expect(routes).toMatchObject<Partial<RouteConfig>[]>([
-      { baseUrl: "prefix/v1/name", path: "", httpMethods: ["GET"] },
-      { baseUrl: "prefix/v2/name", path: "", httpMethods: ["POST"] },
+      { baseUrl: "", path: "prefix/v1/name", httpMethods: ["GET"] },
+      { baseUrl: "", path: "prefix/v2/name", httpMethods: ["POST"] },
     ]);
   });
 
@@ -131,8 +131,8 @@ describe("REST", () => {
     const routes = facade.app.get(HttpRouter).getRoutes();
     expect(routes).toHaveLength(2);
     expect(routes).toMatchObject<Partial<RouteConfig>[]>([
-      { baseUrl: "prefix/users", path: "http", httpMethods: ["GET"] },
-      { baseUrl: "prefix/users", path: "", httpMethods: ["POST"] },
+      { baseUrl: "", path: "prefix/users/http", httpMethods: ["GET"] },
+      { baseUrl: "", path: "prefix/users", httpMethods: ["POST"] },
     ]);
   });
 

@@ -28,5 +28,7 @@ export type HttpMethod =
   | "HEAD"
   | "OPTIONS";
 
-export type HttpControllerMeta = ReturnType<typeof httpClass._fetch>;
 export { HttpAction as HttpRouteMeta } from "@deepkit/http";
+export type HttpControllerMeta = NonNullable<
+  ReturnType<typeof httpClass._fetch>
+>;
