@@ -289,7 +289,7 @@ describe("REST CRUD", () => {
       });
 
       test("primary key as target field", async () => {
-        @rest.resource(MyEntity, "api").lookup("invalidFieldName")
+        @rest.resource(MyEntity, "api").lookup("pk")
         class TestingResource
           extends MyResource
           implements RestRetrievingCustomizations
@@ -325,6 +325,24 @@ describe("REST CRUD", () => {
         await database.persist(new MyEntity("name"));
         const response = await requester.request(HttpRequest.GET("/api/name"));
         expect(response.json).toMatchObject({ id: 1 });
+      });
+
+      test("invalid lookup name and no custom field specified", async () => {
+        @rest.resource(MyEntity, "api").lookup("invalid")
+        class TestingResource
+          extends MyResource
+          implements RestRetrievingCustomizations
+        {
+          readonly retriever = RestFieldBasedRetriever;
+          @rest.action("GET").detailed()
+          retrieve(context: RestActionContext) {
+            return this.crud.retrieve(context);
+          }
+        }
+        await prepare(TestingResource, [MyEntity]);
+        await database.persist(new MyEntity("name"));
+        const response = await requester.request(HttpRequest.GET("/api/name"));
+        expect(response.statusCode).toBe(500);
       });
     });
 

@@ -48,9 +48,11 @@ export class RestFieldBasedRetriever implements RestRetriever {
     const entitySchema = this.contextReader.getEntitySchema(context);
     const [lookupName] = this.contextReader.getLookupInfo(context);
     if (resource.retrievesOn) return resource.retrievesOn;
+    if (lookupName === "pk")
+      return entitySchema.getPrimary().name as FieldName<Entity>;
     if (entitySchema.hasProperty(lookupName))
       return entitySchema.getProperty(lookupName).name as FieldName<Entity>;
-    return entitySchema.getPrimary().name as FieldName<Entity>;
+    throw new Error("Could not determine the field to retrieve on");
   }
 }
 
