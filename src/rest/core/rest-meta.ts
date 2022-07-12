@@ -46,7 +46,6 @@ export class RestActionMeta extends RestMeta<RestActionMetaValidated> {
   detailed = false;
   method?: HttpMethod;
   path?: string;
-  configurators: RestMetaConfigurator<RestActionMeta>[] = [];
 
   protected validateInternal(): void {
     if (!this.resource || !this.name || !this.method)
@@ -56,7 +55,3 @@ export class RestActionMeta extends RestMeta<RestActionMetaValidated> {
 
 export interface RestActionMetaValidated
   extends PartialRequired<RestActionMeta, "resource" | "name" | "method"> {}
-
-export interface RestMetaConfigurator<Meta> {
-  configure(meta: Meta): void;
-}

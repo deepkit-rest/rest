@@ -36,7 +36,8 @@ export class RestResourceInstaller {
     const resourcePath = this.buildResourcePath(resourceMeta);
     Object.keys(resourceMeta.actions).forEach((name) => {
       const actionMeta = resourceMeta.actions[name].validate();
-      this.setupAction(resourceMeta, actionMeta, resourcePath);
+      this.setupActionPath(resourceMeta, actionMeta, resourcePath);
+      this.setupActionParameterResolver(resourceMeta, actionMeta);
     });
     const controllerMeta = httpClass._fetch(type);
     if (!controllerMeta) throw new Error("Cannot read controller meta");
@@ -47,7 +48,7 @@ export class RestResourceInstaller {
     });
   }
 
-  private setupAction(
+  private setupActionPath(
     resourceMeta: RestResourceMetaValidated,
     actionMeta: RestActionMetaValidated,
     resourcePath: string,
@@ -57,10 +58,6 @@ export class RestResourceInstaller {
       resourceMeta.classType.prototype,
       actionMeta.name,
     );
-    this.setupActionParameterResolver(resourceMeta, actionMeta);
-    actionMeta.configurators.forEach((configurator) => {
-      configurator.configure(actionMeta);
-    });
   }
 
   private setupActionParameterResolver(

@@ -15,8 +15,7 @@ import { AutoIncrement, entity, PrimaryKey } from "@deepkit/type";
 import { HttpExtensionModule } from "src/http-extension/http-extension.module";
 
 import { RestActionContext } from "./core/rest-action";
-import { rest, restClass } from "./core/rest-decoration";
-import { RestActionMeta, RestMetaConfigurator } from "./core/rest-meta";
+import { rest } from "./core/rest-decoration";
 import { RestResource } from "./core/rest-resource";
 import { RestConfig } from "./rest.config";
 import { RestModule } from "./rest.module";
@@ -212,22 +211,6 @@ describe("REST Core", () => {
     );
     expect(response.statusCode).toBe(200);
     assertion();
-  });
-
-  test("meta configurator", async () => {
-    class MyConfigurator implements RestMetaConfigurator<RestActionMeta> {
-      configure(meta: RestActionMeta): void {
-        meta.path = "v2";
-      }
-    }
-    @rest.resource(User)
-    class MyResource extends UserRestResource {
-      @rest.action("GET").useConfigurator(new MyConfigurator()).path("v1")
-      action() {}
-    }
-    expect(restClass._fetch(MyResource)?.actions?.["action"].path).toBe("v1");
-    await setup({ prefix: "prefix", versioning: false }, [MyResource]);
-    expect(restClass._fetch(MyResource)?.actions?.["action"].path).toBe("v2");
   });
 
   test("http scope injection", async () => {
