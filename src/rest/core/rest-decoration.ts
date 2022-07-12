@@ -30,6 +30,16 @@ export class RestClassDecoratorApi extends PrettifiedDecoratorApi<RestResourceMe
     this.meta.name = name;
   }
 
+  parent(parent: ClassType<RestResource<unknown>>): void {
+    const parentMeta = restClass._fetch(parent);
+    if (!parentMeta) throw new Error("Cannot find parent resource meta");
+    this.meta.parent = parentMeta;
+  }
+
+  parentLookup(lookup: string): void {
+    this.meta.parentLookup = lookup;
+  }
+
   version(version: number): void {
     this.meta.version = version;
   }

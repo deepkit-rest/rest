@@ -25,6 +25,8 @@ export class RestResourceMeta<
   version?: number;
   lookup: string = "pk";
   actions: Record<string, RestActionMeta> = {};
+  parent?: RestResourceMeta<Entity>;
+  parentLookup: string = "parentPk";
 
   protected validateInternal(): void {
     if (!this.classType || !this.name || !this.entityType)
