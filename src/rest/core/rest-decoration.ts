@@ -34,8 +34,8 @@ export class RestClassDecoratorApi extends PrettifiedDecoratorApi<RestResourceMe
     this.meta.version = version;
   }
 
-  lookup(name: string): void {
-    this.meta.lookup = name;
+  lookup(lookup: string): void {
+    this.meta.lookup = lookup;
   }
 
   useAction(name: string, action: RestActionMeta): void {

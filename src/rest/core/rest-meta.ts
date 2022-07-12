@@ -23,18 +23,12 @@ export class RestResourceMeta<
   name?: string;
   entityType?: ClassType<Entity>;
   version?: number;
-  lookup?: string;
+  lookup: string = "pk";
   actions: Record<string, RestActionMeta> = {};
 
   protected validateInternal(): void {
     if (!this.classType || !this.name || !this.entityType)
       throw new Error("Resource not properly decorated");
-    if (!this.lookup) {
-      const actions = Object.values(this.actions);
-      const hasDetailed = actions.some((meta) => meta.detailed);
-      if (hasDetailed)
-        throw new Error("Lookup is required for detailed actions");
-    }
   }
 }
 

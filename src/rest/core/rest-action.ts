@@ -116,7 +116,6 @@ export class RestActionContextReader {
     context: RestActionContext<Entity>,
   ): [name: string, value: unknown] {
     const lookup = context.resourceMeta.lookup;
-    if (!lookup) throw new Error("Lookup not specified");
     const value = context.actionParameters[lookup];
     return [lookup, value];
   }
