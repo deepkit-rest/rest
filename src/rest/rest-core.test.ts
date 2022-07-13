@@ -8,7 +8,7 @@ import {
   HttpRouter,
   RouteConfig,
 } from "@deepkit/http";
-import { Inject, InjectorContext, ProviderWithScope } from "@deepkit/injector";
+import { Inject, ProviderWithScope } from "@deepkit/injector";
 import { Logger, MemoryLoggerTransport } from "@deepkit/logger";
 import { Database, MemoryDatabaseAdapter, Query } from "@deepkit/orm";
 import { AutoIncrement, entity, PrimaryKey } from "@deepkit/type";
@@ -35,14 +35,14 @@ describe("REST Core", () => {
       controllers,
       providers: [
         {
-          provide: "DATABASE",
+          provide: Database,
           useValue: new Database(new MemoryDatabaseAdapter()),
         },
         ...providers,
       ],
     });
     requester = facade.app.get(HttpKernel);
-    database = facade.app.get(InjectorContext).get<Database>("DATABASE");
+    database = facade.app.get(Database);
     await database.migrate();
     facade.app.get(Logger).setTransport([new MemoryLoggerTransport()]); // temporary workaround: transport setup is not working, so we have to manually set it up
     await facade.startServer();
@@ -54,7 +54,7 @@ describe("REST Core", () => {
   }
 
   class UserRestResource implements RestResource<User> {
-    constructor(private database: Inject<Database, "DATABASE">) {}
+    constructor(private database: Database) {}
     query(): Query<User> {
       return this.database.query(User);
     }
@@ -191,16 +191,16 @@ describe("REST Core", () => {
     });
   });
 
-  test("parameter resolving", async () => {
+  test("action context", async () => {
     let assertion!: () => void;
-
     @rest.resource(User).lookup("id")
     class TestingResource extends UserRestResource {
+      private context!: Inject<RestActionContext>;
       @rest.action("GET").detailed()
-      retrieve(context: RestActionContext, request: HttpRequest) {
+      retrieve(context: RestActionContext) {
         assertion = () => {
+          expect(context).toBe(this.context);
           expect(context).toBeInstanceOf(RestActionContext);
-          expect(request).toBeDefined();
         };
       }
     }
@@ -216,7 +216,7 @@ describe("REST Core", () => {
   test("http scope injection", async () => {
     @rest.resource(User)
     class MyResource extends UserRestResource {
-      constructor(private dep: Dep, database: Inject<Database, "DATABASE">) {
+      constructor(private dep: Dep, database: Database) {
         super(database);
       }
 

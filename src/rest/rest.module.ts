@@ -2,8 +2,9 @@ import { AppModule, createModule } from "@deepkit/app";
 import { ClassType } from "@deepkit/core";
 
 import {
+  RestActionContext,
   RestActionContextReader,
-  RestActionRouteParameterResolver,
+  RestActionParameterResolver,
 } from "./core/rest-action";
 import { restClass } from "./core/rest-decoration";
 import {
@@ -24,6 +25,7 @@ export class RestModule extends createModule(
   {
     config: RestConfig,
     providers: [
+      { provide: RestActionContext, scope: "http" },
       { provide: RestActionContextReader, scope: "http" },
       { provide: RestCrudService, scope: "http" },
       RestFilterMapFactory,
@@ -60,9 +62,9 @@ export class RestModule extends createModule(
         provide: controllerType,
         scope: "http",
       });
-    if (!module.isProvided(RestActionRouteParameterResolver))
+    if (!module.isProvided(RestActionParameterResolver))
       module.addProvider({
-        provide: RestActionRouteParameterResolver,
+        provide: RestActionParameterResolver,
         scope: "http",
       });
 

@@ -10,6 +10,7 @@ import { purify } from "src/common/type";
 import {
   HttpControllerMeta,
   HttpInjectorContext,
+  HttpRouteConfig,
   HttpRouteMeta,
 } from "src/http-extension/http-common";
 import { HttpRequestParser } from "src/http-extension/http-request-parser.service";
@@ -21,27 +22,38 @@ import {
 } from "./rest-meta";
 import { RestResource } from "./rest-resource";
 
-export class RestActionRouteParameterResolver
-  implements RouteParameterResolver
-{
+export class RestActionParameterResolver implements RouteParameterResolver {
+  constructor(private context: RestActionContext) {}
+
   resolve(context: RouteParameterResolverContext): unknown {
-    const actionContext = RestActionContext.build(context);
-    if (context.token === RestActionContext) return actionContext;
+    if (context.token === RestActionContext) return this.context;
     throw new Error(`Unsupported parameter name ${context.name}`);
   }
 }
 
 export class RestActionContext<Entity = any> {
-  static build(context: RouteParameterResolverContext): RestActionContext {
-    if (context.route.action.type === "function")
-      throw new Error("Function routes are not yet supported");
-    const { controller: resourceType, module } = context.route.action;
+  request: HttpRequest;
+  module: InjectorModule;
+  resourceMeta: RestResourceMetaValidated<Entity>;
+  actionMeta: RestActionMetaValidated;
+  controllerMeta: HttpControllerMeta;
+  routeMeta: HttpRouteMeta;
+
+  constructor(request: HttpRequest, route: HttpRouteConfig) {
+    if (route.action.type === "function")
+      throw new Error("Functional routes are not yet supported");
+
+    const module = route.action.module;
     if (!module) throw new Error("Cannot read resource module");
 
-    const resourceMeta = restClass._fetch(resourceType)?.validate();
+    const resourceType = route.action.controller;
+    const resourceMeta = restClass._fetch(resourceType)?.validate() as
+      | RestResourceMetaValidated<Entity>
+      | undefined;
     if (!resourceMeta)
       throw new Error(`Cannot resolve parameters for non-resource controllers`);
-    const actionName = context.route.action.methodName;
+
+    const actionName = route.action.methodName;
     const actionMeta = resourceMeta.actions[actionName].validate();
     if (!actionMeta)
       throw new Error(`Cannot resolve parameters for non-action routes`);
@@ -50,27 +62,12 @@ export class RestActionContext<Entity = any> {
     if (!controllerMeta) throw new Error("Cannot read controller meta");
     const routeMeta = controllerMeta.getAction(actionName);
 
-    return new RestActionContext({
-      request: context.request,
-      module,
-      resourceMeta,
-      actionMeta,
-      actionParameters: context.parameters,
-      controllerMeta,
-      routeMeta,
-    });
-  }
-
-  request!: HttpRequest;
-  module!: InjectorModule;
-  resourceMeta!: RestResourceMetaValidated<Entity>;
-  actionMeta!: RestActionMetaValidated;
-  actionParameters!: Record<string, unknown>;
-  controllerMeta!: HttpControllerMeta;
-  routeMeta!: HttpRouteMeta;
-
-  private constructor(data: RestActionContext<Entity>) {
-    Object.assign(this, data);
+    this.request = request;
+    this.module = module;
+    this.resourceMeta = resourceMeta;
+    this.actionMeta = actionMeta;
+    this.controllerMeta = controllerMeta;
+    this.routeMeta = routeMeta;
   }
 }
 
@@ -116,7 +113,10 @@ export class RestActionContextReader {
     context: RestActionContext<Entity>,
   ): [name: string, value: unknown] {
     const lookup = context.resourceMeta.lookup;
-    const value = context.actionParameters[lookup];
+    const [path] = this.requestParser.parseUrl(context.request.getUrl());
+    const pathSchema = context.routeMeta.path;
+    const parameters = this.requestParser.parsePath(pathSchema, path);
+    const value = parameters[lookup];
     return [lookup, value];
   }
 }
