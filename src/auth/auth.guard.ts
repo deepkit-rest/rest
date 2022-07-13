@@ -1,6 +1,6 @@
+import { HttpUnauthorizedError } from "@deepkit/http";
 import { Guard, GuardContext } from "src/common/guard";
 import { RequestContext } from "src/core/request-context";
-import { HttpUnauthorizedError } from "src/http-extension/http-common";
 
 import { AuthTokenService } from "./auth-token.service";
 
