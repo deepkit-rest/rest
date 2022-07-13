@@ -37,7 +37,7 @@
   "devDependencies": {
     "@types/bcryptjs": "^2.4.2",
     "@types/formidable": "^2.0.5",
-    "@types/jest": "^27.5.1",
+    "@types/jest": "^28.1.4",
     "@types/jsonwebtoken": "^8.5.8",
     "@types/node": "^16.0.0",
     "@types/nodemailer": "^6.4.4",
