@@ -10,7 +10,7 @@ describe("HttpRequestParser", () => {
   });
 
   describe("parseUrl", () => {
-    it("should work", async () => {
+    it("should work for url with query", async () => {
       const [path, params] = parser.parseUrl(
         "/url?array[]=value1&array[]=value2&object[key]=value",
       );
@@ -19,6 +19,12 @@ describe("HttpRequestParser", () => {
         array: ["value1", "value2"],
         object: { key: "value" },
       });
+    });
+
+    it("should work for url without query", async () => {
+      const [path, params] = parser.parseUrl("/url");
+      expect(path).toBe("/url");
+      expect(params).toEqual({});
     });
   });
 
