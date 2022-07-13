@@ -1,7 +1,13 @@
-import { createHttpError, HtmlResponse, httpClass } from "@deepkit/http";
+import {
+  createHttpError,
+  HtmlResponse,
+  httpClass,
+  RouteConfig,
+} from "@deepkit/http";
 import { InjectorContext } from "@deepkit/injector";
 
 export class HttpInjectorContext extends InjectorContext {}
+export class HttpRouteConfig extends RouteConfig {}
 
 export class NoContentResponse extends HtmlResponse {
   constructor() {
