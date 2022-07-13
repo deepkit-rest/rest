@@ -22,6 +22,13 @@ describe("HttpRequestParser", () => {
     });
   });
 
+  describe("parsePath", () => {
+    it("should work", async () => {
+      const params = parser.parsePath("/url/:id/:name", "/url/1/test");
+      expect(params).toEqual({ id: "1", name: "test" });
+    });
+  });
+
   describe("parseBody", () => {
     it("should work", async () => {
       const request = HttpRequest.POST("/").json({ a: 1 }).build();

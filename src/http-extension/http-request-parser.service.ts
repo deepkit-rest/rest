@@ -11,6 +11,15 @@ export class HttpRequestParser {
     return [path, queries];
   }
 
+  parsePath(pathSchema: string, path: string): Record<string, unknown> {
+    const regExp = pathSchema.replace(
+      /:(\w+)/gu,
+      (_, name) => `(?<${name}>[^/]+)`,
+    );
+    const match = path.match(regExp);
+    return match?.groups ?? {};
+  }
+
   async parseBody(request: HttpRequest): Promise<Record<string, unknown>> {
     const form = formidable({
       multiples: true,
