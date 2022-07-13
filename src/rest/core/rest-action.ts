@@ -1,6 +1,7 @@
 import {
   httpClass,
   HttpRequest,
+  RouteClassControllerAction,
   RouteParameterResolver,
   RouteParameterResolverContext,
 } from "@deepkit/http";
@@ -32,91 +33,148 @@ export class RestActionParameterResolver implements RouteParameterResolver {
 }
 
 export class RestActionContext<Entity = any> {
-  request: HttpRequest;
-  module: InjectorModule;
-  resourceMeta: RestResourceMetaValidated<Entity>;
-  actionMeta: RestActionMetaValidated;
-  controllerMeta: HttpControllerMeta;
-  routeMeta: HttpRouteMeta;
+  private module?: InjectorModule;
+  private resource?: RestResource<Entity>;
+  private resourceMeta?: RestResourceMetaValidated<Entity>;
+  private resourceSchema?: ReflectionClass<any>;
+  private entitySchema?: ReflectionClass<any>;
+  private actionMeta?: RestActionMetaValidated;
+  private controllerMeta?: HttpControllerMeta;
+  private routeMeta?: HttpRouteMeta;
+  private requestBody?: Record<string, unknown>;
+  private requestQueries?: Record<string, unknown>;
+  private requestPathParams?: Record<string, unknown>;
 
-  constructor(request: HttpRequest, route: HttpRouteConfig) {
-    if (route.action.type === "function")
-      throw new Error("Functional routes are not yet supported");
-
-    const module = route.action.module;
-    if (!module) throw new Error("Cannot read resource module");
-
-    const resourceType = route.action.controller;
-    const resourceMeta = restClass._fetch(resourceType)?.validate() as
-      | RestResourceMetaValidated<Entity>
-      | undefined;
-    if (!resourceMeta)
-      throw new Error(`Cannot resolve parameters for non-resource controllers`);
-
-    const actionName = route.action.methodName;
-    const actionMeta = resourceMeta.actions[actionName].validate();
-    if (!actionMeta)
-      throw new Error(`Cannot resolve parameters for non-action routes`);
-
-    const controllerMeta = httpClass._fetch(resourceType);
-    if (!controllerMeta) throw new Error("Cannot read controller meta");
-    const routeMeta = controllerMeta.getAction(actionName);
-
-    this.request = request;
-    this.module = module;
-    this.resourceMeta = resourceMeta;
-    this.actionMeta = actionMeta;
-    this.controllerMeta = controllerMeta;
-    this.routeMeta = routeMeta;
-  }
-}
-
-export class RestActionContextReader {
   constructor(
+    private request: HttpRequest,
+    private routeConfig: HttpRouteConfig,
     private injector: HttpInjectorContext,
     private requestParser: HttpRequestParser,
   ) {}
 
-  getResource<Entity>(
-    context: RestActionContext<Entity>,
-  ): RestResource<Entity> {
-    return this.injector.get(context.resourceMeta.classType, context.module);
+  getRequest(): HttpRequest {
+    return this.request;
   }
 
-  getResourceSchema(context: RestActionContext): ReflectionClass<any> {
-    return ReflectionClass.from(context.resourceMeta.classType);
+  async loadRequestBody(): Promise<void> {
+    if (this.requestBody) return;
+    this.requestBody = await this.requestParser.parseBody(this.request);
   }
 
-  getEntitySchema(context: RestActionContext): ReflectionClass<any> {
-    return ReflectionClass.from(context.resourceMeta.entityType);
-  }
-
-  async parseBody<T extends object = Record<string, unknown>>(
-    context: RestActionContext,
-    type?: ReceiveType<T>,
-  ): Promise<T> {
-    const { request } = context;
-    request.body ??= await this.requestParser.parseBody(request);
-    return type ? purify<T>(request.body, type) : (request.body as T);
-  }
-
-  parseQueries<T extends object = Record<string, unknown>>(
-    context: RestActionContext,
+  getRequestBody<T extends object = Record<string, unknown>>(
     type?: ReceiveType<T>,
   ): T {
-    const { request } = context;
-    const [, queries] = this.requestParser.parseUrl(request.getUrl());
-    return type ? purify<T>(queries, type) : (queries as T);
+    if (!this.requestBody) throw new Error("Request body is not loaded");
+    return type ? purify<T>(this.requestBody, type) : (this.requestBody as T);
   }
 
-  getLookupInfo<Entity>(
-    context: RestActionContext<Entity>,
-  ): [name: string, value: unknown] {
-    const lookup = context.resourceMeta.lookup;
-    const [path] = this.requestParser.parseUrl(context.request.getUrl());
-    const pathSchema = context.routeMeta.path;
-    const parameters = this.requestParser.parsePath(pathSchema, path);
-    const value = parameters[lookup];
-    return [lookup, value];
+  getRequestQueries<T extends object = Record<string, unknown>>(
+    type?: ReceiveType<T>,
+  ): T {
+    if (!this.requestQueries) {
+      const [, queries] = this.requestParser.parseUrl(this.request.getUrl());
+      this.requestQueries = queries;
+    }
+    return type
+      ? purify<T>(this.requestQueries, type)
+      : (this.requestQueries as T);
+  }
+
+  getRequestPathParams<T extends object = Record<string, unknown>>(
+    type?: ReceiveType<T>,
+  ): T {
+    if (!this.requestPathParams) {
+      const [path] = this.requestParser.parseUrl(this.request.getUrl());
+      const pathSchema = this.getRouteConfig().getFullPath();
+      const parameters = this.requestParser.parsePath(pathSchema, path);
+      this.requestPathParams = parameters;
+    }
+    return type
+      ? purify<T>(this.requestPathParams, type)
+      : (this.requestPathParams as T);
+  }
+
+  getRouteConfig(): HttpRouteConfig {
+    return this.routeConfig;
+  }
+
+  getModule(): InjectorModule {
+    if (!this.module) this.module = this.routeConfig.action.module;
+    if (!this.module) throw new Error("Cannot read resource module");
+    return this.module;
+  }
+
+  getResource(): RestResource<Entity> {
+    if (!this.resource)
+      this.resource = this.injector.get(
+        this.getResourceMeta().classType,
+        this.getModule(),
+      );
+    return this.resource;
+  }
+
+  getResourceSchema(): ReflectionClass<any> {
+    if (!this.resourceSchema) {
+      const resourceType = this.getResourceMeta().classType;
+      this.resourceSchema = ReflectionClass.from(resourceType);
+    }
+    return this.resourceSchema;
+  }
+
+  getResourceMeta(): RestResourceMetaValidated<Entity> {
+    if (!this.resourceMeta) {
+      const resourceType = this.getRouteConfigAction().controller;
+      this.resourceMeta = restClass._fetch(resourceType)?.validate() as
+        | RestResourceMetaValidated<Entity>
+        | undefined;
+    }
+    if (!this.resourceMeta)
+      throw new Error(`Cannot resolve parameters for non-resource controllers`);
+    return this.resourceMeta;
+  }
+
+  getEntitySchema(): ReflectionClass<any> {
+    if (!this.entitySchema) {
+      const entityType = this.getResourceMeta().entityType;
+      this.entitySchema = ReflectionClass.from(entityType);
+    }
+    return this.entitySchema;
+  }
+
+  getActionMeta(): RestActionMetaValidated {
+    if (!this.actionMeta) {
+      const resourceMeta = this.getResourceMeta();
+      const actionName = this.getRouteConfigAction().methodName;
+      this.actionMeta = resourceMeta.actions[actionName].validate();
+    }
+    if (!this.actionMeta)
+      throw new Error(`Cannot resolve parameters for non-action routes`);
+    return this.actionMeta;
+  }
+
+  getControllerMeta(): HttpControllerMeta {
+    if (!this.controllerMeta) {
+      const resourceType = this.getRouteConfigAction().controller;
+      this.controllerMeta = httpClass._fetch(resourceType);
+    }
+    if (!this.controllerMeta) throw new Error("Cannot read controller meta");
+    return this.controllerMeta;
+  }
+
+  getRouteMeta(): HttpRouteMeta {
+    if (!this.routeMeta) {
+      const controllerMeta = this.getControllerMeta();
+      const actionName = this.getRouteConfigAction().methodName;
+      this.routeMeta = controllerMeta.getAction(actionName);
+    }
+    if (!this.routeMeta) throw new Error("Cannot read route meta");
+    return this.routeMeta;
+  }
+
+  private getRouteConfigAction(): RouteClassControllerAction {
+    const actionInfo = this.routeConfig.action;
+    if (actionInfo.type === "function")
+      throw new Error("Functional routes are not yet supported");
+    return actionInfo;
   }
 }

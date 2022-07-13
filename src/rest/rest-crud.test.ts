@@ -8,7 +8,6 @@ import { Database, Query } from "@deepkit/orm";
 import { SQLiteDatabaseAdapter } from "@deepkit/sqlite";
 import { AutoIncrement, PrimaryKey, Reference } from "@deepkit/type";
 import { HttpExtensionModule } from "src/http-extension/http-extension.module";
-import { RestActionContext } from "src/rest/core/rest-action";
 import { RestModule } from "src/rest/rest.module";
 
 import { rest } from "./core/rest-decoration";
@@ -87,8 +86,8 @@ describe("REST CRUD", () => {
       {
         readonly paginator = RestOffsetLimitPaginator;
         @rest.action("GET")
-        list(context: RestActionContext) {
-          return this.crud.list(context);
+        list() {
+          return this.crud.list();
         }
       }
       it("should work", async () => {
@@ -112,8 +111,8 @@ describe("REST CRUD", () => {
         {
           readonly paginator = RestOffsetLimitPaginator;
           @rest.action("GET")
-          list(context: RestActionContext): Promise<RestList<MyEntity>> {
-            return this.crud.list(context);
+          list(): Promise<RestList<MyEntity>> {
+            return this.crud.list();
           }
         }
 
@@ -182,8 +181,8 @@ describe("REST CRUD", () => {
             return this.database.query(Entity1);
           }
           @rest.action("GET")
-          list(context: RestActionContext): Promise<RestList<Entity1>> {
-            return this.crud.list(context);
+          list(): Promise<RestList<Entity1>> {
+            return this.crud.list();
           }
         }
 
@@ -227,8 +226,8 @@ describe("REST CRUD", () => {
             return this.database.query(TestingEntity);
           }
           @rest.action("GET")
-          list(context: RestActionContext<TestingEntity>) {
-            return this.crud.list(context);
+          list() {
+            return this.crud.list();
           }
         }
 
@@ -257,8 +256,8 @@ describe("REST CRUD", () => {
       @rest.resource(MyEntity, "api").lookup("id")
       class TestingResource extends MyResource {
         @rest.action("GET").detailed()
-        retrieve(context: RestActionContext) {
-          return this.crud.retrieve(context);
+        retrieve() {
+          return this.crud.retrieve();
         }
       }
       it("should work", async () => {
@@ -278,8 +277,8 @@ describe("REST CRUD", () => {
         {
           readonly retriever = RestFieldBasedRetriever;
           @rest.action("GET").detailed()
-          retrieve(context: RestActionContext) {
-            return this.crud.retrieve(context);
+          retrieve() {
+            return this.crud.retrieve();
           }
         }
         await prepare(TestingResource, [MyEntity]);
@@ -296,8 +295,8 @@ describe("REST CRUD", () => {
         {
           readonly retriever = RestFieldBasedRetriever;
           @rest.action("GET").detailed()
-          retrieve(context: RestActionContext) {
-            return this.crud.retrieve(context);
+          retrieve() {
+            return this.crud.retrieve();
           }
         }
         await prepare(TestingResource, [MyEntity]);
@@ -317,8 +316,8 @@ describe("REST CRUD", () => {
           readonly retriever = RestFieldBasedRetriever;
           readonly retrievesOn = "name";
           @rest.action("GET").detailed()
-          retrieve(context: RestActionContext) {
-            return this.crud.retrieve(context);
+          retrieve() {
+            return this.crud.retrieve();
           }
         }
         await prepare(TestingResource, [MyEntity]);
@@ -335,8 +334,8 @@ describe("REST CRUD", () => {
         {
           readonly retriever = RestFieldBasedRetriever;
           @rest.action("GET").detailed()
-          retrieve(context: RestActionContext) {
-            return this.crud.retrieve(context);
+          retrieve() {
+            return this.crud.retrieve();
           }
         }
         await prepare(TestingResource, [MyEntity]);
@@ -354,15 +353,12 @@ describe("REST CRUD", () => {
       {
         readonly retriever = TestingLookupBackend;
         @rest.action("GET").detailed()
-        retrieve(context: RestActionContext) {
-          return this.crud.retrieve(context);
+        retrieve() {
+          return this.crud.retrieve();
         }
       }
       class TestingLookupBackend implements RestRetriever {
-        retrieve<Entity>(
-          context: RestActionContext<any>,
-          query: Query<Entity>,
-        ): Query<Entity> {
+        retrieve<Entity>(query: Query<Entity>): Query<Entity> {
           return query.filterField("id" as any, 1);
         }
       }

@@ -10,10 +10,7 @@ import { ReflectionProperty } from "@deepkit/type";
 import { RequestContext } from "src/core/request-context";
 import { InjectDatabaseSession } from "src/database/database.tokens";
 import { NoContentResponse } from "src/http-extension/http-common";
-import {
-  RestActionContext,
-  RestActionContextReader,
-} from "src/rest/core/rest-action";
+import { RestActionContext } from "src/rest/core/rest-action";
 import { rest } from "src/rest/core/rest-decoration";
 import { RestResource } from "src/rest/core/rest-resource";
 import { RestCrudService, RestList } from "src/rest/crud/rest-crud";
@@ -64,25 +61,24 @@ export class UserResource
 
   @rest.action("GET")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
-  async list(context: RestActionContext<User>): Promise<RestList<User>> {
-    return this.crud.list(context);
+  async list(): Promise<RestList<User>> {
+    return this.crud.list();
   }
 
   @rest.action("GET").detailed()
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
-  async retrieve(context: RestActionContext<User>): Promise<User> {
-    return this.crud.retrieve(context);
+  async retrieve(): Promise<User> {
+    return this.crud.retrieve();
   }
 
   @rest.action("PATCH").detailed()
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   async update(
-    context: RestActionContext<User>,
     id: User["id"],
     payload: HttpBody<Partial<Pick<User, "name" | "email" | "password">>>,
   ): Promise<User> {
     if (id !== "me") throw new HttpAccessDeniedError();
-    const user = await this.retrieve(context);
+    const user = await this.retrieve();
     return user.assign(payload);
   }
 
@@ -120,14 +116,13 @@ export class UserResource
     .response(400, "Code not match")
     .response(404, "No pending verification")
   async confirmVerification(
-    context: RestActionContext<User>,
     id: User["id"],
     { code }: HttpBody<{ code: string }>, //
   ): Promise<NoContentResponse> {
     if (id !== "me") throw new HttpAccessDeniedError();
     if (!this.verificationService.exists(this.context.user.id))
       throw new HttpNotFoundError("No pending verification");
-    const user = await this.retrieve(context);
+    const user = await this.retrieve();
     const verified = this.verificationService.confirm(user.id, code);
     if (!verified) throw new HttpBadRequestError("Code not match");
     user.verifiedAt = new Date();
@@ -138,9 +133,9 @@ export class UserResource
 export class UserRetriever extends RestFieldBasedRetriever {
   constructor(
     private requestContext: RequestContext,
-    contextReader: RestActionContextReader,
+    context: RestActionContext,
   ) {
-    super(contextReader);
+    super(context);
   }
 
   protected override transformValue(

@@ -1,7 +1,13 @@
 import { AppModule } from "@deepkit/app";
 import { ClassType } from "@deepkit/core";
-import { http, httpClass } from "@deepkit/http";
+import { http, httpClass, HttpRequest } from "@deepkit/http";
 import { Query } from "@deepkit/orm";
+import {
+  ReflectionClass,
+  ReflectionKind,
+  ReflectionParameter,
+  typeOf,
+} from "@deepkit/type";
 import { join } from "path";
 
 import { RestConfig } from "../rest.config";
@@ -35,6 +41,7 @@ export class RestResourceInstaller {
       const actionMeta = resourceMeta.actions[name].validate();
       this.setupActionPath(resourceMeta, actionMeta, resourcePath);
       this.setupActionParameterResolver(resourceMeta, actionMeta);
+      this.fixActionRouting(actionMeta);
     });
     const controllerMeta = httpClass._fetch(type);
     if (!controllerMeta) throw new Error("Cannot read controller meta");
@@ -68,6 +75,30 @@ export class RestResourceInstaller {
       http.resolveParameterByName("lookup", resolver)(...args);
       http.resolveParameterByName("target", resolver)(...args);
     }
+  }
+
+  /**
+   * temporary workaround: route resolving may go wrong when a route method
+   * takes no parameters.
+   * @see https://github.com/deepkit/deepkit-framework/issues/304
+   */
+  private fixActionRouting(actionMeta: RestActionMetaValidated): void {
+    const resourceMeta = actionMeta.resource.validate();
+    const resourceSchema = ReflectionClass.from(resourceMeta.classType);
+    const methodSchema = resourceSchema.getMethod(actionMeta.name);
+    const paramSchemas = methodSchema.getParameters();
+    if (paramSchemas.length) return;
+    paramSchemas.push(
+      new ReflectionParameter(
+        {
+          kind: ReflectionKind.parameter,
+          name: "__workaround",
+          type: typeOf<HttpRequest>(),
+          parent: methodSchema.type,
+        },
+        methodSchema,
+      ),
+    );
   }
 
   private getMetaOrThrow(type: ResourceClassType): RestResourceMeta {

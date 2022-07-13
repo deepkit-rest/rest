@@ -3,10 +3,7 @@ import { FieldName, Query } from "@deepkit/orm";
 import { ReflectionProperty } from "@deepkit/type";
 import { purify } from "src/common/type";
 
-import {
-  RestActionContext,
-  RestActionContextReader,
-} from "../core/rest-action";
+import { RestActionContext } from "../core/rest-action";
 import { RestResource } from "../core/rest-resource";
 
 export interface RestRetrievingCustomizations {
@@ -14,22 +11,17 @@ export interface RestRetrievingCustomizations {
 }
 
 export interface RestRetriever {
-  retrieve<Entity>(
-    context: RestActionContext,
-    query: Query<Entity>,
-  ): Query<Entity>;
+  retrieve<Entity>(query: Query<Entity>): Query<Entity>;
 }
 
 export class RestFieldBasedRetriever implements RestRetriever {
-  constructor(protected contextReader: RestActionContextReader) {}
+  constructor(protected context: RestActionContext) {}
 
-  retrieve<Entity>(
-    context: RestActionContext<Entity>,
-    query: Query<Entity>,
-  ): Query<Entity> {
-    const [, valueRaw] = this.contextReader.getLookupInfo(context);
-    const entitySchema = this.contextReader.getEntitySchema(context);
-    const fieldName = this.getFieldName(context);
+  retrieve<Entity>(query: Query<Entity>): Query<Entity> {
+    const lookupName = this.context.getResourceMeta().lookup;
+    const valueRaw = this.context.getRequestPathParams()[lookupName];
+    const entitySchema = this.context.getEntitySchema();
+    const fieldName = this.getFieldName();
     const fieldSchema = entitySchema.getProperty(fieldName);
     const value = this.transformValue(valueRaw, fieldSchema);
     return query.filterField(fieldName, value as any);
@@ -39,14 +31,12 @@ export class RestFieldBasedRetriever implements RestRetriever {
     return purify(raw, schema.type);
   }
 
-  protected getFieldName<Entity>(
-    context: RestActionContext<Entity>,
-  ): FieldName<Entity> {
+  protected getFieldName<Entity>(): FieldName<Entity> {
     const resource: RestResource<Entity> &
       RestFieldBasedRetrieverCustomizations<Entity> =
-      this.contextReader.getResource(context);
-    const entitySchema = this.contextReader.getEntitySchema(context);
-    const [lookupName] = this.contextReader.getLookupInfo(context);
+      this.context.getResource();
+    const entitySchema = this.context.getEntitySchema();
+    const lookupName = this.context.getResourceMeta().lookup;
     if (resource.retrievesOn) return resource.retrievesOn;
     if (lookupName === "pk")
       return entitySchema.getPrimary().name as FieldName<Entity>;

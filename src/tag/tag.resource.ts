@@ -3,7 +3,6 @@ import { Query } from "@deepkit/orm";
 import { RequestContext } from "src/core/request-context";
 import { InjectDatabaseSession } from "src/database/database.tokens";
 import { NoContentResponse } from "src/http-extension/http-common";
-import { RestActionContext } from "src/rest/core/rest-action";
 import { rest } from "src/rest/core/rest-decoration";
 import { RestResource } from "src/rest/core/rest-resource";
 import { RestCrudService, RestList } from "src/rest/crud/rest-crud";
@@ -48,8 +47,8 @@ export class TagResource
 
   @rest.action("GET")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
-  async list(context: RestActionContext): Promise<RestList<Tag>> {
-    return this.crud.list(context);
+  async list(): Promise<RestList<Tag>> {
+    return this.crud.list();
   }
 
   @rest.action("POST")
@@ -63,24 +62,21 @@ export class TagResource
 
   @rest.action("GET").detailed()
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
-  async retrieve(context: RestActionContext): Promise<Tag> {
-    return this.crud.retrieve(context);
+  async retrieve(): Promise<Tag> {
+    return this.crud.retrieve();
   }
 
   @rest.action("PATCH").detailed()
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
-  async update(
-    context: RestActionContext,
-    payload: HttpBody<TagUpdatePayload>,
-  ): Promise<Tag> {
-    const tag = await this.crud.retrieve(context);
+  async update(payload: HttpBody<TagUpdatePayload>): Promise<Tag> {
+    const tag = await this.retrieve();
     return tag.assign(payload);
   }
 
   @rest.action("DELETE").detailed()
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
-  async delete(context: RestActionContext): Promise<NoContentResponse> {
-    const tag = await this.crud.retrieve(context);
+  async delete(): Promise<NoContentResponse> {
+    const tag = await this.retrieve();
     this.database.remove(tag);
     return new NoContentResponse();
   }
