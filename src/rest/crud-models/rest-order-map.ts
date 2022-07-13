@@ -1,3 +1,4 @@
+import { ClassType } from "@deepkit/core";
 import {
   Data,
   ReflectionClass,
@@ -13,6 +14,8 @@ import { RestQueryModelFactory } from "./rest-query-model";
 export type Orderable = Data<"orderable", true>;
 
 export class RestOrderMapFactory extends RestQueryModelFactory {
+  protected products = new Map<ClassType<any>, ReflectionClass<any>>();
+
   protected selectFields(
     entitySchema: ReflectionClass<any>,
   ): ReflectionProperty[] {

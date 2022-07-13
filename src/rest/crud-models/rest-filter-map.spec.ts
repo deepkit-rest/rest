@@ -24,7 +24,7 @@ describe("RestFilterMapFactory", () => {
       func1 = () => {};
       fund2() {}
     }
-    const s = factory.build<MyEntity>();
+    const s = factory.build(MyEntity);
     expect(s.getPropertyNames()).toEqual(["id", "ref1"]);
     expectOperatorMap(s.getProperty("id"), ReflectionKind.number);
     expectOperatorMap(s.getProperty("ref1"), ReflectionKind.number);

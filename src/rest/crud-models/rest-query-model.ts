@@ -1,8 +1,5 @@
-import {
-  ReceiveType,
-  ReflectionClass,
-  ReflectionProperty,
-} from "@deepkit/type";
+import { ClassType } from "@deepkit/core";
+import { ReflectionClass, ReflectionProperty } from "@deepkit/type";
 import { ReflectionClassAddPropertyOptions } from "src/common/type";
 
 // TODO: move to a better place
@@ -10,8 +7,12 @@ import { ReflectionClassAddPropertyOptions } from "src/common/type";
 class RestQueryModel {}
 
 export abstract class RestQueryModelFactory {
-  build<Entity>(entityType?: ReceiveType<Entity>): ReflectionClass<any> {
+  protected abstract products: Map<ClassType<any>, ReflectionClass<any>>;
+
+  build<Entity>(entityType: ClassType<Entity>): ReflectionClass<any> {
     if (!entityType) throw new Error("Type not specified");
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    if (this.products.has(entityType)) return this.products.get(entityType)!;
     const entitySchema = ReflectionClass.from(entityType);
     const modelSchema = ReflectionClass.from(RestQueryModel).clone();
     const fieldSchemas = this.selectFields(entitySchema);
@@ -19,6 +20,7 @@ export abstract class RestQueryModelFactory {
       const transformed = this.processField(entitySchema, fieldSchema);
       modelSchema.addProperty(transformed);
     });
+    this.products.set(entityType, modelSchema);
     return modelSchema;
   }
 

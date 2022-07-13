@@ -14,7 +14,7 @@ describe("RestOrderMapFactory", () => {
       id: number & AutoIncrement & PrimaryKey & Orderable = 0;
       name!: string;
     }
-    const s = factory.build<MyEntity>();
+    const s = factory.build(MyEntity);
     expect(s.getPropertyNames()).toEqual(["id"]);
     expect(s.getProperty("id")).toMatchObject({
       property: {

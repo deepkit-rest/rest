@@ -1,3 +1,4 @@
+import { ClassType } from "@deepkit/core";
 import {
   ReflectionClass,
   ReflectionKind,
@@ -9,6 +10,8 @@ import { RestQueryModelFactory } from "./rest-query-model";
 
 describe("RestQueryModelFactory", () => {
   class TestingFactory extends RestQueryModelFactory {
+    protected products = new Map<ClassType<any>, ReflectionClass<any>>();
+
     protected selectFields(
       entitySchema: ReflectionClass<any>,
     ): ReflectionProperty[] {
@@ -30,12 +33,12 @@ describe("RestQueryModelFactory", () => {
     factory = new TestingFactory();
   });
 
-  it("should work", () => {
+  test("basic", () => {
     class E {
       id!: number;
       name!: string;
     }
-    const s = factory.build<E>();
+    const s = factory.build(E);
     expect(s.getPropertyNames()).toEqual(["id", "name"]);
     expect(s.getProperty("id").property).toMatchObject({
       type: { kind: ReflectionKind.number },
@@ -45,5 +48,12 @@ describe("RestQueryModelFactory", () => {
       type: { kind: ReflectionKind.string },
       optional: true,
     });
+  });
+
+  test("cache", () => {
+    class E {}
+    const s1 = factory.build(E);
+    const s2 = factory.build(E);
+    expect(s1).toBe(s2);
   });
 });

@@ -1,3 +1,4 @@
+import { ClassType } from "@deepkit/core";
 import {
   Data,
   ReflectionClass,
@@ -15,6 +16,8 @@ import { RestQueryModelFactory } from "./rest-query-model";
 export type Filterable = Data<"filterable", true>;
 
 export class RestFilterMapFactory extends RestQueryModelFactory {
+  protected products = new Map<ClassType<any>, ReflectionClass<any>>();
+
   protected selectFields(
     entitySchema: ReflectionClass<any>,
   ): ReflectionProperty[] {
