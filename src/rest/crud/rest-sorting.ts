@@ -4,16 +4,13 @@ import { InlineRuntimeType } from "@deepkit/type";
 
 import { RestActionContext } from "../core/rest-action";
 import { RestOrderMapFactory } from "../crud-models/rest-order-map";
+import { RestQueryProcessor } from "./rest-crud";
 
 export interface RestSortingCustomizations {
-  sorters?: ClassType<RestSorter>[];
+  sorters?: ClassType<RestQueryProcessor>[];
 }
 
-export interface RestSorter {
-  sort<Entity>(query: Query<Entity>): Query<Entity>;
-}
-
-export class RestGenericSorter implements RestSorter {
+export class RestGenericSorter implements RestQueryProcessor {
   readonly param = "order";
 
   constructor(
@@ -21,7 +18,7 @@ export class RestGenericSorter implements RestSorter {
     protected orderMapFactory: RestOrderMapFactory,
   ) {}
 
-  sort<Entity>(query: Query<Entity>): Query<Entity> {
+  process<Entity>(query: Query<Entity>): Query<Entity> {
     const entityType = this.context.getEntitySchema().getClassType();
     const orderMapSchema = this.orderMapFactory.build(entityType).type;
     const orderMapParam = this.param;

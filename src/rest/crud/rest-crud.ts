@@ -1,4 +1,5 @@
 import { HttpNotFoundError } from "@deepkit/http";
+import { Query } from "@deepkit/orm";
 import { HttpInjectorContext } from "src/http-extension/http-common";
 
 import { RestActionContext } from "../core/rest-action";
@@ -29,18 +30,18 @@ export class RestCrudService {
     if (resource.filters)
       resource.filters
         .map((type) => this.injector.resolve(module, type)())
-        .forEach((filter) => (query = filter.filter(query)));
+        .forEach((filter) => (query = filter.process(query)));
 
     const total = await query.count();
 
     if (resource.sorters)
       resource.sorters
         .map((type) => this.injector.resolve(module, type)())
-        .forEach((sorter) => (query = sorter.sort(query)));
+        .forEach((sorter) => (query = sorter.process(query)));
     if (resource.paginator)
       query = this.injector
         .resolve(module, resource.paginator)()
-        .paginate(query);
+        .process(query);
 
     const items = await query.find();
 
@@ -55,11 +56,15 @@ export class RestCrudService {
       this.context.getResource();
     const retrieverType = resource.retriever ?? RestFieldBasedRetriever;
     const retriever = this.injector.resolve(module, retrieverType)();
-    const query = retriever.retrieve(resource.query());
+    const query = retriever.process(resource.query());
     const result = await query.findOneOrUndefined();
     if (!result) throw new HttpNotFoundError();
     return result;
   }
+}
+
+export interface RestQueryProcessor {
+  process<Entity>(query: Query<Entity>): Query<Entity>;
 }
 
 export interface RestList<Entity> {

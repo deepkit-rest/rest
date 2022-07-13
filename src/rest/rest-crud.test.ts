@@ -12,7 +12,11 @@ import { RestModule } from "src/rest/rest.module";
 
 import { rest } from "./core/rest-decoration";
 import { RestResource } from "./core/rest-resource";
-import { RestCrudService, RestList } from "./crud/rest-crud";
+import {
+  RestCrudService,
+  RestList,
+  RestQueryProcessor,
+} from "./crud/rest-crud";
 import {
   RestFilteringCustomizations,
   RestGenericFilter,
@@ -24,7 +28,6 @@ import {
 import {
   RestFieldBasedRetriever,
   RestFieldBasedRetrieverCustomizations,
-  RestRetriever,
   RestRetrievingCustomizations,
 } from "./crud/rest-retrieving";
 import {
@@ -357,8 +360,8 @@ describe("REST CRUD", () => {
           return this.crud.retrieve();
         }
       }
-      class TestingLookupBackend implements RestRetriever {
-        retrieve<Entity>(query: Query<Entity>): Query<Entity> {
+      class TestingLookupBackend implements RestQueryProcessor {
+        process<Entity>(query: Query<Entity>): Query<Entity> {
           return query.filterField("id" as any, 1);
         }
       }

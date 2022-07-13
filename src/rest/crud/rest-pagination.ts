@@ -3,16 +3,13 @@ import { Query } from "@deepkit/orm";
 import { Maximum, Positive, PositiveNoZero } from "@deepkit/type";
 
 import { RestActionContext } from "../core/rest-action";
+import { RestQueryProcessor } from "./rest-crud";
 
 export interface RestPaginationCustomizations {
-  paginator?: ClassType<RestPaginator>;
+  paginator?: ClassType<RestQueryProcessor>;
 }
 
-export interface RestPaginator {
-  paginate<Entity>(query: Query<Entity>): Query<Entity>;
-}
-
-export class RestOffsetLimitPaginator implements RestPaginator {
+export class RestOffsetLimitPaginator implements RestQueryProcessor {
   readonly limitDefault = 30;
   readonly limitMax = 50;
   readonly limitParam = "limit";
@@ -21,7 +18,7 @@ export class RestOffsetLimitPaginator implements RestPaginator {
 
   constructor(protected context: RestActionContext) {}
 
-  paginate<Entity>(query: Query<Entity>): Query<Entity> {
+  process<Entity>(query: Query<Entity>): Query<Entity> {
     const { limitDefault, limitMax, limitParam, offsetMax, offsetParam } = this;
 
     class PaginationQueries {

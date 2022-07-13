@@ -4,16 +4,13 @@ import { InlineRuntimeType } from "@deepkit/type";
 
 import { RestActionContext } from "../core/rest-action";
 import { RestFilterMapFactory } from "../crud-models/rest-filter-map";
+import { RestQueryProcessor } from "./rest-crud";
 
 export interface RestFilteringCustomizations {
-  filters?: ClassType<RestFilter>[];
+  filters?: ClassType<RestQueryProcessor>[];
 }
 
-export interface RestFilter {
-  filter<Entity>(query: Query<Entity>): Query<Entity>;
-}
-
-export class RestGenericFilter implements RestFilter {
+export class RestGenericFilter implements RestQueryProcessor {
   readonly param = "filter";
 
   constructor(
@@ -21,7 +18,7 @@ export class RestGenericFilter implements RestFilter {
     protected filterMapFactory: RestFilterMapFactory,
   ) {}
 
-  filter<Entity>(query: Query<Entity>): Query<Entity> {
+  process<Entity>(query: Query<Entity>): Query<Entity> {
     const database = query["session"]; // hack
     const entitySchema = this.context.getEntitySchema();
     const entityType = entitySchema.getClassType();
