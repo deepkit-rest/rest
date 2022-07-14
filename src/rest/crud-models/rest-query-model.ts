@@ -7,7 +7,7 @@ import { ReflectionClassAddPropertyOptions } from "src/common/type";
 class RestQueryModel {}
 
 export abstract class RestQueryModelFactory {
-  protected abstract products: Map<ClassType<any>, ReflectionClass<any>>;
+  protected products = new Map<ClassType<any>, ReflectionClass<any>>();
 
   build<Entity>(entityType: ClassType<Entity>): ReflectionClass<any> {
     if (!entityType) throw new Error("Type not specified");

@@ -1,4 +1,3 @@
-import { ClassType } from "@deepkit/core";
 import {
   ReflectionClass,
   ReflectionKind,
@@ -10,8 +9,6 @@ import { RestQueryModelFactory } from "./rest-query-model";
 
 describe("RestQueryModelFactory", () => {
   class TestingFactory extends RestQueryModelFactory {
-    protected products = new Map<ClassType<any>, ReflectionClass<any>>();
-
     protected selectFields(
       entitySchema: ReflectionClass<any>,
     ): ReflectionProperty[] {
