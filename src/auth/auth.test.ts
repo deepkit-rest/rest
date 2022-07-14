@@ -1,9 +1,9 @@
 import { App } from "@deepkit/app";
 import { http, HttpKernel, HttpModule, HttpRequest } from "@deepkit/http";
-import { entities } from "src/core/entities";
+import { CoreModule } from "src/core/core.module";
 import { RequestContext } from "src/core/request-context";
-import { DatabaseModule } from "src/database/database.module";
-import { DatabaseInitializer } from "src/database/database-initializer.service";
+import { DatabaseExtensionModule } from "src/database-extension/database-extension.module";
+import { DatabaseInitializer } from "src/database-extension/database-initializer.service";
 import { JwtModule } from "src/jwt/jwt.module";
 import { User } from "src/user/user.entity";
 
@@ -84,16 +84,15 @@ describe("Auth", () => {
         app = new App({
           imports: [
             new HttpModule(),
-            new DatabaseModule({ url: ":memory:" }).withEntities(...entities),
+            new CoreModule(),
+            new DatabaseExtensionModule(),
             new JwtModule({ secret: "secret" }),
           ],
           controllers: [AuthController],
           providers: [AuthTokenService],
         });
 
-        const database = await app
-          .get(DatabaseInitializer, DatabaseModule)
-          .initialize();
+        const database = await app.get(DatabaseInitializer).initialize();
         await database.migrate();
         await database.query(User).find();
 

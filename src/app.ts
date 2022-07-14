@@ -2,9 +2,8 @@ import { App } from "@deepkit/app";
 import { FrameworkModule } from "@deepkit/framework";
 
 import { AuthModule } from "./auth/auth.module";
-import { entities } from "./core/entities";
-import { RequestContext } from "./core/request-context";
-import { DatabaseModule } from "./database/database.module";
+import { CoreModule } from "./core/core.module";
+import { DatabaseExtensionModule } from "./database-extension/database-extension.module";
 import { EmailEngineModule } from "./email-engine/email-engine.module";
 import { FileModule } from "./file/file.module";
 import { FileEngineModule } from "./file-engine/file-engine.module";
@@ -16,8 +15,9 @@ import { UserModule } from "./user/user.module";
 new App({
   imports: [
     new FrameworkModule(),
+    new CoreModule(),
     new HttpExtensionModule(),
-    new DatabaseModule().withEntities(...entities),
+    new DatabaseExtensionModule(),
     new RestModule(),
     new FileEngineModule(),
     new EmailEngineModule(),
@@ -26,7 +26,6 @@ new App({
     new FileModule(),
     new TagModule(),
   ],
-  providers: [{ provide: RequestContext, scope: "http" }],
 })
   .loadConfigFromEnv()
   .run();

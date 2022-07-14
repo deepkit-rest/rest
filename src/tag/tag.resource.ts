@@ -1,7 +1,7 @@
 import { http, HttpBody } from "@deepkit/http";
 import { Query } from "@deepkit/orm";
 import { RequestContext } from "src/core/request-context";
-import { InjectDatabaseSession } from "src/database/database.tokens";
+import { InjectDatabaseSession } from "src/database-extension/database-tokens";
 import { NoContentResponse } from "src/http-extension/http-common";
 import { rest } from "src/rest/core/rest-decoration";
 import { RestResource } from "src/rest/core/rest-resource";

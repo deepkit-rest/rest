@@ -3,9 +3,9 @@ import { createTestingApp, TestingFacade } from "@deepkit/framework";
 import { HttpKernel, HttpRequest } from "@deepkit/http";
 import { Logger, MemoryLoggerTransport } from "@deepkit/logger";
 import { Database } from "@deepkit/orm";
-import { entities } from "src/core/entities";
+import { CoreModule } from "src/core/core.module";
 import { RequestContext } from "src/core/request-context";
-import { DatabaseModule } from "src/database/database.module";
+import { DatabaseExtensionModule } from "src/database-extension/database-extension.module";
 import { FileEngine } from "src/file-engine/file-engine.interface";
 import { FileEngineModule } from "src/file-engine/file-engine.module";
 import { HttpExtensionModule } from "src/http-extension/http-extension.module";
@@ -26,8 +26,9 @@ describe("File", () => {
   beforeEach(async () => {
     facade = createTestingApp({
       imports: [
+        new CoreModule(),
         new HttpExtensionModule(),
-        new DatabaseModule({ url: ":memory:" }).withEntities(...entities),
+        new DatabaseExtensionModule(),
         new RestModule({ prefix: "" }),
         new FileEngineModule({ name: "memory" }),
         new FileModule(),
@@ -36,6 +37,7 @@ describe("File", () => {
         {
           provide: RequestContext,
           useFactory: () => ({ user: { id: user.id } }),
+          scope: "http",
         },
       ],
     });

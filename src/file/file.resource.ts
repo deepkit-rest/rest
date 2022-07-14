@@ -7,7 +7,7 @@ import {
 } from "@deepkit/http";
 import { Query } from "@deepkit/orm";
 import { RequestContext } from "src/core/request-context";
-import { InjectDatabaseSession } from "src/database/database.tokens";
+import { InjectDatabaseSession } from "src/database-extension/database-tokens";
 import { FileEngine } from "src/file-engine/file-engine.interface";
 import {
   HttpRangeNotSatisfiableError,

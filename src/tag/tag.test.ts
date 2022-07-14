@@ -3,9 +3,9 @@ import { createTestingApp, TestingFacade } from "@deepkit/framework";
 import { HttpKernel, HttpRequest } from "@deepkit/http";
 import { Logger, MemoryLoggerTransport } from "@deepkit/logger";
 import { Database } from "@deepkit/orm";
-import { entities } from "src/core/entities";
+import { CoreModule } from "src/core/core.module";
 import { RequestContext } from "src/core/request-context";
-import { DatabaseModule } from "src/database/database.module";
+import { DatabaseExtensionModule } from "src/database-extension/database-extension.module";
 import { HttpExtensionModule } from "src/http-extension/http-extension.module";
 import { RestModule } from "src/rest/rest.module";
 import { User } from "src/user/user.entity";
@@ -22,15 +22,17 @@ describe("Tag", () => {
   beforeEach(async () => {
     facade = createTestingApp({
       imports: [
+        new CoreModule(),
         new HttpExtensionModule(),
+        new DatabaseExtensionModule(),
         new RestModule({ prefix: "" }),
-        new DatabaseModule({ url: ":memory:" }).withEntities(...entities),
         new TagModule(),
       ],
       providers: [
         {
           provide: RequestContext,
           useFactory: () => ({ user: { id: user.id } }),
+          scope: "http",
         },
       ],
     });

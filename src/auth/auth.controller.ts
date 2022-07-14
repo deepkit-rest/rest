@@ -5,7 +5,7 @@ import {
   HttpBody,
   HttpUnauthorizedError,
 } from "@deepkit/http";
-import { InjectDatabaseSession } from "src/database/database.tokens";
+import { InjectDatabaseSession } from "src/database-extension/database-tokens";
 import { User } from "src/user/user.entity";
 
 import { AuthTokenService } from "./auth-token.service";
