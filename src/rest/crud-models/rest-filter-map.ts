@@ -8,13 +8,13 @@ import {
 } from "@deepkit/type";
 import { ReflectionClassAddPropertyOptions } from "src/common/type";
 
-import { RestQueryModelFactory } from "./rest-query-model";
+import { RestEntityModelFactory } from "./rest-entity-model";
 
 // TODO: move to a better place
 
 export type Filterable = Data<"filterable", true>;
 
-export class RestFilterMapFactory extends RestQueryModelFactory {
+export class RestFilterMapFactory extends RestEntityModelFactory {
   protected selectFields(
     entitySchema: ReflectionClass<any>,
   ): ReflectionProperty[] {

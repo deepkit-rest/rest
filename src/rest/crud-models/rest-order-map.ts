@@ -6,13 +6,13 @@ import {
 } from "@deepkit/type";
 import { ReflectionClassAddPropertyOptions } from "src/common/type";
 
-import { RestQueryModelFactory } from "./rest-query-model";
+import { RestEntityModelFactory } from "./rest-entity-model";
 
 // TODO: move to a better place
 
 export type Orderable = Data<"orderable", true>;
 
-export class RestOrderMapFactory extends RestQueryModelFactory {
+export class RestOrderMapFactory extends RestEntityModelFactory {
   protected selectFields(
     entitySchema: ReflectionClass<any>,
   ): ReflectionProperty[] {

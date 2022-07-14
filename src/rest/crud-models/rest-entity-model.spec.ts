@@ -5,10 +5,10 @@ import {
 } from "@deepkit/type";
 import { ReflectionClassAddPropertyOptions } from "src/common/type";
 
-import { RestQueryModelFactory } from "./rest-query-model";
+import { RestEntityModelFactory } from "./rest-entity-model";
 
-describe("RestQueryModelFactory", () => {
-  class TestingFactory extends RestQueryModelFactory {
+describe("RestEntityModelFactory", () => {
+  class TestingFactory extends RestEntityModelFactory {
     protected selectFields(
       entitySchema: ReflectionClass<any>,
     ): ReflectionProperty[] {
@@ -24,7 +24,7 @@ describe("RestQueryModelFactory", () => {
     }
   }
 
-  let factory: RestQueryModelFactory;
+  let factory: RestEntityModelFactory;
 
   beforeEach(() => {
     factory = new TestingFactory();
