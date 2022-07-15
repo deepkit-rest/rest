@@ -4,8 +4,6 @@ import { ReflectionClassAddPropertyOptions } from "src/common/type";
 
 // TODO: move to a better place
 
-class RestEntityModel {}
-
 export abstract class RestEntityModelFactory {
   protected products = new Map<ClassType<any>, ReflectionClass<any>>();
 
@@ -14,7 +12,7 @@ export abstract class RestEntityModelFactory {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     if (this.products.has(entityType)) return this.products.get(entityType)!;
     const entitySchema = ReflectionClass.from(entityType);
-    const modelSchema = ReflectionClass.from(RestEntityModel).clone();
+    const modelSchema = this.createInitialSchema();
     const fieldSchemas = this.selectFields(entitySchema);
     fieldSchemas.forEach((fieldSchema) => {
       const transformed = this.processField(entitySchema, fieldSchema);
@@ -32,4 +30,9 @@ export abstract class RestEntityModelFactory {
     entitySchema: ReflectionClass<any>,
     fieldSchema: ReflectionProperty,
   ): ReflectionClassAddPropertyOptions;
+
+  protected createInitialSchema(): ReflectionClass<any> {
+    class RestEntityModel {}
+    return ReflectionClass.from(RestEntityModel);
+  }
 }

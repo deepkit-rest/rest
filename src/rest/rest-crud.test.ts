@@ -6,7 +6,7 @@ import { Inject, InjectorContext, ProviderWithScope } from "@deepkit/injector";
 import { Logger, MemoryLoggerTransport } from "@deepkit/logger";
 import { Database, Query } from "@deepkit/orm";
 import { SQLiteDatabaseAdapter } from "@deepkit/sqlite";
-import { AutoIncrement, PrimaryKey, Reference } from "@deepkit/type";
+import { AutoIncrement, Maximum, PrimaryKey, Reference } from "@deepkit/type";
 import { HttpExtensionModule } from "src/http-extension/http-extension.module";
 import { RestModule } from "src/rest/rest.module";
 
@@ -165,7 +165,7 @@ describe("REST CRUD", () => {
     describe("Filtering", () => {
       describe("RestGenericFilter", () => {
         class Entity1 {
-          id: number & AutoIncrement & PrimaryKey & Filterable = 0;
+          id: number & AutoIncrement & PrimaryKey & Maximum<3> & Filterable = 0;
           ref!: Entity2 & Reference & Filterable;
         }
         class Entity2 {
@@ -210,6 +210,13 @@ describe("REST CRUD", () => {
           const response = await requester.request(request);
           expect(response.json).toEqual({ total, items });
         });
+
+        it("should fail with invalid query", async () => {
+          const request = HttpRequest.GET("/api");
+          request["queryPath"] = "filter[id][$eq]=99999";
+          const response = await requester.request(request);
+          expect(response.statusCode).toBe(400);
+        });
       });
     });
 
@@ -249,6 +256,13 @@ describe("REST CRUD", () => {
           if (query) request["queryPath"] = query;
           const response = await requester.request(request);
           expect(response.json).toEqual({ total: 2, items });
+        });
+
+        it("should fail with invalid query", async () => {
+          const request = HttpRequest.GET("/api");
+          request["queryPath"] = "order[id]=asdfasdf";
+          const response = await requester.request(request);
+          expect(response.statusCode).toBe(400);
         });
       });
     });

@@ -3,6 +3,8 @@ import {
   ReflectionClass,
   ReflectionKind,
   ReflectionProperty,
+  typeOf,
+  validationAnnotation,
 } from "@deepkit/type";
 import { ReflectionClassAddPropertyOptions } from "src/common/type";
 
@@ -23,15 +25,15 @@ export class RestOrderMapFactory extends RestEntityModelFactory {
     entitySchema: ReflectionClass<any>,
     fieldSchema: ReflectionProperty,
   ): ReflectionClassAddPropertyOptions {
+    const regExp = /asc|desc/u;
+    const annotations = {
+      [validationAnnotation.symbol]: [
+        { name: "pattern", args: [typeOf<typeof regExp>()] },
+      ],
+    };
     return {
       name: fieldSchema.name,
-      type: {
-        kind: ReflectionKind.union,
-        types: [
-          { kind: ReflectionKind.literal, literal: "asc" },
-          { kind: ReflectionKind.literal, literal: "desc" },
-        ],
-      },
+      type: { kind: ReflectionKind.string, annotations },
       optional: true,
     };
   }

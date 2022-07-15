@@ -1,4 +1,9 @@
-import { AutoIncrement, PrimaryKey, ReflectionKind } from "@deepkit/type";
+import {
+  AutoIncrement,
+  PrimaryKey,
+  ReflectionKind,
+  validationAnnotation,
+} from "@deepkit/type";
 
 import { Orderable, RestOrderMapFactory } from "./rest-order-map";
 
@@ -20,11 +25,12 @@ describe("RestOrderMapFactory", () => {
       property: {
         optional: true,
         type: {
-          kind: ReflectionKind.union,
-          types: [
-            { kind: ReflectionKind.literal, literal: "asc" },
-            { kind: ReflectionKind.literal, literal: "desc" },
-          ],
+          kind: ReflectionKind.string,
+          annotations: {
+            [validationAnnotation.symbol]: [
+              { name: "pattern", args: expect.any(Array) },
+            ],
+          },
         },
       },
     });
