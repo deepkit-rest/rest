@@ -14,9 +14,12 @@ import { RestCrudService } from "./crud/rest-crud";
 import { RestGenericFilter } from "./crud/rest-filtering";
 import { RestOffsetLimitPaginator } from "./crud/rest-pagination";
 import { RestFieldBasedRetriever } from "./crud/rest-retrieving";
+import { RestGenericSerializer } from "./crud/rest-serialization";
 import { RestGenericSorter } from "./crud/rest-sorting";
+import { RestCreationSchemaFactory } from "./crud-models/rest-creation-schema";
 import { RestFilterMapFactory } from "./crud-models/rest-filter-map";
 import { RestOrderMapFactory } from "./crud-models/rest-order-map";
+import { RestUpdateSchemaFactory } from "./crud-models/rest-update-schema";
 import { RestConfig } from "./rest.config";
 import { RestListener } from "./rest.listener";
 
@@ -28,10 +31,13 @@ export class RestModule extends createModule(
       { provide: RestCrudService, scope: "http" },
       RestFilterMapFactory,
       RestOrderMapFactory,
+      RestCreationSchemaFactory,
+      RestUpdateSchemaFactory,
       { provide: RestOffsetLimitPaginator, scope: "http" },
       { provide: RestFieldBasedRetriever, scope: "http" },
       { provide: RestGenericFilter, scope: "http" },
       { provide: RestGenericSorter, scope: "http" },
+      { provide: RestGenericSerializer, scope: "http" },
     ],
     listeners: [RestListener],
     forRoot: true,

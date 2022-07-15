@@ -13,6 +13,10 @@ import {
   RestFieldBasedRetriever,
   RestRetrievingCustomizations,
 } from "./rest-retrieving";
+import {
+  RestGenericSerializer,
+  RestSerializationCustomizations,
+} from "./rest-serialization";
 import { RestSortingCustomizations } from "./rest-sorting";
 
 export class RestCrudService {
@@ -49,6 +53,36 @@ export class RestCrudService {
     const items = await query.find();
 
     return { total, items };
+  }
+
+  // TODO: return 201
+  async create<Entity>(): Promise<Entity> {
+    const resource: RestResource<Entity> &
+      RestSerializationCustomizations<Entity> = this.context.getResource();
+    const module = this.context.getModule();
+    const serializerType = resource.serializer ?? RestGenericSerializer;
+    const serializer = this.injector.resolve(module, serializerType)();
+    await this.context.loadRequestBody();
+    const entity = await serializer.create(this.context.getRequestBody());
+    const database = this.context.getResource().query()["session"]; // hack
+    database.add(entity);
+    await database.flush();
+    return entity;
+  }
+
+  async update<Entity>(): Promise<Entity> {
+    const resource: RestResource<Entity> &
+      RestSerializationCustomizations<Entity> = this.context.getResource();
+    const module = this.context.getModule();
+    const serializerType = resource.serializer ?? RestGenericSerializer;
+    const serializer = this.injector.resolve(module, serializerType)();
+    await this.context.loadRequestBody();
+    let entity = await this.retrieve<Entity>();
+    entity = await serializer.update(entity, this.context.getRequestBody());
+    const database = this.context.getResource().query()["session"]; // hack
+    database.add(entity);
+    await database.flush();
+    return entity;
   }
 
   async retrieve<Entity>(): Promise<Entity> {

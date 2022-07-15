@@ -2,11 +2,17 @@ import { App } from "@deepkit/app";
 import { ClassType } from "@deepkit/core";
 import { createTestingApp, TestingFacade } from "@deepkit/framework";
 import { HttpKernel, HttpRequest } from "@deepkit/http";
-import { Inject, InjectorContext, ProviderWithScope } from "@deepkit/injector";
+import { Inject, ProviderWithScope } from "@deepkit/injector";
 import { Logger, MemoryLoggerTransport } from "@deepkit/logger";
 import { Database, Query } from "@deepkit/orm";
 import { SQLiteDatabaseAdapter } from "@deepkit/sqlite";
-import { AutoIncrement, Maximum, PrimaryKey, Reference } from "@deepkit/type";
+import {
+  AutoIncrement,
+  Maximum,
+  MaxLength,
+  PrimaryKey,
+  Reference,
+} from "@deepkit/type";
 import { HttpExtensionModule } from "src/http-extension/http-extension.module";
 import { RestModule } from "src/rest/rest.module";
 
@@ -34,8 +40,10 @@ import {
   RestGenericSorter,
   RestSortingCustomizations,
 } from "./crud/rest-sorting";
+import { InCreation } from "./crud-models/rest-creation-schema";
 import { Filterable } from "./crud-models/rest-filter-map";
 import { Orderable } from "./crud-models/rest-order-map";
+import { InUpdate } from "./crud-models/rest-update-schema";
 
 describe("REST CRUD", () => {
   let facade: TestingFacade<App<any>>;
@@ -55,14 +63,14 @@ describe("REST CRUD", () => {
       controllers: [resource],
       providers: [
         {
-          provide: "database",
+          provide: Database,
           useValue: new Database(new SQLiteDatabaseAdapter(), entities),
         },
         ...providers,
       ],
     });
     requester = facade.app.get(HttpKernel);
-    database = facade.app.get(InjectorContext).get<Database>("database");
+    database = facade.app.get(Database);
     await database.migrate();
     facade.app.get(Logger).setTransport([new MemoryLoggerTransport()]); // temporary workaround: transport setup is not working, so we have to manually set it up
     await facade.startServer();
@@ -73,7 +81,7 @@ describe("REST CRUD", () => {
     constructor(public name: string = "") {}
   }
   class MyResource implements RestResource<MyEntity> {
-    protected db!: Inject<Database, "database">;
+    protected db!: Inject<Database>;
     protected crud!: Inject<RestCrudService>;
     query(): Query<MyEntity> {
       return this.db.query(MyEntity);
@@ -177,7 +185,7 @@ describe("REST CRUD", () => {
         {
           readonly filters = [RestGenericFilter];
           constructor(
-            private database: Inject<Database, "database">,
+            private database: Database,
             private crud: RestCrudService,
           ) {}
           query(): Query<Entity1> {
@@ -229,7 +237,7 @@ describe("REST CRUD", () => {
         class TestingResource implements RestSortingCustomizations {
           readonly sorters = [RestGenericSorter];
           constructor(
-            private database: Inject<Database, "database">,
+            private database: Database,
             private crud: RestCrudService,
           ) {}
           query(): Query<TestingEntity> {
@@ -264,6 +272,52 @@ describe("REST CRUD", () => {
           const response = await requester.request(request);
           expect(response.statusCode).toBe(400);
         });
+      });
+    });
+  });
+
+  describe("Create", () => {
+    describe("RestGenericSerializer", () => {
+      class TestingEntity {
+        id: number & AutoIncrement & PrimaryKey = 0;
+        name!: string & InCreation;
+      }
+      @rest.resource(TestingEntity, "api")
+      class TestingResource implements RestResource<TestingEntity> {
+        constructor(
+          private crud: RestCrudService,
+          private database: Database,
+        ) {}
+        query(): Query<TestingEntity> {
+          return this.database.query(TestingEntity);
+        }
+        @rest.action("POST")
+        create() {
+          return this.crud.create();
+        }
+      }
+
+      beforeEach(async () => {
+        await prepare(TestingResource, [TestingEntity]);
+      });
+
+      test("basic", async () => {
+        const payload = {
+          name: "test",
+        };
+        const response = await requester.request(
+          HttpRequest.POST("/api").json(payload),
+        );
+        expect(response.statusCode).toBe(200);
+        expect(response.json).toEqual({ id: 1, name: "test" });
+        expect(await database.query(TestingEntity).count()).toBe(1);
+      });
+
+      test("validation", async () => {
+        const response = await requester.request(
+          HttpRequest.POST("/api").json({}),
+        );
+        expect(response.statusCode).toBe(400);
       });
     });
   });
@@ -390,6 +444,66 @@ describe("REST CRUD", () => {
         const response = await requester.request(HttpRequest.GET("/api/any"));
         expect(response.statusCode).toBe(200);
         expect(response.json["id"]).toBe(1);
+      });
+    });
+  });
+
+  describe("Update", () => {
+    describe("RestGenericSerializer", () => {
+      class TestingEntity {
+        id: number & AutoIncrement & PrimaryKey = 0;
+        name!: string & MaxLength<10> & InUpdate;
+      }
+      @rest.resource(TestingEntity, "api")
+      class TestingResource implements RestResource<TestingEntity> {
+        constructor(
+          private crud: RestCrudService,
+          private database: Database,
+        ) {}
+        query(): Query<TestingEntity> {
+          return this.database.query(TestingEntity);
+        }
+        @rest.action("PATCH").detailed()
+        update() {
+          return this.crud.update();
+        }
+      }
+
+      beforeEach(async () => {
+        await prepare(TestingResource, [TestingEntity]);
+        const entity = new TestingEntity();
+        entity.name = "test";
+        await database.persist(entity);
+      });
+
+      test("basic", async () => {
+        const payload = { name: "updated" };
+        const response = await requester.request(
+          HttpRequest.PATCH("/api/1").json(payload),
+        );
+        expect(response.statusCode).toBe(200);
+        expect(response.json).toEqual({ id: 1, name: "updated" });
+        expect(await database.query(TestingEntity).findOne()).toMatchObject({
+          name: "updated",
+        });
+      });
+
+      test("property optional", async () => {
+        const response = await requester.request(
+          HttpRequest.PATCH("/api/1").json({}),
+        );
+        expect(response.statusCode).toBe(200);
+        expect(response.json).toEqual({ id: 1, name: "test" });
+        expect(await database.query(TestingEntity).findOne()).toMatchObject({
+          name: "test",
+        });
+      });
+
+      test("validation", async () => {
+        const response = await requester.request(
+          HttpRequest.PATCH("/api/1").json({ name: "alsdfhlasdhfladhflaskfj" }),
+        );
+        expect(response.statusCode).toBe(400);
       });
     });
   });
