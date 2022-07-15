@@ -379,4 +379,22 @@ describe("REST CRUD", () => {
       });
     });
   });
+
+  describe("Delete", () => {
+    test("response", async () => {
+      @rest.resource(MyEntity, "api")
+      class TestingResource extends MyResource {
+        @rest.action("DELETE").detailed()
+        delete() {
+          return this.crud.delete();
+        }
+      }
+      await prepare(TestingResource, [MyEntity]);
+      await database.persist(new MyEntity());
+      const response = await requester.request(HttpRequest.DELETE("/api/1"));
+      expect(response.statusCode).toBe(204);
+      expect(response.bodyString).toBe("");
+      expect(await database.query(MyEntity).count()).toBe(0);
+    });
+  });
 });

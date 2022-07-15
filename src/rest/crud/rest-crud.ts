@@ -1,6 +1,9 @@
 import { HttpNotFoundError } from "@deepkit/http";
 import { Query } from "@deepkit/orm";
-import { HttpInjectorContext } from "src/http-extension/http-common";
+import {
+  HttpInjectorContext,
+  NoContentResponse,
+} from "src/http-extension/http-common";
 
 import { RestActionContext } from "../core/rest-action";
 import { RestResource } from "../core/rest-resource";
@@ -60,6 +63,14 @@ export class RestCrudService {
     const result = await query.findOneOrUndefined();
     if (!result) throw new HttpNotFoundError();
     return result;
+  }
+
+  async delete<Entity>(): Promise<NoContentResponse> {
+    const entity = await this.retrieve<Entity>();
+    const database = this.context.getResource().query()["session"]; // hack
+    database.remove(entity);
+    await database.flush();
+    return new NoContentResponse();
   }
 }
 

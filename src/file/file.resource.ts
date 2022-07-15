@@ -94,9 +94,7 @@ export class FileResource
   @rest.action("DELETE").detailed()
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   async delete(): Promise<NoContentResponse> {
-    const record = await this.retrieve();
-    this.database.remove(record);
-    return new NoContentResponse();
+    return this.crud.delete();
   }
 
   @rest.action("PUT").detailed().path("content")
