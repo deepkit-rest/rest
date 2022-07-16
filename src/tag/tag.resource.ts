@@ -1,6 +1,8 @@
-import { http, HttpBody } from "@deepkit/http";
+import { http } from "@deepkit/http";
+import { Inject } from "@deepkit/injector";
 import { Query } from "@deepkit/orm";
 import { RequestContext } from "src/core/request-context";
+import { AppEntitySerializer } from "src/core/rest";
 import { InjectDatabaseSession } from "src/database-extension/database-tokens";
 import { NoContentResponse } from "src/http-extension/http-common";
 import { rest } from "src/rest/core/rest-decoration";
@@ -14,6 +16,7 @@ import {
   RestOffsetLimitPaginator,
   RestPaginationCustomizations,
 } from "src/rest/crud/rest-pagination";
+import { RestSerializationCustomizations } from "src/rest/crud/rest-serialization";
 import {
   RestGenericSorter,
   RestSortingCustomizations,
@@ -28,8 +31,10 @@ export class TagResource
     RestResource<Tag>,
     RestPaginationCustomizations,
     RestFilteringCustomizations,
-    RestSortingCustomizations
+    RestSortingCustomizations,
+    RestSerializationCustomizations<Tag>
 {
+  readonly serializer = TagSerializer;
   readonly paginator = RestOffsetLimitPaginator;
   readonly filters = [RestGenericFilter];
   readonly sorters = [RestGenericSorter];
@@ -53,11 +58,8 @@ export class TagResource
 
   @rest.action("POST")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
-  async create(payload: HttpBody<TagCreationPayload>): Promise<Tag> {
-    const owner = this.database.getReference(User, this.context.user.id);
-    const tag = new Tag({ ...payload, owner });
-    this.database.add(tag);
-    return tag;
+  async create(): Promise<Tag> {
+    return this.crud.create();
   }
 
   @rest.action("GET").detailed()
@@ -68,9 +70,8 @@ export class TagResource
 
   @rest.action("PATCH").detailed()
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
-  async update(payload: HttpBody<TagUpdatePayload>): Promise<Tag> {
-    const tag = await this.retrieve();
-    return tag.assign(payload);
+  async update(): Promise<Tag> {
+    return this.crud.update();
   }
 
   @rest.action("DELETE").detailed()
@@ -80,8 +81,12 @@ export class TagResource
   }
 }
 
-interface TagCreationPayload {
-  name: Tag["name"];
+export class TagSerializer extends AppEntitySerializer<Tag> {
+  protected database!: InjectDatabaseSession;
+  protected requestContext!: Inject<RequestContext>;
+  protected override createEntity(data: Partial<Tag>): Tag {
+    const userId = this.requestContext.user.id;
+    data.owner = this.database.getReference(User, userId);
+    return super.createEntity(data);
+  }
 }
-
-interface TagUpdatePayload extends Partial<TagCreationPayload> {}

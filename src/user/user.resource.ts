@@ -8,6 +8,7 @@ import {
 import { Query } from "@deepkit/orm";
 import { ReflectionProperty } from "@deepkit/type";
 import { RequestContext } from "src/core/request-context";
+import { AppEntitySerializer } from "src/core/rest";
 import { InjectDatabaseSession } from "src/database-extension/database-tokens";
 import { NoContentResponse } from "src/http-extension/http-common";
 import { RestActionContext } from "src/rest/core/rest-action";
@@ -26,6 +27,7 @@ import {
   RestFieldBasedRetriever,
   RestRetrievingCustomizations,
 } from "src/rest/crud/rest-retrieving";
+import { RestSerializationCustomizations } from "src/rest/crud/rest-serialization";
 import {
   RestGenericSorter,
   RestSortingCustomizations,
@@ -41,9 +43,11 @@ export class UserResource
     RestRetrievingCustomizations,
     RestPaginationCustomizations,
     RestFilteringCustomizations,
-    RestSortingCustomizations
+    RestSortingCustomizations,
+    RestSerializationCustomizations<User>
 {
   readonly retriever = UserRetriever;
+  readonly serializer = UserSerializer;
   readonly paginator = RestOffsetLimitPaginator;
   readonly filters = [RestGenericFilter];
   readonly sorters = [RestGenericSorter];
@@ -73,13 +77,9 @@ export class UserResource
 
   @rest.action("PATCH").detailed()
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
-  async update(
-    id: User["id"],
-    payload: HttpBody<Partial<Pick<User, "name" | "email" | "password">>>,
-  ): Promise<User> {
+  async update(id: User["id"]): Promise<User> {
     if (id !== "me") throw new HttpAccessDeniedError();
-    const user = await this.retrieve();
-    return user.assign(payload);
+    return this.crud.update();
   }
 
   @rest.action("PUT").detailed().path("verification")
@@ -146,3 +146,5 @@ export class UserRetriever extends RestFieldBasedRetriever {
     return super.transformValue(raw, schema);
   }
 }
+
+export class UserSerializer extends AppEntitySerializer<User> {}

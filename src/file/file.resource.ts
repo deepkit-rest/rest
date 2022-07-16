@@ -1,12 +1,13 @@
 import {
   http,
-  HttpBody,
   HttpNotFoundError,
   HttpRequest,
   HttpResponse,
 } from "@deepkit/http";
+import { Inject } from "@deepkit/injector";
 import { Query } from "@deepkit/orm";
 import { RequestContext } from "src/core/request-context";
+import { AppEntitySerializer } from "src/core/rest";
 import { InjectDatabaseSession } from "src/database-extension/database-tokens";
 import { FileEngine } from "src/file-engine/file-engine.interface";
 import {
@@ -25,6 +26,7 @@ import {
   RestOffsetLimitPaginator,
   RestPaginationCustomizations,
 } from "src/rest/crud/rest-pagination";
+import { RestSerializationCustomizations } from "src/rest/crud/rest-serialization";
 import {
   RestGenericSorter,
   RestSortingCustomizations,
@@ -34,14 +36,18 @@ import { User } from "src/user/user.entity";
 import { FileRecord } from "./file-record.entity";
 import { FileStreamUtils } from "./file-stream.utils";
 
+// TODO: rename
+
 @rest.resource(FileRecord, "files").lookup("id")
 export class FileResource
   implements
     RestResource<FileRecord>,
     RestPaginationCustomizations,
     RestFilteringCustomizations,
-    RestSortingCustomizations
+    RestSortingCustomizations,
+    RestSerializationCustomizations<FileRecord>
 {
+  readonly serializer = FileRecordSerializer;
   readonly paginator = RestOffsetLimitPaginator;
   readonly filters = [RestGenericFilter];
   readonly sorters = [RestGenericSorter];
@@ -67,13 +73,8 @@ export class FileResource
 
   @rest.action("POST")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
-  async create(
-    payload: HttpBody<FileRecordCreationPayload>,
-  ): Promise<FileRecord> {
-    const owner = this.database.getReference(User, this.context.user.id);
-    const record = new FileRecord({ owner, ...payload });
-    this.database.add(record);
-    return record;
+  async create(): Promise<FileRecord> {
+    return this.crud.create();
   }
 
   @rest.action("GET").detailed()
@@ -84,11 +85,8 @@ export class FileResource
 
   @rest.action("PATCH").detailed()
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
-  async update(
-    payload: HttpBody<FileRecordUpdatePayload>,
-  ): Promise<FileRecord> {
-    const record = await this.retrieve();
-    return record.assign(payload);
+  async update(): Promise<FileRecord> {
+    return this.crud.update();
   }
 
   @rest.action("DELETE").detailed()
@@ -151,12 +149,15 @@ export class FileResource
   }
 }
 
-interface FileRecordCreationPayload {
-  name: FileRecord["name"];
-  path: FileRecord["path"];
+export class FileRecordSerializer extends AppEntitySerializer<FileRecord> {
+  protected database!: InjectDatabaseSession;
+  protected requestContext!: Inject<RequestContext>;
+  protected override createEntity(data: Partial<FileRecord>): FileRecord {
+    const userId = this.requestContext.user.id;
+    data.owner = this.database.getReference(User, userId);
+    return super.createEntity(data);
+  }
 }
-
-interface FileRecordUpdatePayload extends Partial<FileRecordCreationPayload> {}
 
 function getContentLength(request: HttpRequest): number {
   const result = request.headers["content-length"];
