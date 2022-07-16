@@ -1,6 +1,33 @@
+import { Query } from "@deepkit/orm";
+import { RestResource } from "src/rest/core/rest-resource";
+import {
+  RestFilteringCustomizations,
+  RestGenericFilter,
+} from "src/rest/crud/rest-filtering";
+import {
+  RestOffsetLimitPaginator,
+  RestPaginationCustomizations,
+} from "src/rest/crud/rest-pagination";
 import { RestGenericSerializer } from "src/rest/crud/rest-serialization";
+import {
+  RestGenericSorter,
+  RestSortingCustomizations,
+} from "src/rest/crud/rest-sorting";
 
 import { AppEntity, isAppEntityType } from "./entity";
+
+export abstract class AppResource<Entity extends AppEntity<Entity>>
+  implements
+    RestResource<Entity>,
+    RestPaginationCustomizations,
+    RestFilteringCustomizations,
+    RestSortingCustomizations
+{
+  paginator = RestOffsetLimitPaginator;
+  filters = [RestGenericFilter];
+  sorters = [RestGenericSorter];
+  abstract query(): Query<Entity>;
+}
 
 export abstract class AppEntitySerializer<
   E extends AppEntity<E>,

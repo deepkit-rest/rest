@@ -2,48 +2,30 @@ import { http } from "@deepkit/http";
 import { Inject } from "@deepkit/injector";
 import { Query } from "@deepkit/orm";
 import { RequestContext } from "src/core/request-context";
-import { AppEntitySerializer } from "src/core/rest";
+import { AppEntitySerializer, AppResource } from "src/core/rest";
 import { InjectDatabaseSession } from "src/database-extension/database-tokens";
 import { NoContentResponse } from "src/http-extension/http-common";
 import { rest } from "src/rest/core/rest-decoration";
-import { RestResource } from "src/rest/core/rest-resource";
 import { RestCrudService, RestList } from "src/rest/crud/rest-crud";
-import {
-  RestFilteringCustomizations,
-  RestGenericFilter,
-} from "src/rest/crud/rest-filtering";
-import {
-  RestOffsetLimitPaginator,
-  RestPaginationCustomizations,
-} from "src/rest/crud/rest-pagination";
 import { RestSerializationCustomizations } from "src/rest/crud/rest-serialization";
-import {
-  RestGenericSorter,
-  RestSortingCustomizations,
-} from "src/rest/crud/rest-sorting";
 import { User } from "src/user/user.entity";
 
 import { Tag } from "./tag.entity";
 
 @rest.resource(Tag).lookup("id")
 export class TagResource
-  implements
-    RestResource<Tag>,
-    RestPaginationCustomizations,
-    RestFilteringCustomizations,
-    RestSortingCustomizations,
-    RestSerializationCustomizations<Tag>
+  extends AppResource<Tag>
+  implements RestSerializationCustomizations<Tag>
 {
   readonly serializer = TagSerializer;
-  readonly paginator = RestOffsetLimitPaginator;
-  readonly filters = [RestGenericFilter];
-  readonly sorters = [RestGenericSorter];
 
   constructor(
     private context: RequestContext,
     private database: InjectDatabaseSession,
     private crud: RestCrudService,
-  ) {}
+  ) {
+    super();
+  }
 
   query(): Query<Tag> {
     const userRef = this.database.getReference(User, this.context.user.id);

@@ -8,56 +8,39 @@ import {
 import { Query } from "@deepkit/orm";
 import { ReflectionProperty } from "@deepkit/type";
 import { RequestContext } from "src/core/request-context";
-import { AppEntitySerializer } from "src/core/rest";
+import { AppEntitySerializer, AppResource } from "src/core/rest";
 import { InjectDatabaseSession } from "src/database-extension/database-tokens";
 import { NoContentResponse } from "src/http-extension/http-common";
 import { RestActionContext } from "src/rest/core/rest-action";
 import { rest } from "src/rest/core/rest-decoration";
-import { RestResource } from "src/rest/core/rest-resource";
 import { RestCrudService, RestList } from "src/rest/crud/rest-crud";
-import {
-  RestFilteringCustomizations,
-  RestGenericFilter,
-} from "src/rest/crud/rest-filtering";
-import {
-  RestOffsetLimitPaginator,
-  RestPaginationCustomizations,
-} from "src/rest/crud/rest-pagination";
 import {
   RestFieldBasedRetriever,
   RestRetrievingCustomizations,
 } from "src/rest/crud/rest-retrieving";
 import { RestSerializationCustomizations } from "src/rest/crud/rest-serialization";
-import {
-  RestGenericSorter,
-  RestSortingCustomizations,
-} from "src/rest/crud/rest-sorting";
 
 import { User } from "./user.entity";
 import { UserVerificationService } from "./user-verification.service";
 
 @rest.resource(User).lookup("id")
 export class UserResource
+  extends AppResource<User>
   implements
-    RestResource<User>,
     RestRetrievingCustomizations,
-    RestPaginationCustomizations,
-    RestFilteringCustomizations,
-    RestSortingCustomizations,
     RestSerializationCustomizations<User>
 {
   readonly retriever = UserRetriever;
   readonly serializer = UserSerializer;
-  readonly paginator = RestOffsetLimitPaginator;
-  readonly filters = [RestGenericFilter];
-  readonly sorters = [RestGenericSorter];
 
   constructor(
     private context: RequestContext,
     private database: InjectDatabaseSession,
     private crud: RestCrudService,
     private verificationService: UserVerificationService,
-  ) {}
+  ) {
+    super();
+  }
 
   query(): Query<User> {
     return this.database.query(User);

@@ -7,7 +7,7 @@ import {
 import { Inject } from "@deepkit/injector";
 import { Query } from "@deepkit/orm";
 import { RequestContext } from "src/core/request-context";
-import { AppEntitySerializer } from "src/core/rest";
+import { AppEntitySerializer, AppResource } from "src/core/rest";
 import { InjectDatabaseSession } from "src/database-extension/database-tokens";
 import { FileEngine } from "src/file-engine/file-engine.interface";
 import {
@@ -16,21 +16,8 @@ import {
 } from "src/http-extension/http-common";
 import { HttpRangeParser } from "src/http-extension/http-range-parser.service";
 import { rest } from "src/rest/core/rest-decoration";
-import { RestResource } from "src/rest/core/rest-resource";
 import { RestCrudService, RestList } from "src/rest/crud/rest-crud";
-import {
-  RestFilteringCustomizations,
-  RestGenericFilter,
-} from "src/rest/crud/rest-filtering";
-import {
-  RestOffsetLimitPaginator,
-  RestPaginationCustomizations,
-} from "src/rest/crud/rest-pagination";
 import { RestSerializationCustomizations } from "src/rest/crud/rest-serialization";
-import {
-  RestGenericSorter,
-  RestSortingCustomizations,
-} from "src/rest/crud/rest-sorting";
 import { User } from "src/user/user.entity";
 
 import { FileRecord } from "./file-record.entity";
@@ -38,17 +25,10 @@ import { FileStreamUtils } from "./file-stream.utils";
 
 @rest.resource(FileRecord, "files").lookup("id")
 export class FileRecordResource
-  implements
-    RestResource<FileRecord>,
-    RestPaginationCustomizations,
-    RestFilteringCustomizations,
-    RestSortingCustomizations,
-    RestSerializationCustomizations<FileRecord>
+  extends AppResource<FileRecord>
+  implements RestSerializationCustomizations<FileRecord>
 {
   readonly serializer = FileRecordSerializer;
-  readonly paginator = RestOffsetLimitPaginator;
-  readonly filters = [RestGenericFilter];
-  readonly sorters = [RestGenericSorter];
 
   constructor(
     private database: InjectDatabaseSession,
@@ -56,7 +36,9 @@ export class FileRecordResource
     private crud: RestCrudService,
     private engine: FileEngine,
     private rangeParser: HttpRangeParser,
-  ) {}
+  ) {
+    super();
+  }
 
   query(): Query<FileRecord> {
     const userRef = this.database.getReference(User, this.context.user.id);
