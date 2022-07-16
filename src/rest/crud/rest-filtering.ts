@@ -1,6 +1,6 @@
 import { ClassType } from "@deepkit/core";
 import { FieldName, Query } from "@deepkit/orm";
-import { InlineRuntimeType } from "@deepkit/type";
+import { purify } from "src/common/type";
 
 import { RestActionContext } from "../core/rest-action";
 import { RestFilterMapFactory } from "../crud-models/rest-filter-map";
@@ -11,7 +11,7 @@ export interface RestFilteringCustomizations {
 }
 
 export class RestGenericFilter implements RestQueryProcessor {
-  readonly param = "filter";
+  param = "filter";
 
   constructor(
     protected context: RestActionContext,
@@ -25,11 +25,11 @@ export class RestGenericFilter implements RestQueryProcessor {
 
     const filterMapSchema = this.filterMapFactory.build(entityType);
     const filterMapParam = this.param;
-    interface Queries {
-      [filterMapParam]?: InlineRuntimeType<typeof filterMapSchema>;
-    }
-    const filterMap: object | undefined =
-      this.context.getRequestQueries<Queries>()[filterMapParam];
+    const queries = this.context.getRequestQueries();
+    const filterMap = purify<object>(
+      queries[filterMapParam] ?? {},
+      filterMapSchema.type,
+    );
 
     if (filterMap)
       Object.entries(filterMap).forEach(([field, condition]) => {

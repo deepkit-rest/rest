@@ -1,6 +1,6 @@
 import { ClassType } from "@deepkit/core";
 import { FieldName, Query } from "@deepkit/orm";
-import { InlineRuntimeType } from "@deepkit/type";
+import { purify } from "src/common/type";
 
 import { RestActionContext } from "../core/rest-action";
 import { RestOrderMapFactory } from "../crud-models/rest-order-map";
@@ -11,7 +11,7 @@ export interface RestSortingCustomizations {
 }
 
 export class RestGenericSorter implements RestQueryProcessor {
-  readonly param = "order";
+  param = "order";
 
   constructor(
     protected context: RestActionContext,
@@ -20,13 +20,13 @@ export class RestGenericSorter implements RestQueryProcessor {
 
   process<Entity>(query: Query<Entity>): Query<Entity> {
     const entityType = this.context.getEntitySchema().getClassType();
-    const orderMapSchema = this.orderMapFactory.build(entityType).type;
+    const orderMapSchema = this.orderMapFactory.build(entityType);
     const orderMapParam = this.param;
-    interface Queries {
-      [orderMapParam]?: InlineRuntimeType<typeof orderMapSchema>;
-    }
-    const orderMap: object | undefined =
-      this.context.getRequestQueries<Queries>()[orderMapParam];
+    const queries = this.context.getRequestQueries();
+    const orderMap = purify<object>(
+      queries[orderMapParam] ?? {},
+      orderMapSchema.type,
+    );
 
     if (orderMap)
       Object.entries(orderMap).forEach(([field, order]) => {
