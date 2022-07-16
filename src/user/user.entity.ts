@@ -8,7 +8,7 @@ import {
   Unique,
 } from "@deepkit/type";
 import { compare, hash } from "bcryptjs";
-import { Entity } from "src/common/entity";
+import { Entity } from "src/core/entity";
 import { FileRecord } from "src/file/file-record.entity";
 import { Filterable } from "src/rest/crud-models/rest-filter-map";
 import { Orderable } from "src/rest/crud-models/rest-order-map";

@@ -6,9 +6,9 @@ import {
   Positive,
   Reference,
 } from "@deepkit/type";
-import { Entity } from "src/common/entity";
 import { PartialRequired } from "src/common/utilities";
-import { FileRecordToTag } from "src/core/entity-pivots";
+import { FileRecordToTag } from "src/core/entities";
+import { Entity } from "src/core/entity";
 import { Filterable } from "src/rest/crud-models/rest-filter-map";
 import { Orderable } from "src/rest/crud-models/rest-order-map";
 import { Tag } from "src/tag/tag.entity";
