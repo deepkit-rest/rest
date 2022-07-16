@@ -35,21 +35,19 @@ export class RestCrudService {
     let query = resource.query();
 
     if (resource.filters)
-      resource.filters
+      query = resource.filters
         .map((type) => this.injector.resolve(module, type)())
-        .forEach((filter) => (query = filter.process(query)));
-
+        .reduce((query, filter) => filter.process(query), query);
     const total = await query.count();
 
     if (resource.sorters)
-      resource.sorters
+      query = resource.sorters
         .map((type) => this.injector.resolve(module, type)())
-        .forEach((sorter) => (query = sorter.process(query)));
+        .reduce((query, sorter) => sorter.process(query), query);
     if (resource.paginator)
       query = this.injector
         .resolve(module, resource.paginator)()
         .process(query);
-
     const items = await query.find();
 
     return { total, items };
