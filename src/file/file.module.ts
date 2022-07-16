@@ -1,10 +1,13 @@
 import { createModule } from "@deepkit/app";
 
-import { FileRecordSerializer, FileResource } from "./file.resource";
+import {
+  FileRecordResource,
+  FileRecordSerializer,
+} from "./file-record.resource";
 
 export class FileModule extends createModule(
   {
-    controllers: [FileResource],
+    controllers: [FileRecordResource],
     providers: [{ provide: FileRecordSerializer, scope: "http" }],
   },
   "file",

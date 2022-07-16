@@ -36,10 +36,8 @@ import { User } from "src/user/user.entity";
 import { FileRecord } from "./file-record.entity";
 import { FileStreamUtils } from "./file-stream.utils";
 
-// TODO: rename
-
 @rest.resource(FileRecord, "files").lookup("id")
-export class FileResource
+export class FileRecordResource
   implements
     RestResource<FileRecord>,
     RestPaginationCustomizations,
