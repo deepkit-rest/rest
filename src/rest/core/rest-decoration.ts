@@ -19,11 +19,11 @@ export class RestClassDecoratorApi extends PrettifiedDecoratorApi<RestResourceMe
     this.meta.classType = type;
   }
 
-  resource(entityType: ClassType<unknown>, name?: string): void {
+  resource(entityType: ClassType<unknown>, path?: string): void {
     this.meta.entityType = entityType;
-    if (!name) name = entity._fetch(entityType)?.collectionName;
-    if (!name) throw new Error("Cannot determine resource name");
-    this.meta.name = name;
+    if (!path) path = entity._fetch(entityType)?.collectionName;
+    if (!path) throw new Error("Cannot determine resource name");
+    this.meta.path = path;
   }
 
   parent(parent: ClassType<RestResource<unknown>>): void {

@@ -20,7 +20,7 @@ export class RestResourceMeta<
   Entity = unknown,
 > extends RestMeta<RestResourceMetaValidated> {
   classType?: ClassType<RestResource<Entity>>;
-  name?: string;
+  path?: string;
   entityType?: ClassType<Entity>;
   version?: number;
   lookup: string = "pk";
@@ -29,7 +29,7 @@ export class RestResourceMeta<
   parentLookup: string = "parentPk";
 
   protected validateInternal(): void {
-    if (!this.classType || !this.name || !this.entityType)
+    if (!this.classType || !this.path || !this.entityType)
       throw new Error("Resource not properly decorated");
   }
 }
@@ -37,7 +37,7 @@ export class RestResourceMeta<
 export interface RestResourceMetaValidated<Entity = unknown>
   extends PartialRequired<
     RestResourceMeta<Entity>,
-    "classType" | "name" | "entityType"
+    "classType" | "path" | "entityType"
   > {}
 
 export class RestActionMeta extends RestMeta<RestActionMetaValidated> {
