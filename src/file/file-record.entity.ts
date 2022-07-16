@@ -8,7 +8,7 @@ import {
 } from "@deepkit/type";
 import { PartialRequired } from "src/common/utilities";
 import { FileRecordToTag } from "src/core/entities";
-import { Entity } from "src/core/entity";
+import { AppEntity } from "src/core/entity";
 import { InCreation } from "src/rest/crud-models/rest-creation-schema";
 import { Filterable } from "src/rest/crud-models/rest-filter-map";
 import { Orderable } from "src/rest/crud-models/rest-order-map";
@@ -19,7 +19,10 @@ import { User } from "src/user/user.entity";
 type BackRefViaPivot = BackReference<{ via: typeof FileRecordToTag }>;
 
 @entity.name("file-record").collection("file-records")
-export class FileRecord extends Entity<FileRecord, "owner" | "name" | "path"> {
+export class FileRecord extends AppEntity<
+  FileRecord,
+  "owner" | "name" | "path"
+> {
   owner!: User & Reference & Filterable & Orderable;
   name!: string & Filterable & Orderable & InCreation & InUpdate;
   path!: string & Filterable & Orderable & InCreation & InUpdate;

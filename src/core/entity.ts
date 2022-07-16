@@ -4,8 +4,8 @@ import { PrimaryKey, uuid } from "@deepkit/type";
 import { Filterable } from "src/rest/crud-models/rest-filter-map";
 import { Orderable } from "src/rest/crud-models/rest-order-map";
 
-export abstract class Entity<
-  Derived extends Entity<Derived> = never,
+export abstract class AppEntity<
+  Derived extends AppEntity<Derived> = never,
   InputField extends FieldName<Derived> = never,
 > {
   id: string & PrimaryKey & Filterable & Orderable = uuid(); // temporary workaround: use `string` instead of `UUID` because of UUID will sometimes fail queries https://github.com/deepkit/deepkit-framework/issues/253
@@ -19,13 +19,15 @@ export abstract class Entity<
   }
 }
 
-export interface EntityType<
-  Derived extends Entity<Derived> = never,
+export interface AppEntityType<
+  Derived extends AppEntity<Derived> = never,
   InputField extends FieldName<Derived> = never,
 > {
-  new (input: Pick<Derived, InputField>): Entity<Derived, InputField>;
+  new (input: Pick<Derived, InputField>): AppEntity<Derived, InputField>;
 }
 
-export function isEntityType(classType: ClassType): classType is EntityType {
-  return classType.prototype instanceof Entity;
+export function isAppEntityType(
+  classType: ClassType,
+): classType is AppEntityType {
+  return classType.prototype instanceof AppEntity;
 }

@@ -8,7 +8,7 @@ import {
   Unique,
 } from "@deepkit/type";
 import { compare, hash } from "bcryptjs";
-import { Entity } from "src/core/entity";
+import { AppEntity } from "src/core/entity";
 import { FileRecord } from "src/file/file-record.entity";
 import { InCreation } from "src/rest/crud-models/rest-creation-schema";
 import { Filterable } from "src/rest/crud-models/rest-filter-map";
@@ -19,7 +19,7 @@ const HASH_LENGTH = 60;
 
 // prettier-ignore
 @entity.name("user").collection("users")
-export class User extends Entity<User, "name" | "email" | "password"> {
+export class User extends AppEntity<User, "name" | "email" | "password"> {
   name!: string & MinLength<1> & MaxLength<20> & Filterable & Orderable & InCreation & InUpdate;
   email!: Email & Unique & Filterable & Orderable & InCreation & InUpdate;
   password!: string & MinLength<6> & MaxLength<typeof HASH_LENGTH> & InCreation & InUpdate & Group<"hidden">;
