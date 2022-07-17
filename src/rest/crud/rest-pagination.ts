@@ -2,8 +2,8 @@ import { ClassType } from "@deepkit/core";
 import { Query } from "@deepkit/orm";
 import { Maximum, Positive, PositiveNoZero } from "@deepkit/type";
 import { purify } from "src/common/type";
+import { HttpRequestContext } from "src/http-extension/http-request-context.service";
 
-import { RestActionContext } from "../core/rest-action";
 import { RestQueryProcessor } from "./rest-crud";
 
 export interface RestPaginationCustomizations {
@@ -17,7 +17,7 @@ export class RestOffsetLimitPaginator implements RestQueryProcessor {
   offsetMax = 1000;
   offsetParam = "offset";
 
-  constructor(protected context: RestActionContext) {}
+  constructor(protected request: HttpRequestContext) {}
 
   process<Entity>(query: Query<Entity>): Query<Entity> {
     const { limitDefault, limitMax, limitParam, offsetMax, offsetParam } = this;
@@ -25,7 +25,7 @@ export class RestOffsetLimitPaginator implements RestQueryProcessor {
     type Limit = number & PositiveNoZero & Maximum<typeof limitMax>;
     type Offset = number & Positive & Maximum<typeof offsetMax>;
 
-    const queries = this.context.getRequestQueries();
+    const queries = this.request.getQueries();
     const limit = purify<Limit>(queries[limitParam] ?? limitDefault);
     const offset = purify<Offset>(queries[offsetParam] ?? 0);
 

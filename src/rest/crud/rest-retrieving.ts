@@ -2,6 +2,7 @@ import { ClassType } from "@deepkit/core";
 import { FieldName, Query } from "@deepkit/orm";
 import { ReflectionProperty } from "@deepkit/type";
 import { purify } from "src/common/type";
+import { HttpRequestContext } from "src/http-extension/http-request-context.service";
 
 import { RestActionContext } from "../core/rest-action";
 import { RestResource } from "../core/rest-resource";
@@ -12,11 +13,14 @@ export interface RestRetrievingCustomizations {
 }
 
 export class RestFieldBasedRetriever implements RestQueryProcessor {
-  constructor(protected context: RestActionContext) {}
+  constructor(
+    protected request: HttpRequestContext,
+    protected context: RestActionContext,
+  ) {}
 
   process<Entity>(query: Query<Entity>): Query<Entity> {
     const lookupName = this.context.getResourceMeta().lookup;
-    const valueRaw = this.context.getRequestPathParams()[lookupName];
+    const valueRaw = this.request.getPathParams()[lookupName];
     const entitySchema = this.context.getEntitySchema();
     const fieldName = this.getFieldName();
     const fieldSchema = entitySchema.getProperty(fieldName);

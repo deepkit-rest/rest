@@ -5,13 +5,13 @@ import {
   HttpBody,
   HttpNotFoundError,
 } from "@deepkit/http";
+import { Inject } from "@deepkit/injector";
 import { Query } from "@deepkit/orm";
 import { ReflectionProperty } from "@deepkit/type";
 import { RequestContext } from "src/core/request-context";
 import { AppEntitySerializer, AppResource } from "src/core/rest";
 import { InjectDatabaseSession } from "src/database-extension/database-tokens";
 import { NoContentResponse } from "src/http-extension/http-common";
-import { RestActionContext } from "src/rest/core/rest-action";
 import { rest } from "src/rest/core/rest-decoration";
 import { RestCrudService, RestList } from "src/rest/crud/rest-crud";
 import {
@@ -114,12 +114,7 @@ export class UserResource
 }
 
 export class UserRetriever extends RestFieldBasedRetriever {
-  constructor(
-    private requestContext: RequestContext,
-    context: RestActionContext,
-  ) {
-    super(context);
-  }
+  private requestContext!: Inject<RequestContext>;
 
   protected override transformValue(
     raw: unknown,

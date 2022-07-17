@@ -4,6 +4,7 @@ import {
   HttpInjectorContext,
   NoContentResponse,
 } from "src/http-extension/http-common";
+import { HttpRequestContext } from "src/http-extension/http-request-context.service";
 
 import { RestActionContext } from "../core/rest-action";
 import { RestResource } from "../core/rest-resource";
@@ -21,6 +22,7 @@ import { RestSortingCustomizations } from "./rest-sorting";
 
 export class RestCrudService {
   constructor(
+    protected request: HttpRequestContext,
     protected injector: HttpInjectorContext,
     protected context: RestActionContext,
   ) {}
@@ -90,8 +92,8 @@ export class RestCrudService {
     const module = this.context.getModule();
     const serializerType = resource.serializer ?? RestGenericEntitySerializer;
     const serializer = this.injector.resolve(module, serializerType)();
-    await this.context.loadRequestBody();
-    const entity = await serializer.deserialize(this.context.getRequestBody());
+    await this.request.loadBody();
+    const entity = await serializer.deserialize(this.request.getBody());
     const database = this.context.getResource().query()["session"]; // hack
     database.add(entity);
     await database.flush();

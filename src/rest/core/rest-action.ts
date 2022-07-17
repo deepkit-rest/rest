@@ -1,17 +1,14 @@
 import {
-  HttpRequest,
   RouteClassControllerAction,
   RouteParameterResolver,
   RouteParameterResolverContext,
 } from "@deepkit/http";
 import { InjectorModule } from "@deepkit/injector";
-import { ReceiveType, ReflectionClass } from "@deepkit/type";
-import { purify } from "src/common/type";
+import { ReflectionClass } from "@deepkit/type";
 import {
   HttpInjectorContext,
   HttpRouteConfig,
 } from "src/http-extension/http-common";
-import { HttpRequestParser } from "src/http-extension/http-request-parser.service";
 
 import { restClass } from "./rest-decoration";
 import {
@@ -36,62 +33,11 @@ export class RestActionContext<Entity = any> {
   private resourceSchema?: ReflectionClass<any>;
   private entitySchema?: ReflectionClass<any>;
   private actionMeta?: RestActionMetaValidated;
-  private requestBody?: Record<string, unknown>;
-  private requestQueries?: Record<string, unknown>;
-  private requestPathParams?: Record<string, unknown>;
 
   constructor(
-    private request: HttpRequest,
-    private routeConfig: HttpRouteConfig,
     private injector: HttpInjectorContext,
-    private requestParser: HttpRequestParser,
+    private routeConfig: HttpRouteConfig,
   ) {}
-
-  getRequest(): HttpRequest {
-    return this.request;
-  }
-
-  async loadRequestBody(): Promise<void> {
-    if (this.requestBody) return;
-    this.requestBody = await this.requestParser.parseBody(this.request);
-  }
-
-  getRequestBody<T extends object = Record<string, unknown>>(
-    type?: ReceiveType<T>,
-  ): T {
-    if (!this.requestBody) throw new Error("Request body is not loaded");
-    return type ? purify<T>(this.requestBody, type) : (this.requestBody as T);
-  }
-
-  getRequestQueries<T extends object = Record<string, unknown>>(
-    type?: ReceiveType<T>,
-  ): T {
-    if (!this.requestQueries) {
-      const [, queries] = this.requestParser.parseUrl(this.request.getUrl());
-      this.requestQueries = queries;
-    }
-    return type
-      ? purify<T>(this.requestQueries, type)
-      : (this.requestQueries as T);
-  }
-
-  getRequestPathParams<T extends object = Record<string, unknown>>(
-    type?: ReceiveType<T>,
-  ): T {
-    if (!this.requestPathParams) {
-      const [path] = this.requestParser.parseUrl(this.request.getUrl());
-      const pathSchema = this.getRouteConfig().getFullPath();
-      const parameters = this.requestParser.parsePath(pathSchema, path);
-      this.requestPathParams = parameters;
-    }
-    return type
-      ? purify<T>(this.requestPathParams, type)
-      : (this.requestPathParams as T);
-  }
-
-  getRouteConfig(): HttpRouteConfig {
-    return this.routeConfig;
-  }
 
   getModule(): InjectorModule {
     if (!this.module) this.module = this.routeConfig.action.module;
@@ -118,7 +64,7 @@ export class RestActionContext<Entity = any> {
 
   getResourceMeta(): RestResourceMetaValidated<Entity> {
     if (!this.resourceMeta) {
-      const resourceType = this.getRouteConfigActionInfo().controller;
+      const resourceType = this.getActionInfo().controller;
       this.resourceMeta = restClass._fetch(resourceType)?.validate() as
         | RestResourceMetaValidated<Entity>
         | undefined;
@@ -139,7 +85,7 @@ export class RestActionContext<Entity = any> {
   getActionMeta(): RestActionMetaValidated {
     if (!this.actionMeta) {
       const resourceMeta = this.getResourceMeta();
-      const actionName = this.getRouteConfigActionInfo().methodName;
+      const actionName = this.getActionInfo().methodName;
       this.actionMeta = resourceMeta.actions[actionName].validate();
     }
     if (!this.actionMeta)
@@ -147,7 +93,7 @@ export class RestActionContext<Entity = any> {
     return this.actionMeta;
   }
 
-  private getRouteConfigActionInfo(): RouteClassControllerAction {
+  private getActionInfo(): RouteClassControllerAction {
     const actionInfo = this.routeConfig.action;
     if (actionInfo.type === "function")
       throw new Error("Functional routes are not yet supported");

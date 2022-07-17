@@ -1,6 +1,7 @@
 import { ClassType } from "@deepkit/core";
 import { FieldName, Query } from "@deepkit/orm";
 import { purify } from "src/common/type";
+import { HttpRequestContext } from "src/http-extension/http-request-context.service";
 
 import { RestActionContext } from "../core/rest-action";
 import { RestOrderMapFactory } from "../crud-models/rest-order-map";
@@ -14,6 +15,7 @@ export class RestGenericSorter implements RestQueryProcessor {
   param = "order";
 
   constructor(
+    protected request: HttpRequestContext,
     protected context: RestActionContext,
     protected orderMapFactory: RestOrderMapFactory,
   ) {}
@@ -22,7 +24,7 @@ export class RestGenericSorter implements RestQueryProcessor {
     const entityType = this.context.getEntitySchema().getClassType();
     const orderMapSchema = this.orderMapFactory.build(entityType);
     const orderMapParam = this.param;
-    const queries = this.context.getRequestQueries();
+    const queries = this.request.getQueries();
     const orderMap = purify<object>(
       queries[orderMapParam] ?? {},
       orderMapSchema.type,

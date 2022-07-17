@@ -1,6 +1,7 @@
 import { ClassType } from "@deepkit/core";
 import { FieldName, Query } from "@deepkit/orm";
 import { purify } from "src/common/type";
+import { HttpRequestContext } from "src/http-extension/http-request-context.service";
 
 import { RestActionContext } from "../core/rest-action";
 import { RestFilterMapFactory } from "../crud-models/rest-filter-map";
@@ -14,6 +15,7 @@ export class RestGenericFilter implements RestQueryProcessor {
   param = "filter";
 
   constructor(
+    protected request: HttpRequestContext,
     protected context: RestActionContext,
     protected filterMapFactory: RestFilterMapFactory,
   ) {}
@@ -25,7 +27,7 @@ export class RestGenericFilter implements RestQueryProcessor {
 
     const filterMapSchema = this.filterMapFactory.build(entityType);
     const filterMapParam = this.param;
-    const queries = this.context.getRequestQueries();
+    const queries = this.request.getQueries();
     const filterMap = purify<object>(
       queries[filterMapParam] ?? {},
       filterMapSchema.type,
