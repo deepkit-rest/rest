@@ -1,6 +1,7 @@
 import {
   createHttpError,
   HtmlResponse,
+  HttpAction,
   httpClass,
   RouteConfig,
 } from "@deepkit/http";
@@ -29,7 +30,8 @@ export type HttpMethod =
   | "HEAD"
   | "OPTIONS";
 
-export { HttpAction as HttpRouteMeta } from "@deepkit/http";
-export type HttpControllerMeta = NonNullable<
-  ReturnType<typeof httpClass._fetch>
->;
+export class HttpActionMeta extends HttpAction {}
+
+export class HttpControllerMeta {}
+export interface HttpControllerMeta extends HttpControllerMetadata {}
+type HttpControllerMetadata = NonNullable<ReturnType<typeof httpClass._fetch>>;

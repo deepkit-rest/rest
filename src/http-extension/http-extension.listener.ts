@@ -1,7 +1,12 @@
 import { eventDispatcher } from "@deepkit/event";
-import { httpWorkflow } from "@deepkit/http";
+import { httpClass, httpWorkflow } from "@deepkit/http";
 
-import { HttpInjectorContext, HttpRouteConfig } from "./http-common";
+import {
+  HttpActionMeta,
+  HttpControllerMeta,
+  HttpInjectorContext,
+  HttpRouteConfig,
+} from "./http-common";
 
 export class HttpExtensionListener {
   @eventDispatcher.listen(httpWorkflow.onRequest)
@@ -13,5 +18,12 @@ export class HttpExtensionListener {
   afterRouteResolved(event: typeof httpWorkflow.onRoute.event): void {
     if (!event.route) return;
     event.injectorContext.set(HttpRouteConfig, event.route);
+    if (event.route.action.type !== "controller") return;
+    const controllerMeta = httpClass._fetch(event.route.action.controller);
+    if (!controllerMeta) throw new Error("Cannot read controller meta");
+    const actionName = event.route.action.methodName;
+    const actionMeta = controllerMeta.getAction(actionName);
+    event.injectorContext.set(HttpControllerMeta, controllerMeta);
+    event.injectorContext.set(HttpActionMeta, actionMeta);
   }
 }

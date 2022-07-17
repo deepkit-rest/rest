@@ -1,5 +1,4 @@
 import {
-  httpClass,
   HttpRequest,
   RouteClassControllerAction,
   RouteParameterResolver,
@@ -9,10 +8,8 @@ import { InjectorModule } from "@deepkit/injector";
 import { ReceiveType, ReflectionClass } from "@deepkit/type";
 import { purify } from "src/common/type";
 import {
-  HttpControllerMeta,
   HttpInjectorContext,
   HttpRouteConfig,
-  HttpRouteMeta,
 } from "src/http-extension/http-common";
 import { HttpRequestParser } from "src/http-extension/http-request-parser.service";
 
@@ -39,8 +36,6 @@ export class RestActionContext<Entity = any> {
   private resourceSchema?: ReflectionClass<any>;
   private entitySchema?: ReflectionClass<any>;
   private actionMeta?: RestActionMetaValidated;
-  private controllerMeta?: HttpControllerMeta;
-  private routeMeta?: HttpRouteMeta;
   private requestBody?: Record<string, unknown>;
   private requestQueries?: Record<string, unknown>;
   private requestPathParams?: Record<string, unknown>;
@@ -123,7 +118,7 @@ export class RestActionContext<Entity = any> {
 
   getResourceMeta(): RestResourceMetaValidated<Entity> {
     if (!this.resourceMeta) {
-      const resourceType = this.getRouteConfigAction().controller;
+      const resourceType = this.getRouteConfigActionInfo().controller;
       this.resourceMeta = restClass._fetch(resourceType)?.validate() as
         | RestResourceMetaValidated<Entity>
         | undefined;
@@ -144,7 +139,7 @@ export class RestActionContext<Entity = any> {
   getActionMeta(): RestActionMetaValidated {
     if (!this.actionMeta) {
       const resourceMeta = this.getResourceMeta();
-      const actionName = this.getRouteConfigAction().methodName;
+      const actionName = this.getRouteConfigActionInfo().methodName;
       this.actionMeta = resourceMeta.actions[actionName].validate();
     }
     if (!this.actionMeta)
@@ -152,26 +147,7 @@ export class RestActionContext<Entity = any> {
     return this.actionMeta;
   }
 
-  getControllerMeta(): HttpControllerMeta {
-    if (!this.controllerMeta) {
-      const resourceType = this.getRouteConfigAction().controller;
-      this.controllerMeta = httpClass._fetch(resourceType);
-    }
-    if (!this.controllerMeta) throw new Error("Cannot read controller meta");
-    return this.controllerMeta;
-  }
-
-  getRouteMeta(): HttpRouteMeta {
-    if (!this.routeMeta) {
-      const controllerMeta = this.getControllerMeta();
-      const actionName = this.getRouteConfigAction().methodName;
-      this.routeMeta = controllerMeta.getAction(actionName);
-    }
-    if (!this.routeMeta) throw new Error("Cannot read route meta");
-    return this.routeMeta;
-  }
-
-  private getRouteConfigAction(): RouteClassControllerAction {
+  private getRouteConfigActionInfo(): RouteClassControllerAction {
     const actionInfo = this.routeConfig.action;
     if (actionInfo.type === "function")
       throw new Error("Functional routes are not yet supported");
