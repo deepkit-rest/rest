@@ -8,7 +8,7 @@ import {
   RestOffsetLimitPaginator,
   RestPaginationCustomizations,
 } from "src/rest/crud/rest-pagination";
-import { RestGenericSerializer } from "src/rest/crud/rest-serialization";
+import { RestGenericEntitySerializer } from "src/rest/crud/rest-serialization";
 import {
   RestGenericSorter,
   RestSortingCustomizations,
@@ -31,7 +31,7 @@ export abstract class AppResource<Entity extends AppEntity<Entity>>
 
 export abstract class AppEntitySerializer<
   E extends AppEntity<E>,
-> extends RestGenericSerializer<E> {
+> extends RestGenericEntitySerializer<E> {
   protected override createEntity(data: Partial<E>): E {
     const entityType = this.context.getEntitySchema().getClassType();
     if (!isAppEntityType(entityType)) throw new Error("Invalid entity class");
