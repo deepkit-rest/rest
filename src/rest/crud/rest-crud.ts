@@ -57,11 +57,32 @@ export class RestCrudService {
 
   // TODO: return 201
   async create<Entity>(): Promise<Entity> {
-    return this.deserializeBodyAndSave();
+    const resource: RestResource<Entity> &
+      RestSerializationCustomizations<Entity> = this.context.getResource();
+    const module = this.context.getModule();
+    const serializerType = resource.serializer ?? RestGenericEntitySerializer;
+    const serializer = this.injector.resolve(module, serializerType)();
+    await this.request.loadBody();
+    const entity = await serializer.deserializeCreation(this.request.getBody());
+    const database = this.context.getResource().query()["session"]; // hack
+    database.add(entity);
+    await database.flush();
+    return entity;
   }
 
   async update<Entity>(): Promise<Entity> {
-    return this.deserializeBodyAndSave();
+    const resource: RestResource<Entity> &
+      RestSerializationCustomizations<Entity> = this.context.getResource();
+    const module = this.context.getModule();
+    const serializerType = resource.serializer ?? RestGenericEntitySerializer;
+    const serializer = this.injector.resolve(module, serializerType)();
+    await this.request.loadBody();
+    let entity = await this.retrieve<Entity>();
+    entity = await serializer.deserializeUpdate(entity, this.request.getBody());
+    const database = this.context.getResource().query()["session"]; // hack
+    database.add(entity);
+    await database.flush();
+    return entity;
   }
 
   async retrieve<Entity>(): Promise<Entity> {
@@ -84,20 +105,6 @@ export class RestCrudService {
     database.remove(entity);
     await database.flush();
     return new NoContentResponse();
-  }
-
-  protected async deserializeBodyAndSave<Entity>(): Promise<Entity> {
-    const resource: RestResource<Entity> &
-      RestSerializationCustomizations<Entity> = this.context.getResource();
-    const module = this.context.getModule();
-    const serializerType = resource.serializer ?? RestGenericEntitySerializer;
-    const serializer = this.injector.resolve(module, serializerType)();
-    await this.request.loadBody();
-    const entity = await serializer.deserialize(this.request.getBody());
-    const database = this.context.getResource().query()["session"]; // hack
-    database.add(entity);
-    await database.flush();
-    return entity;
   }
 }
 
