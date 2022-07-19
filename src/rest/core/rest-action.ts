@@ -27,70 +27,78 @@ export class RestActionParameterResolver implements RouteParameterResolver {
 }
 
 export class RestActionContext<Entity = any> {
-  private module?: InjectorModule;
-  private resource?: RestResource<Entity>;
-  private resourceMeta?: RestResourceMetaValidated<Entity>;
-  private resourceSchema?: ReflectionClass<any>;
-  private entitySchema?: ReflectionClass<any>;
-  private actionMeta?: RestActionMetaValidated;
-
   constructor(
+    protected cache: RestActionContextCache,
     protected injector: HttpInjectorContext,
     protected routeConfig: HttpRouteConfig,
   ) {}
 
   getModule(): InjectorModule {
-    if (!this.module) this.module = this.routeConfig.action.module;
-    if (!this.module) throw new Error("Cannot read resource module");
-    return this.module;
+    return this.getCacheOrCreate(this.getModule, () => {
+      const module = this.routeConfig.action.module;
+      if (!module) throw new Error("Cannot read resource module");
+      return module;
+    });
   }
 
   getResource(): RestResource<Entity> {
-    if (!this.resource)
-      this.resource = this.injector.get(
-        this.getResourceMeta().classType,
-        this.getModule(),
-      );
-    return this.resource;
+    return this.getCacheOrCreate(this.getResource, () =>
+      this.injector.get(this.getResourceMeta().classType, this.getModule()),
+    );
   }
 
   getResourceSchema(): ReflectionClass<any> {
-    if (!this.resourceSchema) {
+    return this.getCacheOrCreate(this.getResourceSchema, () => {
       const resourceType = this.getResourceMeta().classType;
-      this.resourceSchema = ReflectionClass.from(resourceType);
-    }
-    return this.resourceSchema;
+      return ReflectionClass.from(resourceType);
+    });
   }
 
   getResourceMeta(): RestResourceMetaValidated<Entity> {
-    if (!this.resourceMeta) {
+    return this.getCacheOrCreate(this.getResourceMeta, () => {
       const resourceType = this.getActionInfo().controller;
-      this.resourceMeta = restClass._fetch(resourceType)?.validate() as
+      const resourceMeta = restClass._fetch(resourceType)?.validate() as
         | RestResourceMetaValidated<Entity>
         | undefined;
-    }
-    if (!this.resourceMeta)
-      throw new Error(`Cannot resolve parameters for non-resource controllers`);
-    return this.resourceMeta;
+      if (!resourceMeta) throw new Error(`Cannot read resource meta`);
+      return resourceMeta;
+    });
   }
 
   getEntitySchema(): ReflectionClass<any> {
-    if (!this.entitySchema) {
+    return this.getCacheOrCreate(this.getEntitySchema, () => {
       const entityType = this.getResourceMeta().entityType;
-      this.entitySchema = ReflectionClass.from(entityType);
-    }
-    return this.entitySchema;
+      return ReflectionClass.from(entityType);
+    });
   }
 
   getActionMeta(): RestActionMetaValidated {
-    if (!this.actionMeta) {
+    return this.getCacheOrCreate(this.getActionMeta, () => {
       const resourceMeta = this.getResourceMeta();
       const actionName = this.getActionInfo().methodName;
-      this.actionMeta = resourceMeta.actions[actionName].validate();
-    }
-    if (!this.actionMeta)
-      throw new Error(`Cannot resolve parameters for non-action routes`);
-    return this.actionMeta;
+      const actionMeta = resourceMeta.actions[actionName].validate();
+      if (!actionMeta)
+        throw new Error(`Cannot resolve parameters for non-action routes`);
+      return actionMeta;
+    });
+  }
+
+  protected getCache<Method extends (...args: any[]) => any>(
+    method: Method,
+  ): ReturnType<Method> | null {
+    const value = this.cache.get(method);
+    return (value as ReturnType<Method>) ?? null;
+  }
+
+  protected getCacheOrCreate<Method extends (...args: any[]) => any>(
+    method: Method,
+    factory: () => ReturnType<Method>,
+  ): ReturnType<Method> {
+    const cached = this.getCache(method);
+    if (cached) return cached;
+    const value = factory();
+    this.cache.set(method, value);
+    return value;
   }
 
   private getActionInfo(): RouteClassControllerAction {
@@ -100,3 +108,8 @@ export class RestActionContext<Entity = any> {
     return actionInfo;
   }
 }
+
+export class RestActionContextCache extends Map<
+  (...args: any[]) => any,
+  unknown
+> {}

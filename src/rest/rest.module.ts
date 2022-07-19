@@ -3,6 +3,7 @@ import { ClassType } from "@deepkit/core";
 
 import {
   RestActionContext,
+  RestActionContextCache,
   RestActionParameterResolver,
 } from "./core/rest-action";
 import { restClass } from "./core/rest-decoration";
@@ -31,6 +32,7 @@ export class RestModule extends createModule(
     config: RestConfig,
     providers: [
       { provide: RestActionContext, scope: "http" },
+      { provide: RestActionContextCache, scope: "http" },
       { provide: RestCrudKernel, scope: "http" },
       { provide: RestCrudActionContext, scope: "http" },
       RestFilterMapFactory,

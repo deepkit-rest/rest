@@ -3,7 +3,6 @@ import { HttpNotFoundError } from "@deepkit/http";
 import { Query } from "@deepkit/orm";
 import {
   HttpInjectorContext,
-  HttpRouteConfig,
   NoContentResponse,
 } from "src/http-extension/http-common";
 import { HttpRequestContext } from "src/http-extension/http-request-context.service";
@@ -103,10 +102,6 @@ export interface RestList<Entity> {
 
 export class RestCrudActionContext<Entity> extends RestActionContext {
   private entity?: Entity;
-
-  constructor(injector: HttpInjectorContext, routeConfig: HttpRouteConfig) {
-    super(injector, routeConfig);
-  }
 
   async getEntity(): Promise<Entity> {
     if (this.entity) return this.entity;
