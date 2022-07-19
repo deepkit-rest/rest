@@ -35,8 +35,8 @@ export class RestActionContext<Entity = any> {
   private actionMeta?: RestActionMetaValidated;
 
   constructor(
-    private injector: HttpInjectorContext,
-    private routeConfig: HttpRouteConfig,
+    protected injector: HttpInjectorContext,
+    protected routeConfig: HttpRouteConfig,
   ) {}
 
   getModule(): InjectorModule {

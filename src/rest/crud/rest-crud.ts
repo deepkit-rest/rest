@@ -1,7 +1,9 @@
+import { ClassType } from "@deepkit/core";
 import { HttpNotFoundError } from "@deepkit/http";
 import { Query } from "@deepkit/orm";
 import {
   HttpInjectorContext,
+  HttpRouteConfig,
   NoContentResponse,
 } from "src/http-extension/http-common";
 import { HttpRequestContext } from "src/http-extension/http-request-context.service";
@@ -15,6 +17,7 @@ import {
   RestRetrievingCustomizations,
 } from "./rest-retrieving";
 import {
+  RestEntitySerializer,
   RestGenericEntitySerializer,
   RestSerializationCustomizations,
 } from "./rest-serialization";
@@ -24,32 +27,20 @@ export class RestCrudKernel {
   constructor(
     protected request: HttpRequestContext,
     protected injector: HttpInjectorContext,
-    protected context: RestActionContext,
+    protected context: RestCrudActionContext,
   ) {}
 
   async list<Entity>(): Promise<RestList<Entity>> {
-    const module = this.context.getModule();
-    const resource: RestResource<Entity> &
-      RestPaginationCustomizations &
-      RestFilteringCustomizations &
-      RestSortingCustomizations = this.context.getResource();
+    const resource = this.context.getResource<Entity>();
+    const filters = this.context.getFilters();
+    const sorters = this.context.getSorters();
+    const paginator = this.context.getPaginator();
 
     let query = resource.query();
-
-    if (resource.filters)
-      query = resource.filters
-        .map((type) => this.injector.resolve(module, type)())
-        .reduce((query, filter) => filter.process(query), query);
+    query = filters.reduce((q, p) => p.process(q), query);
     const total = await query.count();
-
-    if (resource.sorters)
-      query = resource.sorters
-        .map((type) => this.injector.resolve(module, type)())
-        .reduce((query, sorter) => sorter.process(query), query);
-    if (resource.paginator)
-      query = this.injector
-        .resolve(module, resource.paginator)()
-        .process(query);
+    query = sorters.reduce((q, p) => p.process(q), query);
+    if (paginator) query = paginator.process(query);
     const items = await query.find();
 
     return { total, items };
@@ -57,26 +48,20 @@ export class RestCrudKernel {
 
   // TODO: return 201
   async create<Entity>(): Promise<Entity> {
-    const resource: RestResource<Entity> &
-      RestSerializationCustomizations<Entity> = this.context.getResource();
-    const module = this.context.getModule();
-    const serializerType = resource.serializer ?? RestGenericEntitySerializer;
-    const serializer = this.injector.resolve(module, serializerType)();
+    const serializer = this.context.getSerializer<Entity>();
     await this.request.loadBody();
-    const entity = await serializer.deserializeCreation(this.request.getBody());
+    const payload = this.request.getBody();
+    const entity = await serializer.deserializeCreation(payload);
     await this.saveEntity(entity);
     return entity;
   }
 
   async update<Entity>(): Promise<Entity> {
-    const resource: RestResource<Entity> &
-      RestSerializationCustomizations<Entity> = this.context.getResource();
-    const module = this.context.getModule();
-    const serializerType = resource.serializer ?? RestGenericEntitySerializer;
-    const serializer = this.injector.resolve(module, serializerType)();
+    const serializer = this.context.getSerializer<Entity>();
     await this.request.loadBody();
+    const payload = this.request.getBody();
     let entity = await this.retrieve<Entity>();
-    entity = await serializer.deserializeUpdate(entity, this.request.getBody());
+    entity = await serializer.deserializeUpdate(entity, payload);
     await this.saveEntity(entity);
     return entity;
   }
@@ -84,11 +69,8 @@ export class RestCrudKernel {
   async retrieve<Entity>(): Promise<Entity> {
     if (!this.context.getActionMeta().detailed)
       throw new Error("Not a detailed action");
-    const module = this.context.getModule();
-    const resource: RestResource<Entity> & RestRetrievingCustomizations =
-      this.context.getResource();
-    const retrieverType = resource.retriever ?? RestFieldBasedRetriever;
-    const retriever = this.injector.resolve(module, retrieverType)();
+    const resource = this.context.getResource<Entity>();
+    const retriever = this.context.getRetriever();
     const query = retriever.process(resource.query());
     const result = await query.findOneOrUndefined();
     if (!result) throw new HttpNotFoundError();
@@ -121,4 +103,49 @@ export interface RestQueryProcessor {
 export interface RestList<Entity> {
   total: number;
   items: Entity[];
+}
+
+export class RestCrudActionContext extends RestActionContext {
+  constructor(injector: HttpInjectorContext, routeConfig: HttpRouteConfig) {
+    super(injector, routeConfig);
+  }
+
+  override getResource<Entity>(): RestResource<Entity> &
+    RestRetrievingCustomizations &
+    RestPaginationCustomizations &
+    RestFilteringCustomizations &
+    RestSortingCustomizations &
+    RestSerializationCustomizations<Entity> {
+    return super.getResource();
+  }
+
+  getRetriever(): RestQueryProcessor {
+    const resource = this.getResource();
+    return this.getDep(resource.retriever ?? RestFieldBasedRetriever);
+  }
+
+  getPaginator(): RestQueryProcessor | undefined {
+    const resource = this.getResource();
+    return resource.paginator && this.getDep(resource.paginator);
+  }
+
+  getFilters(): RestQueryProcessor[] {
+    const resource = this.getResource();
+    return resource.filters?.map((type) => this.getDep(type)) ?? [];
+  }
+
+  getSorters(): RestQueryProcessor[] {
+    const resource = this.getResource();
+    return resource.sorters?.map((type) => this.getDep(type)) ?? [];
+  }
+
+  getSerializer<Entity>(): RestEntitySerializer<Entity> {
+    const resource = this.getResource<Entity>();
+    return this.getDep(resource.serializer ?? RestGenericEntitySerializer);
+  }
+
+  getDep<Dep>(type: ClassType<Dep>): Dep {
+    const module = this.getModule();
+    return this.injector.resolve(module, type)();
+  }
 }
