@@ -64,9 +64,7 @@ export class RestCrudService {
     const serializer = this.injector.resolve(module, serializerType)();
     await this.request.loadBody();
     const entity = await serializer.deserializeCreation(this.request.getBody());
-    const database = this.context.getResource().query()["session"]; // hack
-    database.add(entity);
-    await database.flush();
+    await this.saveEntity(entity);
     return entity;
   }
 
@@ -79,9 +77,7 @@ export class RestCrudService {
     await this.request.loadBody();
     let entity = await this.retrieve<Entity>();
     entity = await serializer.deserializeUpdate(entity, this.request.getBody());
-    const database = this.context.getResource().query()["session"]; // hack
-    database.add(entity);
-    await database.flush();
+    await this.saveEntity(entity);
     return entity;
   }
 
@@ -101,10 +97,20 @@ export class RestCrudService {
 
   async delete<Entity>(): Promise<NoContentResponse> {
     const entity = await this.retrieve<Entity>();
+    await this.removeEntity(entity);
+    return new NoContentResponse();
+  }
+
+  protected async saveEntity<Entity>(entity: Entity): Promise<void> {
+    const database = this.context.getResource().query()["session"]; // hack
+    database.add(entity);
+    await database.flush();
+  }
+
+  protected async removeEntity<Entity>(entity: Entity): Promise<void> {
     const database = this.context.getResource().query()["session"]; // hack
     database.remove(entity);
     await database.flush();
-    return new NoContentResponse();
   }
 }
 
