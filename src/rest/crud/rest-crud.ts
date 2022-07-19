@@ -101,18 +101,17 @@ export interface RestList<Entity> {
 }
 
 export class RestCrudActionContext<Entity> extends RestActionContext {
-  private entity?: Entity;
-
   async getEntity(): Promise<Entity> {
-    if (this.entity) return this.entity;
-    if (!this.getActionMeta().detailed)
-      throw new Error("Not a detailed action");
-    const resource = this.getResource<Entity>();
-    const retriever = this.getRetriever();
-    const query = retriever.process(resource.query());
-    this.entity = await query.findOneOrUndefined();
-    if (!this.entity) throw new HttpNotFoundError();
-    return this.entity;
+    return this.getCacheOrCreateAsync(this.getCache, async () => {
+      if (!this.getActionMeta().detailed)
+        throw new Error("Not a detailed action");
+      const resource = this.getResource<Entity>();
+      const retriever = this.getRetriever();
+      const query = retriever.process(resource.query());
+      const entity = await query.findOneOrUndefined();
+      if (!entity) throw new HttpNotFoundError();
+      return entity;
+    });
   }
 
   override getResource<Entity>(): RestResource<Entity> &

@@ -101,6 +101,17 @@ export class RestActionContext<Entity = any> {
     return value;
   }
 
+  protected async getCacheOrCreateAsync<Method extends (...args: any[]) => any>(
+    method: Method,
+    factory: () => Promise<ReturnType<Method>>,
+  ): Promise<ReturnType<Method>> {
+    const cached = this.getCache(method);
+    if (cached) return cached;
+    const value = await factory();
+    this.cache.set(method, value);
+    return value;
+  }
+
   private getActionInfo(): RouteClassControllerAction {
     const actionInfo = this.routeConfig.action;
     if (actionInfo.type === "function")
