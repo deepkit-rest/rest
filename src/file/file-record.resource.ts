@@ -3,7 +3,6 @@ import {
   HttpNotFoundError,
   HttpRequest,
   HttpResponse,
-  Response,
 } from "@deepkit/http";
 import { Inject } from "@deepkit/injector";
 import { Query } from "@deepkit/orm";
@@ -17,7 +16,11 @@ import {
 } from "src/http-extension/http-common";
 import { HttpRangeParser } from "src/http-extension/http-range-parser.service";
 import { rest } from "src/rest/core/rest-decoration";
-import { RestCrudActionContext, RestCrudKernel } from "src/rest/crud/rest-crud";
+import {
+  ResponseReturnType,
+  RestCrudActionContext,
+  RestCrudKernel,
+} from "src/rest/crud/rest-crud";
 import { RestSerializationCustomizations } from "src/rest/crud/rest-serialization";
 import { User } from "src/user/user.entity";
 
@@ -49,31 +52,31 @@ export class FileRecordResource
 
   @rest.action("GET")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
-  async list(): Promise<Response> {
+  async list(): Promise<ResponseReturnType> {
     return this.crud.list();
   }
 
   @rest.action("POST")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
-  async create(): Promise<Response> {
+  async create(): Promise<ResponseReturnType> {
     return this.crud.create();
   }
 
   @rest.action("GET").detailed()
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
-  async retrieve(): Promise<Response> {
+  async retrieve(): Promise<ResponseReturnType> {
     return this.crud.retrieve();
   }
 
   @rest.action("PATCH").detailed()
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
-  async update(): Promise<Response> {
+  async update(): Promise<ResponseReturnType> {
     return this.crud.update();
   }
 
   @rest.action("DELETE").detailed()
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
-  async delete(): Promise<Response> {
+  async delete(): Promise<ResponseReturnType> {
     return this.crud.delete();
   }
 

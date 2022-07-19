@@ -4,7 +4,6 @@ import {
   HttpBadRequestError,
   HttpBody,
   HttpNotFoundError,
-  Response,
 } from "@deepkit/http";
 import { Inject } from "@deepkit/injector";
 import { Query } from "@deepkit/orm";
@@ -14,7 +13,11 @@ import { AppEntitySerializer, AppResource } from "src/core/rest";
 import { InjectDatabaseSession } from "src/database-extension/database-tokens";
 import { NoContentResponse } from "src/http-extension/http-common";
 import { rest } from "src/rest/core/rest-decoration";
-import { RestCrudActionContext, RestCrudKernel } from "src/rest/crud/rest-crud";
+import {
+  ResponseReturnType,
+  RestCrudActionContext,
+  RestCrudKernel,
+} from "src/rest/crud/rest-crud";
 import {
   RestFieldBasedRetriever,
   RestRetrievingCustomizations,
@@ -50,19 +53,19 @@ export class UserResource
 
   @rest.action("GET")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
-  async list(): Promise<Response> {
+  async list(): Promise<ResponseReturnType> {
     return this.crud.list();
   }
 
   @rest.action("GET").detailed()
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
-  async retrieve(): Promise<Response> {
+  async retrieve(): Promise<ResponseReturnType> {
     return this.crud.retrieve();
   }
 
   @rest.action("PATCH").detailed()
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
-  async update(id: User["id"]): Promise<Response> {
+  async update(id: User["id"]): Promise<ResponseReturnType> {
     if (id !== "me") throw new HttpAccessDeniedError();
     return this.crud.update();
   }

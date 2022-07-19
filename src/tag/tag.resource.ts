@@ -1,11 +1,11 @@
-import { http, Response } from "@deepkit/http";
+import { http } from "@deepkit/http";
 import { Inject } from "@deepkit/injector";
 import { Query } from "@deepkit/orm";
 import { RequestContext } from "src/core/request-context";
 import { AppEntitySerializer, AppResource } from "src/core/rest";
 import { InjectDatabaseSession } from "src/database-extension/database-tokens";
 import { rest } from "src/rest/core/rest-decoration";
-import { RestCrudKernel } from "src/rest/crud/rest-crud";
+import { ResponseReturnType, RestCrudKernel } from "src/rest/crud/rest-crud";
 import { RestSerializationCustomizations } from "src/rest/crud/rest-serialization";
 import { User } from "src/user/user.entity";
 
@@ -33,31 +33,31 @@ export class TagResource
 
   @rest.action("GET")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
-  async list(): Promise<Response> {
+  async list(): Promise<ResponseReturnType> {
     return this.crud.list();
   }
 
   @rest.action("POST")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
-  async create(): Promise<Response> {
+  async create(): Promise<ResponseReturnType> {
     return this.crud.create();
   }
 
   @rest.action("GET").detailed()
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
-  async retrieve(): Promise<Response> {
+  async retrieve(): Promise<ResponseReturnType> {
     return this.crud.retrieve();
   }
 
   @rest.action("PATCH").detailed()
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
-  async update(): Promise<Response> {
+  async update(): Promise<ResponseReturnType> {
     return this.crud.update();
   }
 
   @rest.action("DELETE").detailed()
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
-  async delete(): Promise<Response> {
+  async delete(): Promise<ResponseReturnType> {
     return this.crud.delete();
   }
 }

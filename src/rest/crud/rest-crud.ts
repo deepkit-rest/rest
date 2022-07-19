@@ -172,3 +172,8 @@ export class RestCrudActionContext<Entity> extends RestActionContext {
 export interface RestQueryProcessor {
   processQuery<Entity>(query: Query<Entity>): Query<Entity>;
 }
+
+// temporary workaround: Serialization Goes Wrong when Return Type Is Response,
+// JSONResponse or HtmlResponse.
+// https://github.com/deepkit/deepkit-framework/issues/321
+export type ResponseReturnType = any;
