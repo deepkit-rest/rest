@@ -13,7 +13,7 @@ import { AppEntitySerializer, AppResource } from "src/core/rest";
 import { InjectDatabaseSession } from "src/database-extension/database-tokens";
 import { NoContentResponse } from "src/http-extension/http-common";
 import { rest } from "src/rest/core/rest-decoration";
-import { RestCrudService, RestList } from "src/rest/crud/rest-crud";
+import { RestCrudKernel, RestList } from "src/rest/crud/rest-crud";
 import {
   RestFieldBasedRetriever,
   RestRetrievingCustomizations,
@@ -36,7 +36,7 @@ export class UserResource
   constructor(
     private context: RequestContext,
     private database: InjectDatabaseSession,
-    private crud: RestCrudService,
+    private crud: RestCrudKernel,
     private verificationService: UserVerificationService,
   ) {
     super();

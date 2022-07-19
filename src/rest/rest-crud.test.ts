@@ -18,11 +18,7 @@ import { RestModule } from "src/rest/rest.module";
 
 import { rest } from "./core/rest-decoration";
 import { RestResource } from "./core/rest-resource";
-import {
-  RestCrudService,
-  RestList,
-  RestQueryProcessor,
-} from "./crud/rest-crud";
+import { RestCrudKernel, RestList, RestQueryProcessor } from "./crud/rest-crud";
 import {
   RestFilteringCustomizations,
   RestGenericFilter,
@@ -82,7 +78,7 @@ describe("REST CRUD", () => {
   }
   class MyResource implements RestResource<MyEntity> {
     protected db!: Inject<Database>;
-    protected crud!: Inject<RestCrudService>;
+    protected crud!: Inject<RestCrudKernel>;
     query(): Query<MyEntity> {
       return this.db.query(MyEntity);
     }
@@ -186,7 +182,7 @@ describe("REST CRUD", () => {
           readonly filters = [RestGenericFilter];
           constructor(
             private database: Database,
-            private crud: RestCrudService,
+            private crud: RestCrudKernel,
           ) {}
           query(): Query<Entity1> {
             return this.database.query(Entity1);
@@ -238,7 +234,7 @@ describe("REST CRUD", () => {
           readonly sorters = [RestGenericSorter];
           constructor(
             private database: Database,
-            private crud: RestCrudService,
+            private crud: RestCrudKernel,
           ) {}
           query(): Query<TestingEntity> {
             return this.database.query(TestingEntity);
@@ -284,10 +280,7 @@ describe("REST CRUD", () => {
       }
       @rest.resource(TestingEntity, "api")
       class TestingResource implements RestResource<TestingEntity> {
-        constructor(
-          private crud: RestCrudService,
-          private database: Database,
-        ) {}
+        constructor(private crud: RestCrudKernel, private database: Database) {}
         query(): Query<TestingEntity> {
           return this.database.query(TestingEntity);
         }
@@ -456,10 +449,7 @@ describe("REST CRUD", () => {
       }
       @rest.resource(TestingEntity, "api")
       class TestingResource implements RestResource<TestingEntity> {
-        constructor(
-          private crud: RestCrudService,
-          private database: Database,
-        ) {}
+        constructor(private crud: RestCrudKernel, private database: Database) {}
         query(): Query<TestingEntity> {
           return this.database.query(TestingEntity);
         }

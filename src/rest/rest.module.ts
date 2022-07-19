@@ -10,7 +10,7 @@ import {
   RestResourceInstaller,
   RestResourceRegistry,
 } from "./core/rest-resource";
-import { RestCrudService } from "./crud/rest-crud";
+import { RestCrudKernel } from "./crud/rest-crud";
 import { RestGenericFilter } from "./crud/rest-filtering";
 import { RestOffsetLimitPaginator } from "./crud/rest-pagination";
 import { RestFieldBasedRetriever } from "./crud/rest-retrieving";
@@ -28,7 +28,7 @@ export class RestModule extends createModule(
     config: RestConfig,
     providers: [
       { provide: RestActionContext, scope: "http" },
-      { provide: RestCrudService, scope: "http" },
+      { provide: RestCrudKernel, scope: "http" },
       RestFilterMapFactory,
       RestOrderMapFactory,
       RestCreationSchemaFactory,

@@ -6,7 +6,7 @@ import { AppEntitySerializer, AppResource } from "src/core/rest";
 import { InjectDatabaseSession } from "src/database-extension/database-tokens";
 import { NoContentResponse } from "src/http-extension/http-common";
 import { rest } from "src/rest/core/rest-decoration";
-import { RestCrudService, RestList } from "src/rest/crud/rest-crud";
+import { RestCrudKernel, RestList } from "src/rest/crud/rest-crud";
 import { RestSerializationCustomizations } from "src/rest/crud/rest-serialization";
 import { User } from "src/user/user.entity";
 
@@ -22,7 +22,7 @@ export class TagResource
   constructor(
     private context: RequestContext,
     private database: InjectDatabaseSession,
-    private crud: RestCrudService,
+    private crud: RestCrudKernel,
   ) {
     super();
   }

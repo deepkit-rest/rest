@@ -16,7 +16,7 @@ import {
 } from "src/http-extension/http-common";
 import { HttpRangeParser } from "src/http-extension/http-range-parser.service";
 import { rest } from "src/rest/core/rest-decoration";
-import { RestCrudService, RestList } from "src/rest/crud/rest-crud";
+import { RestCrudKernel, RestList } from "src/rest/crud/rest-crud";
 import { RestSerializationCustomizations } from "src/rest/crud/rest-serialization";
 import { User } from "src/user/user.entity";
 
@@ -33,7 +33,7 @@ export class FileRecordResource
   constructor(
     private database: InjectDatabaseSession,
     private context: RequestContext,
-    private crud: RestCrudService,
+    private crud: RestCrudKernel,
     private engine: FileEngine,
     private rangeParser: HttpRangeParser,
   ) {

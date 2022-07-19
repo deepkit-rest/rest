@@ -20,7 +20,7 @@ import {
 } from "./rest-serialization";
 import { RestSortingCustomizations } from "./rest-sorting";
 
-export class RestCrudService {
+export class RestCrudKernel {
   constructor(
     protected request: HttpRequestContext,
     protected injector: HttpInjectorContext,
