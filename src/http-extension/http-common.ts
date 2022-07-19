@@ -7,9 +7,6 @@ import {
 } from "@deepkit/http";
 import { InjectorContext } from "@deepkit/injector";
 
-export class HttpInjectorContext extends InjectorContext {}
-export class HttpRouteConfig extends RouteConfig {}
-
 export class NoContentResponse extends HtmlResponse {
   constructor() {
     super("", 204);
@@ -31,6 +28,10 @@ export type HttpMethod =
   | "OPTIONS";
 
 export class HttpActionMeta extends HttpAction {}
+
+export class HttpInjectorContext extends InjectorContext {}
+
+export class HttpRouteConfig extends RouteConfig {}
 
 export class HttpControllerMeta {}
 export interface HttpControllerMeta extends HttpControllerMetadata {}
