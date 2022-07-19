@@ -7,8 +7,8 @@ import {
   Reference,
 } from "@deepkit/type";
 import { PartialRequired } from "src/common/utilities";
-import { FileRecordToTag } from "src/core/entities";
 import { AppEntity } from "src/core/entity";
+import { FileRecordToTag } from "src/core/entity-pivots";
 import { InCreation } from "src/rest/crud-models/rest-creation-schema";
 import { Filterable } from "src/rest/crud-models/rest-filter-map";
 import { Orderable } from "src/rest/crud-models/rest-order-map";

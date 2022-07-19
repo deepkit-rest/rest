@@ -6,6 +6,6 @@ import { entities } from "./entities";
 
 export class SQLiteDatabase extends Database {
   constructor(url: CoreConfig["databaseUrl"]) {
-    super(new SQLiteDatabaseAdapter(url), [...entities]);
+    super(new SQLiteDatabaseAdapter(url), entities);
   }
 }

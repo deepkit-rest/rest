@@ -1,6 +1,6 @@
 import { BackReference, entity, Group, Reference } from "@deepkit/type";
-import { FileRecordToTag } from "src/core/entities";
 import { AppEntity } from "src/core/entity";
+import { FileRecordToTag } from "src/core/entity-pivots";
 import { FileRecord } from "src/file/file-record.entity";
 import { InCreation } from "src/rest/crud-models/rest-creation-schema";
 import { Filterable } from "src/rest/crud-models/rest-filter-map";
