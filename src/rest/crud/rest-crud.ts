@@ -62,7 +62,7 @@ export class RestCrudKernel<Entity> {
     const serializer = this.context.getSerializer();
     await this.request.loadBody();
     const payload = this.request.getBody();
-    let entity = await this.retrieve();
+    let entity = await this.context.getEntity();
     entity = await serializer.deserializeUpdate(entity, payload);
     await this.saveEntity(entity);
     return entity;
@@ -73,7 +73,7 @@ export class RestCrudKernel<Entity> {
   }
 
   async delete(): Promise<NoContentResponse> {
-    const entity = await this.retrieve();
+    const entity = await this.context.getEntity();
     await this.removeEntity(entity);
     return new NoContentResponse();
   }
