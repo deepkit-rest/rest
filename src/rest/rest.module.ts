@@ -12,7 +12,10 @@ import {
 } from "./core/rest-resource";
 import { RestCrudActionContext, RestCrudKernel } from "./crud/rest-crud";
 import { RestGenericFilter } from "./crud/rest-filtering";
-import { RestOffsetLimitPaginator } from "./crud/rest-pagination";
+import {
+  RestNoopPaginator,
+  RestOffsetLimitPaginator,
+} from "./crud/rest-pagination";
 import { RestFieldBasedRetriever } from "./crud/rest-retrieving";
 import { RestGenericEntitySerializer } from "./crud/rest-serialization";
 import { RestGenericSorter } from "./crud/rest-sorting";
@@ -34,6 +37,7 @@ export class RestModule extends createModule(
       RestOrderMapFactory,
       RestCreationSchemaFactory,
       RestUpdateSchemaFactory,
+      { provide: RestNoopPaginator, scope: "http" },
       { provide: RestOffsetLimitPaginator, scope: "http" },
       { provide: RestFieldBasedRetriever, scope: "http" },
       { provide: RestGenericFilter, scope: "http" },

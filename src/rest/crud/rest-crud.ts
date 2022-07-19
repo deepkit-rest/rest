@@ -11,7 +11,10 @@ import { HttpRequestContext } from "src/http-extension/http-request-context.serv
 import { RestActionContext } from "../core/rest-action";
 import { RestResource } from "../core/rest-resource";
 import { RestFilteringCustomizations } from "./rest-filtering";
-import { RestPaginationCustomizations } from "./rest-pagination";
+import {
+  RestNoopPaginator,
+  RestPaginationCustomizations,
+} from "./rest-pagination";
 import {
   RestFieldBasedRetriever,
   RestRetrievingCustomizations,
@@ -40,7 +43,7 @@ export class RestCrudKernel {
     query = filters.reduce((q, p) => p.process(q), query);
     const total = await query.count();
     query = sorters.reduce((q, p) => p.process(q), query);
-    if (paginator) query = paginator.process(query);
+    query = paginator.process(query);
     const items = await query.find();
 
     return { total, items };
@@ -124,9 +127,9 @@ export class RestCrudActionContext extends RestActionContext {
     return this.getDep(resource.retriever ?? RestFieldBasedRetriever);
   }
 
-  getPaginator(): RestQueryProcessor | undefined {
+  getPaginator(): RestQueryProcessor {
     const resource = this.getResource();
-    return resource.paginator && this.getDep(resource.paginator);
+    return this.getDep(resource.paginator ?? RestNoopPaginator);
   }
 
   getFilters(): RestQueryProcessor[] {

@@ -10,6 +10,12 @@ export interface RestPaginationCustomizations {
   paginator?: ClassType<RestQueryProcessor>;
 }
 
+export class RestNoopPaginator implements RestQueryProcessor {
+  process<Entity>(query: Query<Entity>): Query<Entity> {
+    return query;
+  }
+}
+
 export class RestOffsetLimitPaginator implements RestQueryProcessor {
   limitDefault = 30;
   limitMax = 50;
