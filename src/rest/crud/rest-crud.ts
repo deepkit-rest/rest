@@ -33,7 +33,7 @@ export class RestCrudKernel<Entity> {
   ) {}
 
   async list(): Promise<RestList<Entity>> {
-    const resource = this.context.getResource<Entity>();
+    const resource = this.context.getResource();
     const filters = this.context.getFilters();
     const sorters = this.context.getSorters();
     const paginator = this.context.getPaginator();
@@ -50,7 +50,7 @@ export class RestCrudKernel<Entity> {
 
   // TODO: return 201
   async create(): Promise<Entity> {
-    const serializer = this.context.getSerializer<Entity>();
+    const serializer = this.context.getSerializer();
     await this.request.loadBody();
     const payload = this.request.getBody();
     const entity = await serializer.deserializeCreation(payload);
@@ -59,7 +59,7 @@ export class RestCrudKernel<Entity> {
   }
 
   async update(): Promise<Entity> {
-    const serializer = this.context.getSerializer<Entity>();
+    const serializer = this.context.getSerializer();
     await this.request.loadBody();
     const payload = this.request.getBody();
     let entity = await this.retrieve();
@@ -105,7 +105,7 @@ export class RestCrudActionContext<Entity> extends RestActionContext {
     return this.getCacheOrCreateAsync(this.getCache, async () => {
       if (!this.getActionMeta().detailed)
         throw new Error("Not a detailed action");
-      const resource = this.getResource<Entity>();
+      const resource = this.getResource();
       const retriever = this.getRetriever();
       const query = retriever.process(resource.query());
       const entity = await query.findOneOrUndefined();
@@ -114,7 +114,7 @@ export class RestCrudActionContext<Entity> extends RestActionContext {
     });
   }
 
-  override getResource<Entity>(): RestResource<Entity> &
+  override getResource(): RestResource<Entity> &
     RestRetrievingCustomizations &
     RestPaginationCustomizations &
     RestFilteringCustomizations &
@@ -143,8 +143,8 @@ export class RestCrudActionContext<Entity> extends RestActionContext {
     return resource.sorters?.map((type) => this.getDep(type)) ?? [];
   }
 
-  getSerializer<Entity>(): RestEntitySerializer<Entity> {
-    const resource = this.getResource<Entity>();
+  getSerializer(): RestEntitySerializer<Entity> {
+    const resource = this.getResource();
     return this.getDep(resource.serializer ?? RestGenericEntitySerializer);
   }
 
