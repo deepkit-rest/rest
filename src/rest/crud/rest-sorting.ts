@@ -8,10 +8,12 @@ import { RestOrderMapFactory } from "../crud-models/rest-order-map";
 import { RestQueryProcessor } from "./rest-crud";
 
 export interface RestSortingCustomizations {
-  sorters?: ClassType<RestQueryProcessor>[];
+  sorters?: ClassType<RestEntitySorter>[];
 }
 
-export class RestGenericSorter implements RestQueryProcessor {
+export interface RestEntitySorter extends RestQueryProcessor {}
+
+export class RestGenericSorter implements RestEntitySorter {
   param = "order";
 
   constructor(
@@ -20,7 +22,7 @@ export class RestGenericSorter implements RestQueryProcessor {
     protected orderMapFactory: RestOrderMapFactory,
   ) {}
 
-  process<Entity>(query: Query<Entity>): Query<Entity> {
+  processQuery<Entity>(query: Query<Entity>): Query<Entity> {
     const entityType = this.context.getEntitySchema().getClassType();
     const orderMapSchema = this.orderMapFactory.build(entityType);
     const orderMapParam = this.param;

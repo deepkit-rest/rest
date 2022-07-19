@@ -6,12 +6,17 @@ import { HttpRequestContext } from "src/http-extension/http-request-context.serv
 
 import { RestActionContext } from "../core/rest-action";
 import { RestResource } from "../core/rest-resource";
-import { RestFilteringCustomizations } from "./rest-filtering";
 import {
+  RestEntityFilter,
+  RestFilteringCustomizations,
+} from "./rest-filtering";
+import {
+  RestEntityPaginator,
   RestNoopPaginator,
   RestPaginationCustomizations,
 } from "./rest-pagination";
 import {
+  RestEntityRetriever,
   RestFieldBasedRetriever,
   RestRetrievingCustomizations,
 } from "./rest-retrieving";
@@ -20,7 +25,7 @@ import {
   RestGenericEntitySerializer,
   RestSerializationCustomizations,
 } from "./rest-serialization";
-import { RestSortingCustomizations } from "./rest-sorting";
+import { RestEntitySorter, RestSortingCustomizations } from "./rest-sorting";
 
 export class RestCrudKernel<Entity> {
   constructor(
@@ -37,10 +42,10 @@ export class RestCrudKernel<Entity> {
     const serializer = this.context.getSerializer();
 
     let query = resource.query();
-    query = filters.reduce((q, p) => p.process(q), query);
+    query = filters.reduce((q, p) => p.processQuery(q), query);
     const total = await query.count();
-    query = sorters.reduce((q, p) => p.process(q), query);
-    query = paginator.process(query);
+    query = sorters.reduce((q, p) => p.processQuery(q), query);
+    query = paginator.processQuery(query);
     const entities = await query.find();
 
     const itemPromises = entities.map((e) => serializer.serialize(e));
@@ -117,7 +122,7 @@ export class RestCrudActionContext<Entity> extends RestActionContext {
         throw new Error("Not a detailed action");
       const resource = this.getResource();
       const retriever = this.getRetriever();
-      const query = retriever.process(resource.query());
+      const query = retriever.processQuery(resource.query());
       const entity = await query.findOneOrUndefined();
       if (!entity) throw new HttpNotFoundError();
       return entity;
@@ -133,22 +138,22 @@ export class RestCrudActionContext<Entity> extends RestActionContext {
     return super.getResource();
   }
 
-  getRetriever(): RestQueryProcessor {
+  getRetriever(): RestEntityRetriever {
     const resource = this.getResource();
     return this.getDep(resource.retriever ?? RestFieldBasedRetriever);
   }
 
-  getPaginator(): RestQueryProcessor {
+  getPaginator(): RestEntityPaginator {
     const resource = this.getResource();
     return this.getDep(resource.paginator ?? RestNoopPaginator);
   }
 
-  getFilters(): RestQueryProcessor[] {
+  getFilters(): RestEntityFilter[] {
     const resource = this.getResource();
     return resource.filters?.map((type) => this.getDep(type)) ?? [];
   }
 
-  getSorters(): RestQueryProcessor[] {
+  getSorters(): RestEntitySorter[] {
     const resource = this.getResource();
     return resource.sorters?.map((type) => this.getDep(type)) ?? [];
   }
@@ -165,5 +170,5 @@ export class RestCrudActionContext<Entity> extends RestActionContext {
 }
 
 export interface RestQueryProcessor {
-  process<Entity>(query: Query<Entity>): Query<Entity>;
+  processQuery<Entity>(query: Query<Entity>): Query<Entity>;
 }

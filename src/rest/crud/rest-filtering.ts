@@ -8,10 +8,12 @@ import { RestFilterMapFactory } from "../crud-models/rest-filter-map";
 import { RestQueryProcessor } from "./rest-crud";
 
 export interface RestFilteringCustomizations {
-  filters?: ClassType<RestQueryProcessor>[];
+  filters?: ClassType<RestEntityFilter>[];
 }
 
-export class RestGenericFilter implements RestQueryProcessor {
+export interface RestEntityFilter extends RestQueryProcessor {}
+
+export class RestGenericFilter implements RestEntityFilter {
   param = "filter";
 
   constructor(
@@ -20,7 +22,7 @@ export class RestGenericFilter implements RestQueryProcessor {
     protected filterMapFactory: RestFilterMapFactory,
   ) {}
 
-  process<Entity>(query: Query<Entity>): Query<Entity> {
+  processQuery<Entity>(query: Query<Entity>): Query<Entity> {
     const database = query["session"]; // hack
     const entitySchema = this.context.getEntitySchema();
     const entityType = entitySchema.getClassType();

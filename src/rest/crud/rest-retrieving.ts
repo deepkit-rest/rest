@@ -9,16 +9,18 @@ import { RestResource } from "../core/rest-resource";
 import { RestQueryProcessor } from "./rest-crud";
 
 export interface RestRetrievingCustomizations {
-  retriever?: ClassType<RestQueryProcessor>;
+  retriever?: ClassType<RestEntityRetriever>;
 }
 
-export class RestFieldBasedRetriever implements RestQueryProcessor {
+export interface RestEntityRetriever extends RestQueryProcessor {}
+
+export class RestFieldBasedRetriever implements RestEntityRetriever {
   constructor(
     protected request: HttpRequestContext,
     protected context: RestActionContext,
   ) {}
 
-  process<Entity>(query: Query<Entity>): Query<Entity> {
+  processQuery<Entity>(query: Query<Entity>): Query<Entity> {
     const lookupName = this.context.getResourceMeta().lookup;
     const valueRaw = this.request.getPathParams()[lookupName];
     const entitySchema = this.context.getEntitySchema();

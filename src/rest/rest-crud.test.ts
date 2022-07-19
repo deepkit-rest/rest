@@ -418,14 +418,14 @@ describe("REST CRUD", () => {
         extends MyResource
         implements RestRetrievingCustomizations
       {
-        readonly retriever = TestingLookupBackend;
+        readonly retriever = TestingRetriever;
         @rest.action("GET").detailed()
         retrieve() {
           return this.crud.retrieve();
         }
       }
-      class TestingLookupBackend implements RestQueryProcessor {
-        process<Entity>(query: Query<Entity>): Query<Entity> {
+      class TestingRetriever implements RestQueryProcessor {
+        processQuery<Entity>(query: Query<Entity>): Query<Entity> {
           return query.filterField("id" as any, 1);
         }
       }
@@ -434,7 +434,7 @@ describe("REST CRUD", () => {
         await prepare(
           TestingResource,
           [MyEntity],
-          [{ provide: TestingLookupBackend, scope: "http" }],
+          [{ provide: TestingRetriever, scope: "http" }],
         );
         await database.persist(new MyEntity());
         const response = await requester.request(HttpRequest.GET("/api/any"));

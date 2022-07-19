@@ -7,16 +7,18 @@ import { HttpRequestContext } from "src/http-extension/http-request-context.serv
 import { RestQueryProcessor } from "./rest-crud";
 
 export interface RestPaginationCustomizations {
-  paginator?: ClassType<RestQueryProcessor>;
+  paginator?: ClassType<RestEntityPaginator>;
 }
 
-export class RestNoopPaginator implements RestQueryProcessor {
-  process<Entity>(query: Query<Entity>): Query<Entity> {
+export interface RestEntityPaginator extends RestQueryProcessor {}
+
+export class RestNoopPaginator implements RestEntityPaginator {
+  processQuery<Entity>(query: Query<Entity>): Query<Entity> {
     return query;
   }
 }
 
-export class RestOffsetLimitPaginator implements RestQueryProcessor {
+export class RestOffsetLimitPaginator implements RestEntityPaginator {
   limitDefault = 30;
   limitMax = 50;
   limitParam = "limit";
@@ -25,7 +27,7 @@ export class RestOffsetLimitPaginator implements RestQueryProcessor {
 
   constructor(protected request: HttpRequestContext) {}
 
-  process<Entity>(query: Query<Entity>): Query<Entity> {
+  processQuery<Entity>(query: Query<Entity>): Query<Entity> {
     const { limitDefault, limitMax, limitParam, offsetMax, offsetParam } = this;
 
     type Limit = number & PositiveNoZero & Maximum<typeof limitMax>;

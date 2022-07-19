@@ -35,7 +35,7 @@ export class UserResource
   readonly serializer = UserSerializer;
 
   constructor(
-    private context: RequestContext,
+    private requestContext: RequestContext,
     private database: InjectDatabaseSession,
     private crud: RestCrudKernel<User>,
     private crudContext: RestCrudActionContext<User>,
@@ -75,7 +75,7 @@ export class UserResource
   async requestVerification(id: User["id"]): Promise<NoContentResponse> {
     if (id !== "me") throw new HttpAccessDeniedError();
     try {
-      this.verificationService.request(this.context.user.id);
+      this.verificationService.request(this.requestContext.user.id);
     } catch (error) {
       throw new HttpAccessDeniedError("Duplicate verification request");
     }
@@ -89,7 +89,7 @@ export class UserResource
     .response(404, "No pending verification")
   async inspectVerification(id: User["id"]): Promise<NoContentResponse> {
     if (id !== "me") throw new HttpAccessDeniedError();
-    if (!this.verificationService.exists(this.context.user.id))
+    if (!this.verificationService.exists(this.requestContext.user.id))
       throw new HttpNotFoundError("No pending verification");
     return new NoContentResponse();
   }
@@ -105,7 +105,7 @@ export class UserResource
     { code }: HttpBody<{ code: string }>, //
   ): Promise<NoContentResponse> {
     if (id !== "me") throw new HttpAccessDeniedError();
-    if (!this.verificationService.exists(this.context.user.id))
+    if (!this.verificationService.exists(this.requestContext.user.id))
       throw new HttpNotFoundError("No pending verification");
     const user = await this.crudContext.getEntity();
     const verified = this.verificationService.confirm(user.id, code);
