@@ -22,7 +22,7 @@ export class TagResource
   constructor(
     private context: RequestContext,
     private database: InjectDatabaseSession,
-    private crud: RestCrudKernel,
+    private crud: RestCrudKernel<Tag>,
   ) {
     super();
   }

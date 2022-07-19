@@ -36,7 +36,7 @@ export class UserResource
   constructor(
     private context: RequestContext,
     private database: InjectDatabaseSession,
-    private crud: RestCrudKernel,
+    private crud: RestCrudKernel<User>,
     private verificationService: UserVerificationService,
   ) {
     super();

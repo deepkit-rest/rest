@@ -26,14 +26,14 @@ import {
 } from "./rest-serialization";
 import { RestSortingCustomizations } from "./rest-sorting";
 
-export class RestCrudKernel {
+export class RestCrudKernel<Entity> {
   constructor(
     protected request: HttpRequestContext,
     protected injector: HttpInjectorContext,
     protected context: RestCrudActionContext,
   ) {}
 
-  async list<Entity>(): Promise<RestList<Entity>> {
+  async list(): Promise<RestList<Entity>> {
     const resource = this.context.getResource<Entity>();
     const filters = this.context.getFilters();
     const sorters = this.context.getSorters();
@@ -50,7 +50,7 @@ export class RestCrudKernel {
   }
 
   // TODO: return 201
-  async create<Entity>(): Promise<Entity> {
+  async create(): Promise<Entity> {
     const serializer = this.context.getSerializer<Entity>();
     await this.request.loadBody();
     const payload = this.request.getBody();
@@ -59,17 +59,17 @@ export class RestCrudKernel {
     return entity;
   }
 
-  async update<Entity>(): Promise<Entity> {
+  async update(): Promise<Entity> {
     const serializer = this.context.getSerializer<Entity>();
     await this.request.loadBody();
     const payload = this.request.getBody();
-    let entity = await this.retrieve<Entity>();
+    let entity = await this.retrieve();
     entity = await serializer.deserializeUpdate(entity, payload);
     await this.saveEntity(entity);
     return entity;
   }
 
-  async retrieve<Entity>(): Promise<Entity> {
+  async retrieve(): Promise<Entity> {
     if (!this.context.getActionMeta().detailed)
       throw new Error("Not a detailed action");
     const resource = this.context.getResource<Entity>();
@@ -80,19 +80,19 @@ export class RestCrudKernel {
     return result;
   }
 
-  async delete<Entity>(): Promise<NoContentResponse> {
-    const entity = await this.retrieve<Entity>();
+  async delete(): Promise<NoContentResponse> {
+    const entity = await this.retrieve();
     await this.removeEntity(entity);
     return new NoContentResponse();
   }
 
-  protected async saveEntity<Entity>(entity: Entity): Promise<void> {
+  protected async saveEntity(entity: Entity): Promise<void> {
     const database = this.context.getResource().query()["session"]; // hack
     database.add(entity);
     await database.flush();
   }
 
-  protected async removeEntity<Entity>(entity: Entity): Promise<void> {
+  protected async removeEntity(entity: Entity): Promise<void> {
     const database = this.context.getResource().query()["session"]; // hack
     database.remove(entity);
     await database.flush();

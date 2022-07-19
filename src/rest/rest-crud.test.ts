@@ -78,7 +78,7 @@ describe("REST CRUD", () => {
   }
   class MyResource implements RestResource<MyEntity> {
     protected db!: Inject<Database>;
-    protected crud!: Inject<RestCrudKernel>;
+    protected crud!: Inject<RestCrudKernel<MyEntity>>;
     query(): Query<MyEntity> {
       return this.db.query(MyEntity);
     }
@@ -182,7 +182,7 @@ describe("REST CRUD", () => {
           readonly filters = [RestGenericFilter];
           constructor(
             private database: Database,
-            private crud: RestCrudKernel,
+            private crud: RestCrudKernel<Entity1>,
           ) {}
           query(): Query<Entity1> {
             return this.database.query(Entity1);
@@ -234,7 +234,7 @@ describe("REST CRUD", () => {
           readonly sorters = [RestGenericSorter];
           constructor(
             private database: Database,
-            private crud: RestCrudKernel,
+            private crud: RestCrudKernel<TestingEntity>,
           ) {}
           query(): Query<TestingEntity> {
             return this.database.query(TestingEntity);
@@ -280,7 +280,10 @@ describe("REST CRUD", () => {
       }
       @rest.resource(TestingEntity, "api")
       class TestingResource implements RestResource<TestingEntity> {
-        constructor(private crud: RestCrudKernel, private database: Database) {}
+        constructor(
+          private crud: RestCrudKernel<TestingEntity>,
+          private database: Database,
+        ) {}
         query(): Query<TestingEntity> {
           return this.database.query(TestingEntity);
         }
@@ -449,7 +452,10 @@ describe("REST CRUD", () => {
       }
       @rest.resource(TestingEntity, "api")
       class TestingResource implements RestResource<TestingEntity> {
-        constructor(private crud: RestCrudKernel, private database: Database) {}
+        constructor(
+          private crud: RestCrudKernel<TestingEntity>,
+          private database: Database,
+        ) {}
         query(): Query<TestingEntity> {
           return this.database.query(TestingEntity);
         }

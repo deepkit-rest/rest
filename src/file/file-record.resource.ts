@@ -33,7 +33,7 @@ export class FileRecordResource
   constructor(
     private database: InjectDatabaseSession,
     private context: RequestContext,
-    private crud: RestCrudKernel,
+    private crud: RestCrudKernel<FileRecord>,
     private engine: FileEngine,
     private rangeParser: HttpRangeParser,
   ) {
