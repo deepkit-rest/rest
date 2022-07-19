@@ -30,7 +30,7 @@ export class RestCrudKernel<Entity> {
   constructor(
     protected request: HttpRequestContext,
     protected injector: HttpInjectorContext,
-    protected context: RestCrudActionContext,
+    protected context: RestCrudActionContext<Entity>,
   ) {}
 
   async list(): Promise<RestList<Entity>> {
@@ -70,14 +70,7 @@ export class RestCrudKernel<Entity> {
   }
 
   async retrieve(): Promise<Entity> {
-    if (!this.context.getActionMeta().detailed)
-      throw new Error("Not a detailed action");
-    const resource = this.context.getResource<Entity>();
-    const retriever = this.context.getRetriever();
-    const query = retriever.process(resource.query());
-    const result = await query.findOneOrUndefined();
-    if (!result) throw new HttpNotFoundError();
-    return result;
+    return this.context.getEntity();
   }
 
   async delete(): Promise<NoContentResponse> {
@@ -108,9 +101,23 @@ export interface RestList<Entity> {
   items: Entity[];
 }
 
-export class RestCrudActionContext extends RestActionContext {
+export class RestCrudActionContext<Entity> extends RestActionContext {
+  private entity?: Entity;
+
   constructor(injector: HttpInjectorContext, routeConfig: HttpRouteConfig) {
     super(injector, routeConfig);
+  }
+
+  async getEntity(): Promise<Entity> {
+    if (this.entity) return this.entity;
+    if (!this.getActionMeta().detailed)
+      throw new Error("Not a detailed action");
+    const resource = this.getResource<Entity>();
+    const retriever = this.getRetriever();
+    const query = retriever.process(resource.query());
+    this.entity = await query.findOneOrUndefined();
+    if (!this.entity) throw new HttpNotFoundError();
+    return this.entity;
   }
 
   override getResource<Entity>(): RestResource<Entity> &
