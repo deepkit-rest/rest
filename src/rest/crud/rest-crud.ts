@@ -1,10 +1,7 @@
 import { ClassType } from "@deepkit/core";
-import { HttpNotFoundError } from "@deepkit/http";
+import { HttpNotFoundError, Response } from "@deepkit/http";
 import { Query } from "@deepkit/orm";
-import {
-  HttpInjectorContext,
-  NoContentResponse,
-} from "src/http-extension/http-common";
+import { HttpInjectorContext } from "src/http-extension/http-common";
 import { HttpRequestContext } from "src/http-extension/http-request-context.service";
 
 import { RestActionContext } from "../core/rest-action";
@@ -32,50 +29,66 @@ export class RestCrudKernel<Entity> {
     protected context: RestCrudActionContext<Entity>,
   ) {}
 
-  async list(): Promise<RestList<Entity>> {
+  async list(): Promise<Response> {
     const resource = this.context.getResource();
     const filters = this.context.getFilters();
     const sorters = this.context.getSorters();
     const paginator = this.context.getPaginator();
+    const serializer = this.context.getSerializer();
 
     let query = resource.query();
     query = filters.reduce((q, p) => p.process(q), query);
     const total = await query.count();
     query = sorters.reduce((q, p) => p.process(q), query);
     query = paginator.process(query);
-    const items = await query.find();
+    const entities = await query.find();
 
-    return { total, items };
+    const itemPromises = entities.map((e) => serializer.serialize(e));
+    const items = await Promise.all(itemPromises);
+    const body = { total, items };
+    return this.createResponse(body, 200);
   }
 
-  // TODO: return 201
-  async create(): Promise<Entity> {
+  async create(): Promise<Response> {
     const serializer = this.context.getSerializer();
+
     await this.request.loadBody();
     const payload = this.request.getBody();
     const entity = await serializer.deserializeCreation(payload);
     await this.saveEntity(entity);
-    return entity;
+
+    const body = await serializer.serialize(entity);
+    return this.createResponse(body, 201);
   }
 
-  async update(): Promise<Entity> {
+  async update(): Promise<Response> {
     const serializer = this.context.getSerializer();
+
     await this.request.loadBody();
     const payload = this.request.getBody();
     let entity = await this.context.getEntity();
     entity = await serializer.deserializeUpdate(entity, payload);
     await this.saveEntity(entity);
-    return entity;
+
+    const body = await serializer.serialize(entity);
+    return this.createResponse(body, 200);
   }
 
-  async retrieve(): Promise<Entity> {
-    return this.context.getEntity();
+  async retrieve(): Promise<Response> {
+    const serializer = this.context.getSerializer();
+
+    const entity = await this.context.getEntity();
+
+    const body = await serializer.serialize(entity);
+    return this.createResponse(body, 200);
   }
 
-  async delete(): Promise<NoContentResponse> {
+  async delete(): Promise<Response> {
     const entity = await this.context.getEntity();
     await this.removeEntity(entity);
-    return new NoContentResponse();
+
+    const body = null;
+    return this.createResponse(body, 204);
   }
 
   protected async saveEntity(entity: Entity): Promise<void> {
@@ -89,15 +102,12 @@ export class RestCrudKernel<Entity> {
     database.remove(entity);
     await database.flush();
   }
-}
 
-export interface RestQueryProcessor {
-  process<Entity>(query: Query<Entity>): Query<Entity>;
-}
-
-export interface RestList<Entity> {
-  total: number;
-  items: Entity[];
+  protected createResponse(body: unknown, status: number): Response {
+    const bodyStringified = body ? JSON.stringify(body) : "";
+    const contentType = "application/json; charset=utf-8";
+    return new Response(bodyStringified, contentType, status);
+  }
 }
 
 export class RestCrudActionContext<Entity> extends RestActionContext {
@@ -152,4 +162,8 @@ export class RestCrudActionContext<Entity> extends RestActionContext {
     const module = this.getModule();
     return this.injector.resolve(module, type)();
   }
+}
+
+export interface RestQueryProcessor {
+  process<Entity>(query: Query<Entity>): Query<Entity>;
 }

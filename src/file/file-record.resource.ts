@@ -3,6 +3,7 @@ import {
   HttpNotFoundError,
   HttpRequest,
   HttpResponse,
+  Response,
 } from "@deepkit/http";
 import { Inject } from "@deepkit/injector";
 import { Query } from "@deepkit/orm";
@@ -16,7 +17,7 @@ import {
 } from "src/http-extension/http-common";
 import { HttpRangeParser } from "src/http-extension/http-range-parser.service";
 import { rest } from "src/rest/core/rest-decoration";
-import { RestCrudKernel, RestList } from "src/rest/crud/rest-crud";
+import { RestCrudActionContext, RestCrudKernel } from "src/rest/crud/rest-crud";
 import { RestSerializationCustomizations } from "src/rest/crud/rest-serialization";
 import { User } from "src/user/user.entity";
 
@@ -34,6 +35,7 @@ export class FileRecordResource
     private database: InjectDatabaseSession,
     private context: RequestContext,
     private crud: RestCrudKernel<FileRecord>,
+    private crudContext: RestCrudActionContext<FileRecord>,
     private engine: FileEngine,
     private rangeParser: HttpRangeParser,
   ) {
@@ -47,38 +49,38 @@ export class FileRecordResource
 
   @rest.action("GET")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
-  async list(): Promise<RestList<FileRecord>> {
+  async list(): Promise<Response> {
     return this.crud.list();
   }
 
   @rest.action("POST")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
-  async create(): Promise<FileRecord> {
+  async create(): Promise<Response> {
     return this.crud.create();
   }
 
   @rest.action("GET").detailed()
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
-  async retrieve(): Promise<FileRecord> {
+  async retrieve(): Promise<Response> {
     return this.crud.retrieve();
   }
 
   @rest.action("PATCH").detailed()
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
-  async update(): Promise<FileRecord> {
+  async update(): Promise<Response> {
     return this.crud.update();
   }
 
   @rest.action("DELETE").detailed()
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
-  async delete(): Promise<NoContentResponse> {
+  async delete(): Promise<Response> {
     return this.crud.delete();
   }
 
   @rest.action("PUT").detailed().path("content")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   async upload(request: HttpRequest): Promise<NoContentResponse> {
-    const record = await this.retrieve();
+    const record = await this.crudContext.getEntity();
     const size = getContentLength(request);
     const [key, integrity] = await Promise.all([
       this.engine.store(request),
@@ -96,7 +98,7 @@ export class FileRecordResource
     response: HttpResponse,
     request: HttpRequest,
   ): Promise<HttpResponse> {
-    const record = await this.retrieve();
+    const record = await this.crudContext.getEntity();
     if (!record.isContentDefined()) throw new HttpNotFoundError();
 
     if (!request.headers["range"]) {
@@ -120,7 +122,7 @@ export class FileRecordResource
     .response(204, "File integrity verified")
     .response(404, "File broken or not uploaded")
   async verify(): Promise<NoContentResponse> {
-    const record = await this.retrieve();
+    const record = await this.crudContext.getEntity();
     if (!record.isContentDefined()) throw new HttpNotFoundError();
     const stream = await this.engine.retrieve(record.contentKey);
     const integrity = await FileStreamUtils.hash(stream);

@@ -4,6 +4,7 @@ import {
   HttpBadRequestError,
   HttpBody,
   HttpNotFoundError,
+  Response,
 } from "@deepkit/http";
 import { Inject } from "@deepkit/injector";
 import { Query } from "@deepkit/orm";
@@ -13,7 +14,7 @@ import { AppEntitySerializer, AppResource } from "src/core/rest";
 import { InjectDatabaseSession } from "src/database-extension/database-tokens";
 import { NoContentResponse } from "src/http-extension/http-common";
 import { rest } from "src/rest/core/rest-decoration";
-import { RestCrudKernel, RestList } from "src/rest/crud/rest-crud";
+import { RestCrudActionContext, RestCrudKernel } from "src/rest/crud/rest-crud";
 import {
   RestFieldBasedRetriever,
   RestRetrievingCustomizations,
@@ -37,6 +38,7 @@ export class UserResource
     private context: RequestContext,
     private database: InjectDatabaseSession,
     private crud: RestCrudKernel<User>,
+    private crudContext: RestCrudActionContext<User>,
     private verificationService: UserVerificationService,
   ) {
     super();
@@ -48,19 +50,19 @@ export class UserResource
 
   @rest.action("GET")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
-  async list(): Promise<RestList<User>> {
+  async list(): Promise<Response> {
     return this.crud.list();
   }
 
   @rest.action("GET").detailed()
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
-  async retrieve(): Promise<User> {
+  async retrieve(): Promise<Response> {
     return this.crud.retrieve();
   }
 
   @rest.action("PATCH").detailed()
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
-  async update(id: User["id"]): Promise<User> {
+  async update(id: User["id"]): Promise<Response> {
     if (id !== "me") throw new HttpAccessDeniedError();
     return this.crud.update();
   }
@@ -105,7 +107,7 @@ export class UserResource
     if (id !== "me") throw new HttpAccessDeniedError();
     if (!this.verificationService.exists(this.context.user.id))
       throw new HttpNotFoundError("No pending verification");
-    const user = await this.retrieve();
+    const user = await this.crudContext.getEntity();
     const verified = this.verificationService.confirm(user.id, code);
     if (!verified) throw new HttpBadRequestError("Code not match");
     user.verifiedAt = new Date();

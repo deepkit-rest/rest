@@ -18,7 +18,7 @@ import { RestModule } from "src/rest/rest.module";
 
 import { rest } from "./core/rest-decoration";
 import { RestResource } from "./core/rest-resource";
-import { RestCrudKernel, RestList, RestQueryProcessor } from "./crud/rest-crud";
+import { RestCrudKernel, RestQueryProcessor } from "./crud/rest-crud";
 import {
   RestFilteringCustomizations,
   RestGenericFilter,
@@ -118,7 +118,7 @@ describe("REST CRUD", () => {
         {
           readonly paginator = RestOffsetLimitPaginator;
           @rest.action("GET")
-          list(): Promise<RestList<MyEntity>> {
+          list() {
             return this.crud.list();
           }
         }
@@ -188,7 +188,7 @@ describe("REST CRUD", () => {
             return this.database.query(Entity1);
           }
           @rest.action("GET")
-          list(): Promise<RestList<Entity1>> {
+          list() {
             return this.crud.list();
           }
         }
@@ -304,7 +304,7 @@ describe("REST CRUD", () => {
         const response = await requester.request(
           HttpRequest.POST("/api").json(payload),
         );
-        expect(response.statusCode).toBe(200);
+        expect(response.statusCode).toBe(201);
         expect(response.json).toEqual({ id: 1, name: "test" });
         expect(await database.query(TestingEntity).count()).toBe(1);
       });
