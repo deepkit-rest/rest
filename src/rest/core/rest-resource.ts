@@ -71,10 +71,6 @@ export class RestResourceInstaller {
     const resolver = RestActionParameterResolver;
     const args = [resourceMeta.classType.prototype, actionMeta.name] as const;
     http.resolveParameter(RestActionContext, resolver)(...args);
-    if (actionMeta.detailed) {
-      http.resolveParameterByName("lookup", resolver)(...args);
-      http.resolveParameterByName("target", resolver)(...args);
-    }
   }
 
   /**
