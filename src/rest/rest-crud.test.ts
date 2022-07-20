@@ -3,7 +3,6 @@ import { ClassType } from "@deepkit/core";
 import { createTestingApp, TestingFacade } from "@deepkit/framework";
 import { HttpKernel, HttpRequest } from "@deepkit/http";
 import { Inject, ProviderWithScope } from "@deepkit/injector";
-import { Logger, MemoryLoggerTransport } from "@deepkit/logger";
 import { Database, Query } from "@deepkit/orm";
 import { SQLiteDatabaseAdapter } from "@deepkit/sqlite";
 import {
@@ -68,7 +67,6 @@ describe("REST CRUD", () => {
     requester = facade.app.get(HttpKernel);
     database = facade.app.get(Database);
     await database.migrate();
-    facade.app.get(Logger).setTransport([new MemoryLoggerTransport()]); // temporary workaround: transport setup is not working, so we have to manually set it up
     await facade.startServer();
   }
 

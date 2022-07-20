@@ -9,7 +9,6 @@ import {
   RouteConfig,
 } from "@deepkit/http";
 import { Inject, ProviderWithScope } from "@deepkit/injector";
-import { Logger, MemoryLoggerTransport } from "@deepkit/logger";
 import { Database, MemoryDatabaseAdapter, Query } from "@deepkit/orm";
 import { AutoIncrement, entity, PrimaryKey } from "@deepkit/type";
 import { HttpExtensionModule } from "src/http-extension/http-extension.module";
@@ -44,7 +43,6 @@ describe("REST Core", () => {
     requester = facade.app.get(HttpKernel);
     database = facade.app.get(Database);
     await database.migrate();
-    facade.app.get(Logger).setTransport([new MemoryLoggerTransport()]); // temporary workaround: transport setup is not working, so we have to manually set it up
     await facade.startServer();
   }
 

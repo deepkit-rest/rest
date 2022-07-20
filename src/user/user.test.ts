@@ -1,7 +1,6 @@
 import { App } from "@deepkit/app";
 import { createTestingApp, TestingFacade } from "@deepkit/framework";
 import { HttpKernel, HttpRequest } from "@deepkit/http";
-import { Logger, MemoryLoggerTransport } from "@deepkit/logger";
 import { Database } from "@deepkit/orm";
 import { ExpirableMap } from "src/common/map";
 import { CoreModule } from "src/core/core.module";
@@ -48,7 +47,6 @@ describe("User", () => {
       password: "password",
     });
     await database.persist(user);
-    facade.app.get(Logger).setTransport([new MemoryLoggerTransport()]); // temporary workaround: transport setup is not working, so we have to manually set it up
     await facade.startServer();
   });
 

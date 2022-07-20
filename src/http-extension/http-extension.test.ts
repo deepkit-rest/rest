@@ -1,6 +1,5 @@
 import { createTestingApp } from "@deepkit/framework";
 import { http, HttpRequest, RouteConfig } from "@deepkit/http";
-import { Logger, MemoryLoggerTransport } from "@deepkit/logger";
 
 import {
   HttpActionMeta,
@@ -35,7 +34,6 @@ describe("Http Extension", () => {
       imports: [new HttpExtensionModule()],
       controllers: [MyController],
     });
-    facade.app.get(Logger).setTransport([new MemoryLoggerTransport()]); // temporary workaround: transport setup is not working, so we have to manually set it up
     await facade.startServer();
     const response = await facade.request(HttpRequest.GET("/"));
     expect(response.statusCode).toBe(200);
