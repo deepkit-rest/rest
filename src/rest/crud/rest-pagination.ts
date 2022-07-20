@@ -10,11 +10,25 @@ export interface RestPaginationCustomizations {
   paginator?: ClassType<RestEntityPaginator>;
 }
 
-export interface RestEntityPaginator extends RestQueryProcessor {}
+export interface RestEntityPaginator extends RestQueryProcessor {
+  buildBody(
+    items: () => Promise<unknown[]>,
+    total: () => Promise<number>,
+  ): Promise<unknown>;
+}
 
 export class RestNoopPaginator implements RestEntityPaginator {
   processQuery<Entity>(query: Query<Entity>): Query<Entity> {
     return query;
+  }
+  async buildBody(
+    items: () => Promise<unknown[]>,
+    total: () => Promise<number>,
+  ): Promise<unknown> {
+    return {
+      total: await total(),
+      items: await items(),
+    };
   }
 }
 
@@ -38,5 +52,15 @@ export class RestOffsetLimitPaginator implements RestEntityPaginator {
     const offset = purify<Offset>(queries[offsetParam] ?? 0);
 
     return query.limit(limit).skip(offset);
+  }
+
+  async buildBody(
+    items: () => Promise<unknown[]>,
+    total: () => Promise<number>,
+  ): Promise<unknown> {
+    return {
+      total: await total(),
+      items: await items(),
+    };
   }
 }

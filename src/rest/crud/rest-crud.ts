@@ -43,14 +43,18 @@ export class RestCrudKernel<Entity> {
 
     let query = resource.query();
     query = filters.reduce((q, p) => p.processQuery(q), query);
-    const total = await query.count();
+    const totalQuery = query;
+    const total = async () => totalQuery.count();
     query = sorters.reduce((q, p) => p.processQuery(q), query);
     query = paginator.processQuery(query);
-    const entities = await query.find();
+    const itemsQuery = query;
+    const items = async () =>
+      itemsQuery
+        .find()
+        .then((entities) => entities.map((e) => serializer.serialize(e)))
+        .then((promises) => Promise.all(promises));
 
-    const itemPromises = entities.map((e) => serializer.serialize(e));
-    const items = await Promise.all(itemPromises);
-    const body = { total, items };
+    const body = await paginator.buildBody(items, total);
     return this.createResponse(body, 200);
   }
 
