@@ -27,8 +27,6 @@ export type HttpMethod =
   | "HEAD"
   | "OPTIONS";
 
-export class HttpActionMeta extends HttpAction {}
-
 export class HttpInjectorContext extends InjectorContext {}
 
 export class HttpRouteConfig extends RouteConfig {}
@@ -36,3 +34,5 @@ export class HttpRouteConfig extends RouteConfig {}
 export class HttpControllerMeta {}
 export interface HttpControllerMeta extends HttpControllerMetadata {}
 type HttpControllerMetadata = NonNullable<ReturnType<typeof httpClass._fetch>>;
+
+export class HttpActionMeta extends HttpAction {}
