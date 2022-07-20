@@ -25,6 +25,9 @@ export class RestOrderMapFactory extends RestEntityModelFactory {
     entitySchema: ReflectionClass<any>,
     fieldSchema: ReflectionProperty,
   ): ReflectionClassAddPropertyOptions {
+    // we cannot use literals here, otherwise the invalid properties will be
+    // directly removed during deserialization and will not cause validation
+    // errors
     const regExp = /asc|desc/u;
     const annotations = {
       [validationAnnotation.symbol]: [

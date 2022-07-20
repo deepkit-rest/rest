@@ -24,6 +24,7 @@ import {
 } from "./crud/rest-filtering";
 import {
   RestOffsetLimitPaginator,
+  RestPageNumberPaginator,
   RestPaginationCustomizations,
 } from "./crud/rest-pagination";
 import {
@@ -126,37 +127,91 @@ describe("REST CRUD", () => {
         });
 
         it.each`
-          limit | offset | items
-          ${1}  | ${1}   | ${[{ id: 2, name: expect.any(String) }]}
-          ${1}  | ${0}   | ${[{ id: 1, name: expect.any(String) }]}
-          ${2}  | ${1}   | ${[{ id: 2, name: expect.any(String) }, { id: 3, name: expect.any(String) }]}
-          ${1}  | ${2}   | ${[{ id: 3, name: expect.any(String) }]}
-        `(
-          "should work when limit is $limit and offset is $offset",
-          async ({ limit, offset, items }) => {
-            await database.persist(
-              new MyEntity(),
-              new MyEntity(),
-              new MyEntity(),
-            );
-            const response = await requester.request(
-              HttpRequest.GET("/api").query({ limit, offset }),
-            );
-            expect(response.json).toEqual({ total: 3, items });
-          },
-        );
+          query                      | items
+          ${null}                    | ${[{ id: 1, name: expect.any(String) }, { id: 2, name: expect.any(String) }, { id: 3, name: expect.any(String) }]}
+          ${{ limit: 1, offset: 1 }} | ${[{ id: 2, name: expect.any(String) }]}
+          ${{ limit: 1, offset: 0 }} | ${[{ id: 1, name: expect.any(String) }]}
+          ${{ limit: 2, offset: 1 }} | ${[{ id: 2, name: expect.any(String) }, { id: 3, name: expect.any(String) }]}
+          ${{ limit: 1, offset: 2 }} | ${[{ id: 3, name: expect.any(String) }]}
+        `("should work when query is $query", async ({ query, items }) => {
+          await database.persist(
+            new MyEntity(),
+            new MyEntity(),
+            new MyEntity(),
+          );
+          const request = HttpRequest.GET("/api");
+          if (query) request.query(query);
+          const response = await requester.request(request);
+          expect(response.json).toEqual({ total: 3, items });
+        });
 
         it.each`
-          limit  | offset
-          ${0}   | ${1}
-          ${-1}  | ${1}
-          ${1}   | ${-1}
-          ${"a"} | ${"b"}
+          limit      | offset
+          ${0}       | ${1}
+          ${-1}      | ${1}
+          ${1}       | ${-1}
+          ${"a"}     | ${"b"}
+          ${9999999} | ${1}
+          ${1}       | ${9999999}
         `(
           "should fail when limit is $limit and offset is $offset",
           async ({ limit, offset }) => {
             const response = await requester.request(
               HttpRequest.GET("/api").query({ limit, offset }),
+            );
+            expect(response.statusCode).toBe(400);
+          },
+        );
+      });
+      describe("RestPageNumberPaginator", () => {
+        @rest.resource(MyEntity, "api")
+        class TestingResource
+          extends MyResource
+          implements RestPaginationCustomizations
+        {
+          readonly paginator = RestPageNumberPaginator;
+          @rest.action("GET")
+          list() {
+            return this.crud.list();
+          }
+        }
+
+        beforeEach(async () => {
+          await prepare(TestingResource, [MyEntity]);
+        });
+
+        it.each`
+          query                   | items
+          ${null}                 | ${[{ id: 1, name: expect.any(String) }, { id: 2, name: expect.any(String) }, { id: 3, name: expect.any(String) }]}
+          ${{ page: 1, size: 2 }} | ${[{ id: 1, name: expect.any(String) }, { id: 2, name: expect.any(String) }]}
+          ${{ page: 2, size: 1 }} | ${[{ id: 2, name: expect.any(String) }]}
+          ${{ page: 2, size: 2 }} | ${[{ id: 3, name: expect.any(String) }]}
+        `(
+          "should work when page is $page and size is $size",
+          async ({ query, items }) => {
+            await database.persist(
+              new MyEntity(),
+              new MyEntity(),
+              new MyEntity(),
+            );
+            const request = HttpRequest.GET("/api");
+            if (query) request.query(query);
+            const response = await requester.request(request);
+            expect(response.json).toEqual({ total: 3, items });
+          },
+        );
+
+        it.each`
+          page     | size
+          ${0}     | ${1}
+          ${1}     | ${0}
+          ${99999} | ${1}
+          ${1}     | ${99999}
+        `(
+          "should fail when page is $page and size is $size",
+          async ({ page, size }) => {
+            const response = await requester.request(
+              HttpRequest.GET("/api").query({ page, size }),
             );
             expect(response.statusCode).toBe(400);
           },
