@@ -25,7 +25,7 @@ new App({
 
 # Core Concepts
 
-Before we get started, let's first get familiar with our core concepts.
+DeepKit REST is divided into multiple decoupled parts. The Core part provides a few concepts that fits well with REST API use cases.
 
 ## Resource
 
@@ -46,9 +46,7 @@ class BookResource implements RestResource<Book> {
 }
 ```
 
-We have to implement the required methods here to provide context for other advanced features of the library such as automated CRUD.
-
-`getQuery()` is a good place for you to limit what the user can view. For example you can limit the user to view only his own `Book`:
+`getQuery()` is a good place to filter the entities that the user can view. For example you can allow the user to view only his own `Book`:
 
 ```ts
 getQuery() {
@@ -66,7 +64,7 @@ class BookModule extends createModule({
 }) {}
 ```
 
-You can basically regard a Resource as a special Controller. Everything that works in a regular Controller also works in a Resource.
+You can basically regard a Resource as a special Controller, as everything that works in regular HTTP Controllers work in REST Resources too.
 
 ```ts
 @rest.resource(Book)
@@ -80,7 +78,7 @@ class BookResource implements RestResource<Book> {
 }
 ```
 
-Assume that `Book` is annotated like this:
+Let's assume that `Book` is annotated like this:
 
 ```ts
 @entity.name("book").collection("books")
@@ -111,21 +109,38 @@ Actions can be defined using the combination of the new `@rest` decorator and th
 action() {}
 ```
 
-Note that you MUST NOT define Actions using ONLY the `@http` decorator, which means you should avoid decorations like `@http.GET()` and `@http.POST`. This would make the Action a regular HTTP Action rather than a REST Action and most features of this library are not available for a regular HTTP Action.
+Note that you MUST NOT define Actions using ONLY the `@http` decorator, which means you should avoid decorations like `@http.GET()` and `@http.POST()`, which would make the Action a regular HTTP Action rather than a REST Action and most features of this library are not available for a regular HTTP Action.
 
-We can also define Detailed Actions:
+An Action can be a Detailed Action:
 
 ```ts
 @rest.action("GET").detailed()
-retrieve(pk: string) {
+retrieve() {
   return "something";
 }
 ```
 
-Detailed Actions are basically Actions with a path parameter suffixed, which is `:pk` by default, but some features are available only for detailed actions.
+Detailed Actions are Actions with a path parameter suffixed, which is `:pk` by default.
 
 The path parameter name can be customized when decorating the Resource:
 
 ```ts
-@rest.action
+@rest.resource(Book).lookup("id")
+```
+
+The decoration above will make Detailed Actions suffixed with a `:id` path parameter.
+
+## Action Context
+
+Action Context is a provider provided in `http` scope which offers a lot of information about the current Resource and Action that might be used during a REST API responding process.
+
+```ts
+class MyService {
+  constructor(private context: RestActionContext) {}
+  method() {
+    const resource = this.context.getResource();
+    const entitySchema = this.context.getEntitySchema();
+    // ...
+  }
+}
 ```
