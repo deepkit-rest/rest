@@ -1,7 +1,7 @@
 import { ClassType } from "@deepkit/core";
 import { serialize } from "@deepkit/type";
 import { purify } from "src/common/type";
-import { HttpActionMeta } from "src/http-extension/http-common";
+import { HttpRouteConfig } from "src/http-extension/http-common";
 
 import { RestActionContext } from "../core/rest-action";
 import { RestCreationSchemaFactory } from "../crud-models/rest-creation-schema";
@@ -25,14 +25,14 @@ export class RestGenericEntitySerializer<Entity>
 {
   constructor(
     protected context: RestActionContext<Entity>,
-    protected httpActionMeta: HttpActionMeta,
+    protected routeConfig: HttpRouteConfig,
     protected creationSchemaFactory: RestCreationSchemaFactory,
     protected updateSchemaFactory: RestUpdateSchemaFactory,
   ) {}
 
   async serialize(entity: Entity): Promise<unknown> {
     const entitySchema = this.context.getEntitySchema();
-    const { serializer, serializationOptions } = this.httpActionMeta;
+    const { serializer, serializationOptions } = this.routeConfig;
     return serialize<Entity>(
       entity,
       serializationOptions,
