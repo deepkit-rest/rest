@@ -23,7 +23,7 @@ export class RestGenericFilter implements RestEntityFilter {
   ) {}
 
   processQuery<Entity>(query: Query<Entity>): Query<Entity> {
-    const database = query["session"]; // hack
+    const database = this.context.getResource().getDatabase();
     const entitySchema = this.context.getEntitySchema();
     const entityType = entitySchema.getClassType();
 

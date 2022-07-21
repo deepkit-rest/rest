@@ -41,7 +41,7 @@ export class RestCrudKernel<Entity> {
     const paginator = this.context.getPaginator();
     const serializer = this.context.getSerializer();
 
-    let query = resource.query();
+    let query = resource.getQuery();
     query = filters.reduce((q, p) => p.processQuery(q), query);
     const totalQuery = query;
     const total = async () => totalQuery.count();
@@ -101,15 +101,11 @@ export class RestCrudKernel<Entity> {
   }
 
   protected async saveEntity(entity: Entity): Promise<void> {
-    const database = this.context.getResource().query()["session"]; // hack
-    database.add(entity);
-    await database.flush();
+    await this.context.getResource().getDatabase().persist(entity);
   }
 
   protected async removeEntity(entity: Entity): Promise<void> {
-    const database = this.context.getResource().query()["session"]; // hack
-    database.remove(entity);
-    await database.flush();
+    await this.context.getResource().getDatabase().remove(entity);
   }
 
   protected createResponse(body: unknown, status: number): Response {
@@ -126,7 +122,7 @@ export class RestCrudActionContext<Entity> extends RestActionContext {
         throw new Error("Not a detailed action");
       const resource = this.getResource();
       const retriever = this.getRetriever();
-      const query = retriever.processQuery(resource.query());
+      const query = retriever.processQuery(resource.getQuery());
       const entity = await query.findOneOrUndefined();
       if (!entity) throw new HttpNotFoundError();
       return entity;

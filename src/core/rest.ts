@@ -1,4 +1,4 @@
-import { Query } from "@deepkit/orm";
+import { Database, Query } from "@deepkit/orm";
 import { RestResource } from "src/rest/core/rest-resource";
 import {
   RestFilteringCustomizations,
@@ -26,7 +26,14 @@ export abstract class AppResource<Entity extends AppEntity<Entity>>
   paginator = RestOffsetLimitPaginator;
   filters = [RestGenericFilter];
   sorters = [RestGenericSorter];
-  abstract query(): Query<Entity>;
+
+  constructor(protected database: Database) {}
+
+  getDatabase(): Database {
+    return this.database;
+  }
+
+  abstract getQuery(): Query<Entity>;
 }
 
 export abstract class AppEntitySerializer<

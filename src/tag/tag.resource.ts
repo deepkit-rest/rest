@@ -1,6 +1,6 @@
 import { http } from "@deepkit/http";
 import { Inject } from "@deepkit/injector";
-import { Query } from "@deepkit/orm";
+import { Database, Query } from "@deepkit/orm";
 import { RequestContext } from "src/core/request-context";
 import { AppEntitySerializer, AppResource } from "src/core/rest";
 import { InjectDatabaseSession } from "src/database-extension/database-tokens";
@@ -19,16 +19,17 @@ export class TagResource
   readonly serializer = TagSerializer;
 
   constructor(
+    database: Database,
     private context: RequestContext,
-    private database: InjectDatabaseSession,
+    private databaseSession: InjectDatabaseSession,
     private crud: RestCrudKernel<Tag>,
   ) {
-    super();
+    super(database);
   }
 
-  query(): Query<Tag> {
+  getQuery(): Query<Tag> {
     const userRef = this.database.getReference(User, this.context.user.id);
-    return this.database.query(Tag).filter({ owner: userRef });
+    return this.databaseSession.query(Tag).filter({ owner: userRef });
   }
 
   @rest.action("GET")

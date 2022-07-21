@@ -78,7 +78,10 @@ describe("REST CRUD", () => {
   class MyResource implements RestResource<MyEntity> {
     protected db!: Inject<Database>;
     protected crud!: Inject<RestCrudKernel<MyEntity>>;
-    query(): Query<MyEntity> {
+    getDatabase(): Database {
+      return this.db;
+    }
+    getQuery(): Query<MyEntity> {
       return this.db.query(MyEntity);
     }
   }
@@ -237,7 +240,10 @@ describe("REST CRUD", () => {
             private database: Database,
             private crud: RestCrudKernel<Entity1>,
           ) {}
-          query(): Query<Entity1> {
+          getDatabase(): Database {
+            return this.database;
+          }
+          getQuery(): Query<Entity1> {
             return this.database.query(Entity1);
           }
           @rest.action("GET")
@@ -289,7 +295,10 @@ describe("REST CRUD", () => {
             private database: Database,
             private crud: RestCrudKernel<TestingEntity>,
           ) {}
-          query(): Query<TestingEntity> {
+          getDatabase(): Database {
+            return this.database;
+          }
+          getQuery(): Query<TestingEntity> {
             return this.database.query(TestingEntity);
           }
           @rest.action("GET")
@@ -337,7 +346,10 @@ describe("REST CRUD", () => {
           private crud: RestCrudKernel<TestingEntity>,
           private database: Database,
         ) {}
-        query(): Query<TestingEntity> {
+        getDatabase(): Database {
+          return this.database;
+        }
+        getQuery(): Query<TestingEntity> {
           return this.database.query(TestingEntity);
         }
         @rest.action("POST")
@@ -509,7 +521,10 @@ describe("REST CRUD", () => {
           private crud: RestCrudKernel<TestingEntity>,
           private database: Database,
         ) {}
-        query(): Query<TestingEntity> {
+        getDatabase(): Database {
+          return this.database;
+        }
+        getQuery(): Query<TestingEntity> {
           return this.database.query(TestingEntity);
         }
         @rest.action("PATCH").detailed()

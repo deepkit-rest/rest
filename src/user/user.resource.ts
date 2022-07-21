@@ -6,7 +6,7 @@ import {
   HttpNotFoundError,
 } from "@deepkit/http";
 import { Inject } from "@deepkit/injector";
-import { Query } from "@deepkit/orm";
+import { Database, Query } from "@deepkit/orm";
 import { ReflectionProperty } from "@deepkit/type";
 import { RequestContext } from "src/core/request-context";
 import { AppEntitySerializer, AppResource } from "src/core/rest";
@@ -38,17 +38,18 @@ export class UserResource
   readonly serializer = UserSerializer;
 
   constructor(
+    database: Database,
     private requestContext: RequestContext,
-    private database: InjectDatabaseSession,
+    private databaseSession: InjectDatabaseSession,
     private crud: RestCrudKernel<User>,
     private crudContext: RestCrudActionContext<User>,
     private verificationService: UserVerificationService,
   ) {
-    super();
+    super(database);
   }
 
-  query(): Query<User> {
-    return this.database.query(User);
+  getQuery(): Query<User> {
+    return this.databaseSession.query(User);
   }
 
   @rest.action("GET")

@@ -5,7 +5,7 @@ import {
   HttpResponse,
 } from "@deepkit/http";
 import { Inject } from "@deepkit/injector";
-import { Query } from "@deepkit/orm";
+import { Database, Query } from "@deepkit/orm";
 import { RequestContext } from "src/core/request-context";
 import { AppEntitySerializer, AppResource } from "src/core/rest";
 import { InjectDatabaseSession } from "src/database-extension/database-tokens";
@@ -35,19 +35,20 @@ export class FileRecordResource
   readonly serializer = FileRecordSerializer;
 
   constructor(
-    private database: InjectDatabaseSession,
+    database: Database,
+    private databaseSession: InjectDatabaseSession,
     private context: RequestContext,
     private crud: RestCrudKernel<FileRecord>,
     private crudContext: RestCrudActionContext<FileRecord>,
     private engine: FileEngine,
     private rangeParser: HttpRangeParser,
   ) {
-    super();
+    super(database);
   }
 
-  query(): Query<FileRecord> {
+  getQuery(): Query<FileRecord> {
     const userRef = this.database.getReference(User, this.context.user.id);
-    return this.database.query(FileRecord).filter({ owner: userRef });
+    return this.databaseSession.query(FileRecord).filter({ owner: userRef });
   }
 
   @rest.action("GET")

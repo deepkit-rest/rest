@@ -53,7 +53,10 @@ describe("REST Core", () => {
 
   class UserRestResource implements RestResource<User> {
     constructor(private database: Database) {}
-    query(): Query<User> {
+    getDatabase(): Database {
+      return this.database;
+    }
+    getQuery(): Query<User> {
       return this.database.query(User);
     }
   }

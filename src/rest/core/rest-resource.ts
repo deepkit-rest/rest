@@ -1,7 +1,7 @@
 import { AppModule } from "@deepkit/app";
 import { ClassType } from "@deepkit/core";
 import { http, httpClass } from "@deepkit/http";
-import { Query } from "@deepkit/orm";
+import { Database, Query } from "@deepkit/orm";
 import { join } from "path";
 
 import { RestConfig } from "../rest.config";
@@ -14,7 +14,8 @@ import {
 } from "./rest-meta";
 
 export interface RestResource<Entity> {
-  query(): Query<Entity>;
+  getDatabase(): Database;
+  getQuery(): Query<Entity>;
 }
 
 export class RestResourceRegistry extends Set<RestResourceRegistryItem> {}
