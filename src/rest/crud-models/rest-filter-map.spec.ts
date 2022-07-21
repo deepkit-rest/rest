@@ -30,6 +30,15 @@ describe("RestFilterMapFactory", () => {
     expectOperatorMap(s.getProperty("ref1"), ReflectionKind.number);
   });
 
+  it("should fail for invalid fields", async () => {
+    class MyEntity {
+      id: number & AutoIncrement & PrimaryKey & Filterable = 0;
+      ref?: MyEntity & Reference;
+      refs: MyEntity[] & Filterable & BackReference = [];
+    }
+    expect(() => factory.build(MyEntity)).toThrowError();
+  });
+
   function expectOperatorMap(target: ReflectionProperty, kind: ReflectionKind) {
     expect(target).toMatchObject({
       property: {

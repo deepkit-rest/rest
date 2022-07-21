@@ -27,6 +27,8 @@ export class RestFilterMapFactory extends RestEntityModelFactory {
     entitySchema: ReflectionClass<any>,
     fieldSchema: ReflectionProperty,
   ): ReflectionClassAddPropertyOptions {
+    if (fieldSchema.getType().kind === ReflectionKind.array)
+      throw new Error("* to many relations are not supported");
     const isRelation =
       fieldSchema.isReference() || fieldSchema.isBackReference();
     const fieldSchemaToUse = isRelation
