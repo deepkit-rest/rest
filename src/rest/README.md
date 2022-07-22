@@ -4,7 +4,7 @@ REST API simplified
 
 > Inspired by: [Django REST Framework](https://www.django-rest-framework.org/)
 
-# Prerequisites
+# Installation
 
 DeepKit REST allows you to implement RESTful APIs in a declarative but also flexible and extensive way.
 
@@ -25,7 +25,7 @@ new App({
 
 # Core Concepts
 
-DeepKit REST is divided into multiple decoupled parts. The Core part provides a few concepts that fits well with REST API use cases.
+DeepKit REST is divided into multiple decoupled parts, which allows you to easily extend its functionalities. The Core part provides a few concepts that fits well with REST API use cases.
 
 ## Resource
 
@@ -56,7 +56,7 @@ getQuery() {
 }
 ```
 
-To include our resource in a module, simply put it into `controllers` of the module's declaration:
+To include our resource in a module, simply declare it in `controllers` of the module:
 
 ```ts
 class BookModule extends createModule({
@@ -66,36 +66,40 @@ class BookModule extends createModule({
 
 You can basically regard a Resource as a special Controller, as Resources are in `http` scope and everything that works in regular HTTP Controllers works in REST Resources.
 
-```ts
-@rest.resource(Book)
-class BookResource implements RestResource<Book> {
-  constructor(private database: Database, private crud: RestCrudKernel) {}
-  // ...
-  @http.GET(":id")
-  async retrieve(id: string): Promise<Book> {
-    return this.getQuery().filter({ id }).findOne();
-  }
-}
-```
-
-Let's assume that `Book` is annotated like this:
+The following code will generate a route at `/api/v1/books/:id`, where `api` is the the default API prefix, `v` is the default versioning prefix, and `books` is the path of the Resource inferred from the entity's collection name because we didn't manually specify a path:
 
 ```ts
 @entity.name("book").collection("books")
 class Book {
   // ...
 }
+
+@rest.resource(Book).version(1)
+class BookResource implements RestResource<Book> {
+  // ...
+  @http.GET(":id")
+  async route(id: string) {}
+}
 ```
 
-Then the code above would generate a route at `/api/books/:id`, where `api` is the the default global prefix which can be configured in the configuration of `RestModule`, and `books` is the collection name of the entity `Book`.
+> `v1` will not appear if Resource is not decorated using `@rest.version()` or versioning is disabled.
 
-We can also manually specify a path for our `BookResource`:
+The API prefix and versioning prefix can be configured when instantiating `RestModule`:
+
+```ts
+// custom prefix
+new RestModule({ prefix: "api-prefix", versioning: "versioning-prefix" });
+// remove API prefix and disable versioning
+new RestModule({ prefix: "", versioning: false });
+```
+
+And Resource path can be manually specified via:
 
 ```ts
 @rest.resource(Book, "my-books")
 ```
 
-Note that it would cause an error if there is no path specified for the resource and also no collection name specified for the entity.
+> It would cause an error if there is no path specified for the resource and also no collection name specified for the entity.
 
 ## Action
 
@@ -109,9 +113,9 @@ Actions can be defined using the combination of the new `@rest` decorator and th
 action() {}
 ```
 
-Note that you MUST NOT define Actions using ONLY the `@http` decorator, which means you should avoid decorations like `@http.GET()` and `@http.POST()`, which would make the Action a regular HTTP Action rather than a REST Action and most features of this library are not available for a regular HTTP Action.
+> You MUST NOT define Actions using ONLY the `@http` decorator, which means you should avoid decorations like `@http.GET()` and `@http.POST()` because this would make the Action a regular HTTP Action rather than a REST Action and most features of this library are not available for a regular HTTP Action.
 
-An Action can be a Detailed Action:
+Actions can be "detailed":
 
 ```ts
 @rest.action("GET").detailed()
@@ -120,19 +124,17 @@ retrieve() {
 }
 ```
 
-Detailed Actions are Actions with a path parameter suffixed, which is `:pk` by default.
+Detailed Actions will be suffixed with a path parameter, which is `:pk` by default.
 
-The path parameter name can be customized when decorating the Resource:
+The path parameter name can be customized via `@rest.lookup()`:
 
 ```ts
 @rest.resource(Book).lookup("id")
 ```
 
-The decoration above will make Detailed Actions suffixed with a `:id` path parameter.
-
 ## Action Context
 
-Action Context is a provider provided in `http` scope which offers a lot of information about the current Resource and Action that might be used during a REST API responding process.
+Action Context is provided in `http` scope, offering easy access to a lot of information about the current Resource and Action that might be used during a REST API responding process.
 
 ```ts
 class MyService {
@@ -145,7 +147,7 @@ class MyService {
 }
 ```
 
-All methods in Action Context have caching implemented, so there's nothing to worry about for calling a method multiple times.
+> All methods in Action Context have caching implemented, so there's nothing to worry when calling a method multiple times.
 
 # CRUD
 
@@ -284,7 +286,7 @@ The built-in `RestGenericFilter` allows the user to filter the entities by speci
 ?filter[owner][$eq]=1&filter[name][$in]=name1&filter[name][$in]=name2
 ```
 
-Supported filter operators are: `["$eq", "$ne", "$gt", "$gte", "$lt", "$lte", "$in", "$nin"]`.
+> Supported filter operators are: `["$eq", "$ne", "$gt", "$gte", "$lt", "$lte", "$in", "$nin"]`.
 
 By default `RestGenericFilter` doesn't allow user-controlled filtering on any fields. To enable filtering on a specific field, we need to add a `Filterable` Type Decorator to the field:
 
@@ -294,9 +296,9 @@ class Book {
 }
 ```
 
-Note that `OneToMany` and `ManyToMany` relational fields are not yet supported. Basically relational fields with an `Array` type are not supported.
+> `OneToMany` and `ManyToMany` relational fields are not yet supported. Basically relational fields with an `Array` type are not supported.
 
-We can customize its behavior by extending and overriding class members:
+We can customize its behavior by extending and overriding its class members:
 
 ```ts
 class AppFilter extends RestGenericFilter {
@@ -440,7 +442,7 @@ interface GeneratedSchema {
 }
 ```
 
-Note that by default `RestGenericSerializer` requires the entity constructor to take no parameters because it's impossible to know what argument to pass. An error will be thrown if `entityClass.length !== 0`. But you can customize how new entities are instantiated by overriding its `createEntity()` method, where the purified payload will be passed as a parameter:
+By default `RestGenericSerializer` requires the entity constructor to take no parameters because it's impossible to know what argument to pass. An error will be thrown if `entityClass.length !== 0`. But you can customize how new entities are instantiated by overriding its `createEntity()` method where the purified payload will be passed as a parameter:
 
 ```ts
 class BookSerializer extends RestGenericSerializer<Book> {
@@ -486,7 +488,7 @@ interface RestEntitySerializer<Entity> {
 
 ### RestGenericSerializer
 
-Just like how it behaves in a Create Action, `RestGenericSerializer` purify the request payload against a generated schema, but now the schema is generated based on the fields decorated with `InUpdate`:
+Just like how it behaves in a Create Action, `RestGenericSerializer` purify the request payload against a generated schema, but now the schema is generated based on fields decorated with `InUpdate`:
 
 ```ts
 class Book {
@@ -508,7 +510,7 @@ class BookSerializer extends RestGenericSerializer<Book> {
 
 ## Keeping DRY via Inheritance
 
-As the application grows, you'll find there are a lot of repeated declarations like the paginator to use, and methods like `getDatabase()` might be completely the same. To keep DRY, you can create an abstract `AppResource` as the base Resource to declare common declarations:
+As the application grows, you'll find that there are a lot of repeated patterns like the paginator declaration and completely same `getDatabase()` code. To keep DRY, you can create an abstract `AppResource` as the base Resource:
 
 ```ts
 export abstract class AppResource<Entity>
@@ -550,4 +552,4 @@ customAction() {
 };
 ```
 
-Note that the caching system is shared by all derived classes of Action Context, which means invoking a `getXxx()` in both Action Context and CRUD Action Context will not cause any redundant calculations.
+> Caching system is shared by all derived classes of Action Context, which means invoking a `getXxx()` in both Action Context and CRUD Action Context will not cause any redundant calculations.
