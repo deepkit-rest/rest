@@ -387,3 +387,121 @@ class BookResource
   // ...
 }
 ```
+
+## Delete Action
+
+Delete Action basically remove the entity retrieved by the Entity Retriever, so its behavior is also decided by the Entity Retriever used.
+
+```ts
+@rest.action("DELETE").detailed()
+delete(): Promise<Response> {
+  return this.crud.delete();
+}
+```
+
+## Create Action
+
+A Create Action's implementation is similar too:
+
+```ts
+@rest.action("POST")
+create(): Promise<Response> {
+  return this.crud.create();
+}
+```
+
+Most customizations can be implemented by customizing the Entity Serializer in use:
+
+```ts
+interface RestEntitySerializer<Entity> {
+  deserializeCreation(payload: Record<string, unknown>): Promise<unknown>;
+  // ...
+}
+```
+
+### RestGenericSerializer
+
+In a Create Action, `RestGenericSerializer` will purify(deserialize and validate) the request payload against a schema generated from the entity based on fields decorated with `InCreation`, and then assign the payload values to a new entity instance.
+
+Let's say `Book` is defined like this:
+
+```ts
+class Book {
+  id: UUID & PrimaryKey = uuid();
+  name: string & MaxLength<50> & InCreation;
+}
+```
+
+Then the request payload for the Create Action will be purified against a schema like this:
+
+```ts
+interface GeneratedSchema {
+  name: string & MaxLength<50>;
+}
+```
+
+Note that by default `RestGenericSerializer` requires the entity constructor to take no parameters because it's impossible to know what argument to pass. An error will be thrown if `entityClass.length !== 0`. But you can customize how new entities are instantiated by overriding its `createEntity()` method, where the purified payload will be passed as a parameter:
+
+```ts
+class BookSerializer extends RestGenericSerializer<Book> {
+  protected override createEntity(data: Partial<Book>) {
+    return new Book(data.title, data.author);
+  }
+}
+```
+
+You can also modify the `data` to assign values to fields like `owner` when overriding `createEntity()`:
+
+```ts
+protected override createEntity(data: Partial<Book>) {
+  const userId = this.requestContext.userId;
+  const user = this.database.getRef(User, userId);
+  data.owner = user;
+  return super.createEntity(data);
+}
+```
+
+## Update
+
+The implementation is as simple as ever:
+
+```ts
+@rest.action("PATCH").detailed()
+update(): Promise<Response> {
+  return this.crud.update();
+}
+```
+
+Update Actions' behavior depends on both the Entity Serializer and the Entity Retriever. It basically uses the Entity Serializer to deserialize the request payload to update the entity retrieved by the Entity Retriever:
+
+```ts
+interface RestEntitySerializer<Entity> {
+  deserializeUpdate(
+    entity: Entity,
+    payload: Record<string, unknown>,
+  ): Promise<Entity>;
+  // ...
+}
+```
+
+### RestGenericSerializer
+
+Just like how it behaves in a Create Action, `RestGenericSerializer` purify the request payload against a generated schema, but now the schema is generated based on the fields decorated with `InUpdate`:
+
+```ts
+class Book {
+  name: ... & InUpdate;
+  // ...
+}
+```
+
+To customize how entities are updated, you can override the `updateEntity()` method, which is a good place to assign values to fields like `updatedAt`:
+
+```ts
+class BookSerializer extends RestGenericSerializer<Book> {
+  protected override updateEntity(entity: Book, data: Partial<Book>) {
+    data.updatedAt = new Date();
+    return super.updateEntity(entity, data);
+  }
+}
+```
