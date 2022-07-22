@@ -20,7 +20,7 @@ export interface RestEntitySerializer<Entity> {
   ): Promise<Entity>;
 }
 
-export class RestGenericEntitySerializer<Entity>
+export class RestGenericSerializer<Entity>
   implements RestEntitySerializer<Entity>
 {
   constructor(

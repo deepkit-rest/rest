@@ -19,7 +19,7 @@ import {
   RestPageNumberPaginator,
 } from "./crud/rest-pagination";
 import { RestFieldBasedRetriever } from "./crud/rest-retrieving";
-import { RestGenericEntitySerializer } from "./crud/rest-serialization";
+import { RestGenericSerializer } from "./crud/rest-serialization";
 import { RestGenericSorter } from "./crud/rest-sorting";
 import { RestCreationSchemaFactory } from "./crud-models/rest-creation-schema";
 import { RestFilterMapFactory } from "./crud-models/rest-filter-map";
@@ -46,7 +46,7 @@ export class RestModule extends createModule(
       { provide: RestFieldBasedRetriever, scope: "http" },
       { provide: RestGenericFilter, scope: "http" },
       { provide: RestGenericSorter, scope: "http" },
-      { provide: RestGenericEntitySerializer, scope: "http" },
+      { provide: RestGenericSerializer, scope: "http" },
     ],
     listeners: [RestListener],
     forRoot: true,

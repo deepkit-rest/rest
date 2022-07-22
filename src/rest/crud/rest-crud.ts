@@ -22,7 +22,7 @@ import {
 } from "./rest-retrieving";
 import {
   RestEntitySerializer,
-  RestGenericEntitySerializer,
+  RestGenericSerializer,
   RestSerializationCustomizations,
 } from "./rest-serialization";
 import { RestEntitySorter, RestSortingCustomizations } from "./rest-sorting";
@@ -160,7 +160,7 @@ export class RestCrudActionContext<Entity> extends RestActionContext {
 
   getSerializer(): RestEntitySerializer<Entity> {
     const resource = this.getResource();
-    return this.getDep(resource.serializer ?? RestGenericEntitySerializer);
+    return this.getDep(resource.serializer ?? RestGenericSerializer);
   }
 
   getDep<Dep>(type: ClassType<Dep>): Dep {
