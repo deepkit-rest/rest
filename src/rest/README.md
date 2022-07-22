@@ -221,7 +221,7 @@ class BookResource implements RestResource<Book>, RestPaginationCustomizations {
 }
 ```
 
-### RestOffsetLimitPaginator
+#### RestOffsetLimitPaginator
 
 By default, `RestOffsetLimitPaginator` paginates the List result based on the `limit` and `offset` query params and returns a `{ total: ..., items: [...] }` object as the response body.
 
@@ -248,7 +248,7 @@ class AppPaginator extends RestOffsetLimitPaginator {
 }
 ```
 
-### RestPageNumberPaginator
+#### RestPageNumberPaginator
 
 `RestPageNumberPaginator` performs pagination based on the `page` and `size` query params by default and also returns a `{ total: ..., items: [...] }` object as the response body.
 
@@ -265,7 +265,7 @@ class AppPaginator extends RestPageNumberPaginator {
 }
 ```
 
-## Filtering
+### Filtering
 
 By default no user-controlled filtering is available. We can only filter entities in the `getQuery()` method of the Resource. User-controlled filtering can be enabled by specifying the Entity Filters we'd like to use:
 
@@ -276,7 +276,7 @@ class BookResource implements RestResource<Book>, RestFilteringCustomizations {
 }
 ```
 
-### RestGenericFilter
+#### RestGenericFilter
 
 The built-in `RestGenericFilter` allows the user to filter the entities by specifying the `filter` query param:
 
@@ -305,7 +305,7 @@ class AppFilter extends RestGenericFilter {
 }
 ```
 
-## Sorting
+### Sorting
 
 User-controlled sorting can be enabled by specifying the Entity Sorters:
 
@@ -316,7 +316,7 @@ class BookResource implements RestResource<Book>, RestSortingCustomizations {
 }
 ```
 
-### RestGenericSorter
+#### RestGenericSorter
 
 `RestGenericSorter` allows user-controlled sorting based on the query param `order` by default:
 
