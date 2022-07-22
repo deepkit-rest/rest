@@ -461,7 +461,7 @@ protected override createEntity(data: Partial<Book>) {
 }
 ```
 
-## Update
+## Update Action
 
 The implementation is as simple as ever:
 
@@ -503,5 +503,31 @@ class BookSerializer extends RestGenericSerializer<Book> {
     data.updatedAt = new Date();
     return super.updateEntity(entity, data);
   }
+}
+```
+
+## Keeping DRY via Inheritance
+
+As the application grows, you'll find there are a lot of repeated declarations like the paginator to use, and methods like `getDatabase()` might be completely the same. To keep DRY, you can create an abstract `AppResource` as the base Resource to declare common declarations:
+
+```ts
+export abstract class AppResource<Entity>
+  implements
+    RestResource<Entity>,
+    RestPaginationCustomizations,
+    RestFilteringCustomizations,
+    RestSortingCustomizations
+{
+  paginator = RestOffsetLimitPaginator;
+  filters = [RestGenericFilter];
+  sorters = [RestGenericSorter];
+
+  protected database: Inject<Database>;
+
+  getDatabase(): Database {
+    return this.database;
+  }
+
+  abstract getQuery(): Query<Entity>;
 }
 ```
