@@ -531,3 +531,23 @@ export abstract class AppResource<Entity>
   abstract getQuery(): Query<Entity>;
 }
 ```
+
+## Leveraging CRUD Features in Custom Actions
+
+In Actions other than the ones supported by the CRUD Kernel, we can still make use of these CRUD Features via CRUD Action Context.
+
+CRUD Action Context is derived from [Action Context](#action-context), where additional contextual information is available for you:
+
+```ts
+constructor(private crudContext: RestCrudActionContext) {}
+@rest.action("PUT").detailed().path("custom-action")
+customAction() {
+  // retrieve the entity using the Entity Retriever
+  // (available for only detailed actions)
+  const entity = await this.crudContext.getEntity();
+  // the return type is overridden to include all customization interfaces
+  const resource = this.crudContext.getResource();
+};
+```
+
+Note that the caching system is shared by all derived classes of Action Context, which means invoking a `getXxx()` in both Action Context and CRUD Action Context will not cause any redundant calculations.
