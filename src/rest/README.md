@@ -160,9 +160,37 @@ class BookResource implements RestResource<Book> {
 }
 ```
 
-## List
+## Entity Serializer
 
-Let's implement a simplest List Action:
+As entities must be serialized into plain objects to form the response, all the CRUD Actions will make use of an Entity Serializer.
+
+```ts
+interface RestEntitySerializer<Entity> {
+  serialize(entity: Entity): Promise<unknown>;
+  // ...
+}
+```
+
+The default Entity Serializer is `RestGenericSerializer` which internally uses DeepKit's serialization feature. When using `RestGenericSerializer`, you can specify the DeepKit serialization options and the DeepKit serializer to use via the `@http` decorator:
+
+```ts
+@http.serializer(serializer).serialization({ groupsExclude: ["hidden"] })
+```
+
+You can extend the `RestGenericSerializer` or implement your own Entity Serializer to customize the behavior:
+
+```ts
+class BookResource
+  implements RestResource<Book>, RestSerializationCustomizations<Book>
+{
+  serializer = BookSerializer;
+  // ...
+}
+```
+
+## List Action
+
+Now let's first implement a simplest List Action:
 
 ```ts
 @rest.action("GET")
@@ -180,11 +208,11 @@ This simplest List Action has no pagination, no filtering, no sorting support. I
 }
 ```
 
-where `items` is all the entities that can be queries using the `Query` object return by the `getQuery()` method implemented in the Resource.
+where `items` is all the entities that can be queried using the `Query` object returned from the `getQuery()` method implemented in the Resource.
 
 ### Pagination
 
-The default paginator `RestNoopPaginator` won't do any processing to the `Query` object. There are two other built-in paginator implementations: `RestOffsetLimitPaginator` and `RestPageNumberPaginator`. To enable advanced pagination, we need to specify the paginator we want to use:
+The default paginator `RestNoopPaginator` won't do any processing to the `Query` object, but there are two other paginators implemented for you: `RestOffsetLimitPaginator` and `RestPageNumberPaginator`. To enable advanced pagination, we need to specify the paginator we want to use:
 
 ```ts
 class BookResource implements RestResource<Book>, RestPaginationCustomizations {
