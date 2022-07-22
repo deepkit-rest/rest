@@ -119,17 +119,18 @@ Actions can be "detailed":
 
 ```ts
 @rest.action("GET").detailed()
-retrieve() {
-  return "something";
-}
 ```
 
-Detailed Actions will be suffixed with a path parameter, which is `:pk` by default.
-
-The path parameter name can be customized via `@rest.lookup()`:
+Detailed Actions are actions performed on a specific entity, thus will be suffixed with a path parameter, which is `:pk` by default. The path parameter name can be customized via `@rest.lookup()`:
 
 ```ts
 @rest.resource(Book).lookup("id")
+```
+
+Actions can also have additional custom path suffixed:
+
+```ts
+@rest.action("GET").detailed().path('suffixed-path')
 ```
 
 ## Action Context
