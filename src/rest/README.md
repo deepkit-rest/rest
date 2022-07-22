@@ -2,8 +2,6 @@
 
 REST API simplified
 
-> Inspired by: [Django REST Framework](https://www.django-rest-framework.org/)
-
 # Installation
 
 DeepKit REST allows you to implement RESTful APIs in a declarative but also flexible and extensive way.
@@ -554,3 +552,8 @@ customAction() {
 ```
 
 > Caching system is shared by all derived classes of Action Context, which means invoking a `getXxx()` in both Action Context and CRUD Action Context will not cause any redundant calculations.
+
+# Special Thanks
+
+- [Django REST Framework](https://www.django-rest-framework.org/) for inspiration
+- [Marc J. Schmidt](https://github.com/marcj) for developing DeepKit and helping me understanding DeepKit
