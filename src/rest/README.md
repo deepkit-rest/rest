@@ -212,7 +212,7 @@ where `items` is all the entities that can be queried using the `Query` object r
 
 ### Pagination
 
-The default paginator `RestNoopPaginator` won't do any processing to the `Query` object, but there are two other paginators implemented for you: `RestOffsetLimitPaginator` and `RestPageNumberPaginator`. To enable advanced pagination, we need to specify the paginator we want to use:
+The default Entity Paginator `RestNoopPaginator` won't do any processing to the `Query` object, but there are two other Entity Paginators implemented for you: `RestOffsetLimitPaginator` and `RestPageNumberPaginator`. To enable advanced pagination, we need to specify the Entity Paginator we want to use:
 
 ```ts
 class BookResource implements RestResource<Book>, RestPaginationCustomizations {
@@ -267,7 +267,7 @@ class AppPaginator extends RestPageNumberPaginator {
 
 ## Filtering
 
-By default no user-controlled filtering is allowed. We can only filter entities in the `getQuery()` method of the Resource. User-controlled filtering can be enabled by specifying the filters we'd like to use:
+By default no user-controlled filtering is available. We can only filter entities in the `getQuery()` method of the Resource. User-controlled filtering can be enabled by specifying the Entity Filters we'd like to use:
 
 ```ts
 class BookResource implements RestResource<Book>, RestFilteringCustomizations {
@@ -307,7 +307,7 @@ class AppFilter extends RestGenericFilter {
 
 ## Sorting
 
-User-controlled sorting can be enabled by specifying the sorters:
+User-controlled sorting can be enabled by specifying the Entity Sorters:
 
 ```ts
 class BookResource implements RestResource<Book>, RestSortingCustomizations {
@@ -337,6 +337,53 @@ Behavior can be customized by extending the class:
 ```ts
 class AppSorter extends RestGenericSorter {
   override param = "order";
+  // ...
+}
+```
+
+## Retrieve Action
+
+A Retrieve Action can be implemented like this:
+
+```ts
+@rest.action("GET").detailed()
+retrieve(): Promise<Response> {
+  return this.crud.retrieve();
+}
+```
+
+The behavior of Retrieve Action completely depends on the Entity Retriever in use:
+
+```ts
+class BookResource implements RestResource<Book>, RestRetrievingCustomizations {
+  retriever = RestFieldBasedRetriever;
+  // ...
+}
+```
+
+### RestFieldBasedRetriever
+
+`RestFieldBasedRetriever` is the default Entity Retriever, which retrieves the entity based on the `lookup` metadata of the Resource:
+
+- If the metadata value is `pk`, the entity will be retrieved on its primary key: `lookup: pk` + `GET /books/1` -> `{ id: 1 }`
+- If the metadata value matches the name of one of the entities fields, the entity will be retrieved on the field: `lookup: name` + `GET /books/MyBook` -> `{ name: "MyBook" }`
+- If the metadata value doesn't match any of the cases above, an error is caused unless `retrievesOn` is specified (explained later)
+
+> The value of the `lookup` metadata of a Resource is specified via `@rest.lookup()`.  
+> The default value is `pk`.
+
+If you think that this approach is not type-safe, or you just don't want to bind the `lookup` metadata with the field to retrieve on, there is another approach for you to specify the field:
+
+```ts
+@rest.resource(Book).lookup("anything")
+class BookResource
+  implements
+    RestResource<Book>,
+    RestRetrievingCustomizations,
+    RestFieldBasedRetrieverCustomizations<Book>
+{
+  retriever = RestFieldBasedRetriever;
+  retrievesOn = "id";
   // ...
 }
 ```
