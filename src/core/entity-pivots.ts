@@ -5,7 +5,10 @@ import { Tag } from "src/tag/tag.entity";
 import { AppEntity } from "./entity";
 
 @entity.name("file-record-to-tag")
-export class FileRecordToTag extends AppEntity<FileRecordToTag> {
+export class FileRecordToTag extends AppEntity<
+  FileRecordToTag,
+  "file" | "tag"
+> {
   file!: FileRecord & Reference;
   tag!: Tag & Reference;
 }
