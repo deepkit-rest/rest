@@ -60,8 +60,7 @@ export class RestCrudKernel<Entity> {
   async create(): Promise<Response> {
     const serializer = this.context.getSerializer();
 
-    await this.request.loadBody();
-    const payload = this.request.getBody();
+    const payload = await this.request.getBody();
     const entity = await serializer.deserializeCreation(payload);
     await this.saveEntity(entity);
 
@@ -72,8 +71,7 @@ export class RestCrudKernel<Entity> {
   async update(): Promise<Response> {
     const serializer = this.context.getSerializer();
 
-    await this.request.loadBody();
-    const payload = this.request.getBody();
+    const payload = await this.request.getBody();
     let entity = await this.context.getEntity();
     entity = await serializer.deserializeUpdate(entity, payload);
     await this.saveEntity(entity);

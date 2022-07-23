@@ -10,6 +10,7 @@ import { HttpExtensionListener } from "./http-extension.listener";
 import { HttpRangeParser } from "./http-range-parser.service";
 import { HttpRequestParsed } from "./http-request-parsed.service";
 import { HttpRequestParser } from "./http-request-parser.service";
+import { HttpScopedCache } from "./http-scoped-cache.service";
 
 export class HttpExtensionModule extends createModule(
   {
@@ -18,9 +19,10 @@ export class HttpExtensionModule extends createModule(
       { provide: HttpRouteConfig, useValue: null, scope: "http" },
       { provide: HttpControllerMeta, useValue: null, scope: "http" },
       { provide: HttpActionMeta, useValue: null, scope: "http" },
-      HttpRangeParser,
       HttpRequestParser,
       { provide: HttpRequestParsed, scope: "http" },
+      { provide: HttpScopedCache, scope: "http" },
+      HttpRangeParser,
     ],
     listeners: [HttpExtensionListener],
     forRoot: true,

@@ -3,42 +3,40 @@ import { ValidationError } from "@deepkit/type";
 
 import { HttpRequestParsed } from "./http-request-parsed.service";
 import { HttpRequestParser } from "./http-request-parser.service";
+import { HttpScopedCache } from "./http-scoped-cache.service";
 
 describe("HttpRequestParsed", () => {
   let context: HttpRequestParsed;
   let parser: HttpRequestParser;
+  let cache: HttpScopedCache;
 
   function setup(body = {}, queries = {}, path = "/", pathSchema = "/") {
     const request = HttpRequest.POST(path).json(body).query(queries).build();
     const routeConfig: any = { getFullPath: () => pathSchema };
     parser = new HttpRequestParser();
-    context = new HttpRequestParsed(request, parser, routeConfig);
+    cache = new HttpScopedCache();
+    context = new HttpRequestParsed(request, parser, routeConfig, cache);
   }
 
-  describe("loadBody, getBody", () => {
+  describe("getBody", () => {
     beforeEach(() => {
       setup({ a: 1 });
     });
 
     test("basic", async () => {
-      await context.loadBody();
-      expect(context.getBody()).toEqual({ a: 1 });
+      expect(context.getBody()).resolves.toEqual({ a: 1 });
     });
 
     test("cache", async () => {
       jest.spyOn(parser, "parseBody");
-      await context.loadBody();
-      await context.loadBody();
-      expect(parser.parseBody).toHaveBeenCalledTimes(1);
-      context.getBody();
-      context.getBody();
+      await context.getBody();
+      await context.getBody();
       expect(parser.parseBody).toHaveBeenCalledTimes(1);
     });
 
     test("type", async () => {
-      await context.loadBody();
-      expect(context.getBody<{ a: string }>()).toEqual({ a: "1" });
-      expect(() => context.getBody<{ b: number }>()).toThrow(ValidationError);
+      expect(context.getBody<{ a: string }>()).resolves.toEqual({ a: "1" });
+      expect(context.getBody<{ b: number }>()).rejects.toThrow(ValidationError);
     });
   });
 
