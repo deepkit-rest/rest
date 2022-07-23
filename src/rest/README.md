@@ -282,7 +282,7 @@ class BookResource implements RestResource<Book>, RestFilteringCustomizations {
 The built-in `RestGenericFilter` allows the user to filter the entities by specifying the `filter` query param:
 
 ```
-?filter[owner][$eq]=1&filter[name][$in]=name1&filter[name][$in]=name2
+?filter[owner][$eq]=1&filter[name][$in][]=name1&filter[name][$in][]=name2
 ```
 
 > Supported filter operators are: `["$eq", "$ne", "$gt", "$gte", "$lt", "$lte", "$in", "$nin"]`.
