@@ -1,4 +1,3 @@
-import { ClassType } from "@deepkit/core";
 import { HttpNotFoundError, Response } from "@deepkit/http";
 import { Query } from "@deepkit/orm";
 import { HttpInjectorContext } from "src/http-extension/http-common";
@@ -140,32 +139,27 @@ export class RestCrudActionContext<Entity> extends RestActionContext {
 
   getRetriever(): RestEntityRetriever {
     const resource = this.getResource();
-    return this.getDep(resource.retriever ?? RestFieldBasedRetriever);
+    return this.resolveDep(resource.retriever ?? RestFieldBasedRetriever);
   }
 
   getPaginator(): RestEntityPaginator {
     const resource = this.getResource();
-    return this.getDep(resource.paginator ?? RestNoopPaginator);
+    return this.resolveDep(resource.paginator ?? RestNoopPaginator);
   }
 
   getFilters(): RestEntityFilter[] {
     const resource = this.getResource();
-    return resource.filters?.map((type) => this.getDep(type)) ?? [];
+    return resource.filters?.map((type) => this.resolveDep(type)) ?? [];
   }
 
   getSorters(): RestEntitySorter[] {
     const resource = this.getResource();
-    return resource.sorters?.map((type) => this.getDep(type)) ?? [];
+    return resource.sorters?.map((type) => this.resolveDep(type)) ?? [];
   }
 
   getSerializer(): RestEntitySerializer<Entity> {
     const resource = this.getResource();
-    return this.getDep(resource.serializer ?? RestGenericSerializer);
-  }
-
-  getDep<Dep>(type: ClassType<Dep>): Dep {
-    const module = this.getModule();
-    return this.injector.resolve(module, type)();
+    return this.resolveDep(resource.serializer ?? RestGenericSerializer);
   }
 }
 

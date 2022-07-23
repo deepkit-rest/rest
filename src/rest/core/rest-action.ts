@@ -1,3 +1,4 @@
+import { ClassType } from "@deepkit/core";
 import {
   RouteClassControllerAction,
   RouteParameterResolver,
@@ -81,6 +82,11 @@ export class RestActionContext<Entity = any> {
         throw new Error(`Cannot resolve parameters for non-action routes`);
       return actionMeta;
     });
+  }
+
+  resolveDep<Dep>(type: ClassType<Dep>): Dep {
+    const module = this.getModule();
+    return this.injector.resolve(module, type)();
   }
 
   protected getCache<Method extends (...args: any[]) => any>(
