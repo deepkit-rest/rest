@@ -99,6 +99,14 @@ And Resource path can be manually specified via:
 
 > It would cause an error if there is no path specified for the resource and also no collection name specified for the entity.
 
+> The route generation process of DeepKit REST doesn't use `baseUrl`, thus we can define path parameters in the Resource path:
+>
+> ```ts
+> @rest.resource(Book, "user/:userId/books")
+> ```
+>
+> You can utilize the DeepKit Http Extension library to parse the path parameters.
+
 ## Action
 
 Regular HTTP Actions/Routes are replaced by REST Actions(Action for short).
