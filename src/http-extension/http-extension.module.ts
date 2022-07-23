@@ -8,7 +8,7 @@ import {
 } from "./http-common";
 import { HttpExtensionListener } from "./http-extension.listener";
 import { HttpRangeParser } from "./http-range-parser.service";
-import { HttpRequestContext } from "./http-request-context.service";
+import { HttpRequestParsed } from "./http-request-parsed.service";
 import { HttpRequestParser } from "./http-request-parser.service";
 
 export class HttpExtensionModule extends createModule(
@@ -20,7 +20,7 @@ export class HttpExtensionModule extends createModule(
       { provide: HttpActionMeta, useValue: null, scope: "http" },
       HttpRangeParser,
       HttpRequestParser,
-      { provide: HttpRequestContext, scope: "http" },
+      { provide: HttpRequestParsed, scope: "http" },
     ],
     listeners: [HttpExtensionListener],
     forRoot: true,

@@ -2,7 +2,7 @@ import { ClassType } from "@deepkit/core";
 import { FieldName, Query } from "@deepkit/orm";
 import { ReflectionProperty } from "@deepkit/type";
 import { purify } from "src/common/type";
-import { HttpRequestContext } from "src/http-extension/http-request-context.service";
+import { HttpRequestParsed } from "src/http-extension/http-request-parsed.service";
 
 import { RestActionContext } from "../core/rest-action";
 import { RestResource } from "../core/rest-resource";
@@ -16,7 +16,7 @@ export interface RestEntityRetriever extends RestQueryProcessor {}
 
 export class RestFieldBasedRetriever implements RestEntityRetriever {
   constructor(
-    protected request: HttpRequestContext,
+    protected request: HttpRequestParsed,
     protected context: RestActionContext,
   ) {}
 

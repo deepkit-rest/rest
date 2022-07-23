@@ -1,7 +1,7 @@
 import { ClassType } from "@deepkit/core";
 import { FieldName, Query } from "@deepkit/orm";
 import { purify } from "src/common/type";
-import { HttpRequestContext } from "src/http-extension/http-request-context.service";
+import { HttpRequestParsed } from "src/http-extension/http-request-parsed.service";
 
 import { RestActionContext } from "../core/rest-action";
 import { RestFilterMapFactory } from "../crud-models/rest-filter-map";
@@ -17,7 +17,7 @@ export class RestGenericFilter implements RestEntityFilter {
   param = "filter";
 
   constructor(
-    protected request: HttpRequestContext,
+    protected request: HttpRequestParsed,
     protected context: RestActionContext,
     protected filterMapFactory: RestFilterMapFactory,
   ) {}

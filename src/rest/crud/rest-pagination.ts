@@ -2,7 +2,7 @@ import { ClassType } from "@deepkit/core";
 import { Query } from "@deepkit/orm";
 import { Maximum, Positive, PositiveNoZero } from "@deepkit/type";
 import { purify } from "src/common/type";
-import { HttpRequestContext } from "src/http-extension/http-request-context.service";
+import { HttpRequestParsed } from "src/http-extension/http-request-parsed.service";
 
 import { RestQueryProcessor } from "./rest-crud";
 
@@ -49,7 +49,7 @@ export class RestOffsetLimitPaginator
   offsetMax = 1000;
   offsetParam = "offset";
 
-  constructor(protected request: HttpRequestContext) {
+  constructor(protected request: HttpRequestParsed) {
     super();
   }
 
@@ -77,7 +77,7 @@ export class RestPageNumberPaginator
   pageSizeMax = 50;
   pageSizeParam = "size";
 
-  constructor(protected request: HttpRequestContext) {
+  constructor(protected request: HttpRequestParsed) {
     super();
   }
 

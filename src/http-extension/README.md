@@ -96,14 +96,8 @@ Allow dynamic request parsing during the request handling process.
 
 TODO: details
 
-### HttpRequestContext
+### HttpRequestParsed
 
 Higher-level wrapper of `HttpRequestParser` with caching and type validation support.
-
-TODO: details
-
-### HttpRangeParser
-
-Simple parser of http header `Range`.
 
 TODO: details

@@ -1,7 +1,7 @@
 import { HttpNotFoundError, Response } from "@deepkit/http";
 import { Query } from "@deepkit/orm";
 import { HttpInjectorContext } from "src/http-extension/http-common";
-import { HttpRequestContext } from "src/http-extension/http-request-context.service";
+import { HttpRequestParsed } from "src/http-extension/http-request-parsed.service";
 
 import { RestActionContext } from "../core/rest-action";
 import { RestResource } from "../core/rest-resource";
@@ -28,7 +28,7 @@ import { RestEntitySorter, RestSortingCustomizations } from "./rest-sorting";
 
 export class RestCrudKernel<Entity> {
   constructor(
-    protected request: HttpRequestContext,
+    protected request: HttpRequestParsed,
     protected injector: HttpInjectorContext,
     protected context: RestCrudActionContext<Entity>,
   ) {}

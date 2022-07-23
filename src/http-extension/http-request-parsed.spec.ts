@@ -1,18 +1,18 @@
 import { HttpRequest } from "@deepkit/http";
 import { ValidationError } from "@deepkit/type";
 
-import { HttpRequestContext } from "./http-request-context.service";
+import { HttpRequestParsed } from "./http-request-parsed.service";
 import { HttpRequestParser } from "./http-request-parser.service";
 
-describe("HttpRequestContext", () => {
-  let context: HttpRequestContext;
+describe("HttpRequestParsed", () => {
+  let context: HttpRequestParsed;
   let parser: HttpRequestParser;
 
   function setup(body = {}, queries = {}, path = "/", pathSchema = "/") {
     const request = HttpRequest.POST(path).json(body).query(queries).build();
     const routeConfig: any = { getFullPath: () => pathSchema };
     parser = new HttpRequestParser();
-    context = new HttpRequestContext(request, parser, routeConfig);
+    context = new HttpRequestParsed(request, parser, routeConfig);
   }
 
   describe("loadBody, getBody", () => {

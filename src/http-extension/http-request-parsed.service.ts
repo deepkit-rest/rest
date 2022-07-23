@@ -5,7 +5,7 @@ import { purify } from "src/common/type";
 import { HttpRouteConfig } from "./http-common";
 import { HttpRequestParser } from "./http-request-parser.service";
 
-export class HttpRequestContext {
+export class HttpRequestParsed {
   private requestBody?: Record<string, unknown>;
   private requestQueries?: Record<string, unknown>;
   private requestPathParams?: Record<string, unknown>;
