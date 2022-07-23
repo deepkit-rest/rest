@@ -114,7 +114,7 @@ export class RestCrudKernel<Entity> {
 
 export class RestCrudActionContext<Entity> extends RestActionContext {
   async getEntity(): Promise<Entity> {
-    return this.getCacheOrCreateAsync(this.getCache, async () => {
+    return this.cache.getOrCreateAsync(this.getEntity, async () => {
       if (!this.getActionMeta().detailed)
         throw new Error("Not a detailed action");
       const resource = this.getResource();
