@@ -419,6 +419,8 @@ interface RestEntitySerializer<Entity> {
 
 In a Create Action, `RestGenericSerializer` will purify(deserialize and validate) the request payload against a schema generated from the entity based on fields decorated with `InCreation`, and then assign the payload values to a new entity instance.
 
+> During the deserialization, DeepKit will automatically transform primary keys into entity references for fields decorated with `Reference`.
+
 Let's say `Book` is defined like this:
 
 ```ts
