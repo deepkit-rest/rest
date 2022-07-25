@@ -113,6 +113,7 @@ export class FileSystemRecordResource
     const { contentKey, contentSize } = record;
     const [start, end] = this.rangeParser.parseSingle(rangesRaw, contentSize);
     const stream = await this.engine.retrieve(contentKey, { start, end });
+    response.setHeader("Content-Range", `bytes ${start}-${end}/${contentSize}`);
     response.writeHead(206); // `.status()` would accidentally `.end()` the response, and will be removed in the future, so we call `writeHead()` here.
     return stream.pipe(response);
   }

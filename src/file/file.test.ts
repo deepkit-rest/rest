@@ -263,6 +263,7 @@ describe("File", () => {
       expect(spy).toHaveBeenCalledWith("ref", { start: 0, end: 1 });
       await new Promise((r) => response.once("finish", r));
       expect(response.statusCode).toBe(206);
+      expect(response.headers).toEqual({ ["Content-Range"]: "bytes 0-1/1" });
       expect(response.body.toString()).toBe("v");
     });
 
