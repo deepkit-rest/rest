@@ -78,10 +78,6 @@ export class RestResourceInstaller {
     if (this.config.prefix) path = join(path, this.config.prefix);
     if (this.config.versioning && resourceMeta.version)
       path = join(path, `${this.config.versioning}${resourceMeta.version}`);
-    if (resourceMeta.parent) {
-      const parentMeta = resourceMeta.parent.validate();
-      path = join(path, parentMeta.path, `:${resourceMeta.parentLookup}`);
-    }
     path = join(path, resourceMeta.path);
     return path;
   }

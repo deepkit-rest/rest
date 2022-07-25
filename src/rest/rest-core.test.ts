@@ -140,56 +140,6 @@ describe("REST Core", () => {
         { baseUrl: "", path: "prefix/users", httpMethods: ["POST"] },
       ]);
     });
-
-    test("nesting", async () => {
-      @entity.name("parent").collection("parents")
-      class Parent {}
-      @entity.name("child").collection("children")
-      class Child {}
-
-      {
-        @rest.resource(Parent)
-        class ParentResource {
-          @rest.action("GET").detailed() route() {}
-        }
-        @rest.resource(Child).parent(ParentResource as any)
-        class ChildResource {
-          @rest.action("GET").detailed() route() {}
-        }
-        await setup({ prefix: "prefix", versioning: false }, [
-          ParentResource as any,
-          ChildResource as any,
-        ]);
-        const routes = facade.app.get(HttpRouter).getRoutes();
-        expect(routes).toHaveLength(2);
-        expect(routes).toMatchObject<Partial<RouteConfig>[]>([
-          { path: "prefix/parents/:pk" },
-          { path: "prefix/parents/:parentPk/children/:pk" },
-        ]);
-      }
-
-      {
-        @rest.resource(Parent).version(1)
-        class ParentResource {
-          @rest.action("GET").detailed() route() {}
-        }
-        @rest.resource(Child).version(2)
-        @rest.parent(ParentResource as any)
-        class ChildResource {
-          @rest.action("GET").detailed() route() {}
-        }
-        await setup({ prefix: "prefix", versioning: "v" }, [
-          ParentResource as any,
-          ChildResource as any,
-        ]);
-        const routes = facade.app.get(HttpRouter).getRoutes();
-        expect(routes).toHaveLength(2);
-        expect(routes).toMatchObject<Partial<RouteConfig>[]>([
-          { path: "prefix/v1/parents/:pk" },
-          { path: "prefix/v2/parents/:parentPk/children/:pk" },
-        ]);
-      }
-    });
   });
 
   test("action context", async () => {
