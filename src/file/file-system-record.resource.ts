@@ -28,11 +28,11 @@ import { FileStreamUtils } from "./file-stream.utils";
 import { FileSystemRecord } from "./file-system-record.entity";
 
 @rest.resource(FileSystemRecord, "files")
-export class FileRecordResource
+export class FileSystemRecordResource
   extends AppResource<FileSystemRecord>
   implements RestSerializationCustomizations<FileSystemRecord>
 {
-  readonly serializer = FileRecordSerializer;
+  readonly serializer = FileSystemRecordSerializer;
 
   constructor(
     database: Database,
@@ -137,7 +137,7 @@ export class FileRecordResource
   }
 }
 
-export class FileRecordSerializer extends AppEntitySerializer<FileSystemRecord> {
+export class FileSystemRecordSerializer extends AppEntitySerializer<FileSystemRecord> {
   protected database!: InjectDatabaseSession;
   protected requestContext!: Inject<RequestContext>;
   protected override createEntity(

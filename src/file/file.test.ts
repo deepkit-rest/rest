@@ -15,6 +15,7 @@ import { Readable } from "stream";
 import { FileModule } from "./file.module";
 import { FileStreamUtils } from "./file-stream.utils";
 import { FileSystemRecord } from "./file-system-record.entity";
+import { FileSystemTag } from "./file-system-tag.entity";
 
 describe("File", () => {
   let facade: TestingFacade<App<any>>;
@@ -330,6 +331,130 @@ describe("File", () => {
         HttpRequest.GET(`/files/${record.id}/integrity`),
       );
       expect(response.statusCode).toBe(404);
+    });
+  });
+
+  describe("GET /tags", () => {
+    let user2: User;
+
+    beforeEach(async () => {
+      user2 = new User({
+        name: "test2",
+        email: "test@test2.email",
+        password: "password",
+      });
+      await database.persist(
+        new FileSystemTag({ owner: user, name: "name1" }),
+        new FileSystemTag({ owner: user, name: "name2" }),
+        new FileSystemTag({ owner: user, name: "name3" }),
+        new FileSystemTag({ owner: user2, name: "name4" }),
+      );
+    });
+
+    test("response", async () => {
+      const response = await requester.request(HttpRequest.GET("/tags"));
+      expect(response.json).toEqual({
+        total: 3,
+        items: [
+          {
+            id: expect.any(String),
+            owner: user.id,
+            name: "name1",
+            createdAt: expect.any(String),
+          },
+          expect.anything(),
+          expect.anything(),
+        ],
+      });
+    });
+
+    test("pagination", async () => {
+      const response = await requester.request(
+        HttpRequest.GET("/tags?limit=1&offset=1"),
+      );
+      expect(response.json).toMatchObject({
+        total: 3,
+        items: [{ name: "name2" }],
+      });
+    });
+
+    test("filtering", async () => {
+      const response = await requester.request(
+        HttpRequest.GET("/tags?filter[name][$eq]=name2"),
+      );
+      expect(response.json).toMatchObject({
+        total: 1,
+        items: [{ name: "name2" }],
+      });
+    });
+
+    test("ordering", async () => {
+      const response = await requester.request(
+        HttpRequest.GET("/tags?order[name]=desc"),
+      );
+      expect(response.json).toMatchObject({
+        total: 3,
+        items: [{ name: "name3" }, { name: "name2" }, { name: "name1" }],
+      });
+    });
+  });
+
+  describe("POST /tags", () => {
+    test("basic", async () => {
+      const response = await requester.request(
+        HttpRequest.POST("/tags").json({ name: "name" }),
+      );
+      expect(response.json).toEqual({
+        id: expect.any(String),
+        owner: user.id,
+        name: "name",
+        createdAt: expect.any(String),
+      });
+      expect(await database.query(FileSystemTag).count()).toBe(1);
+    });
+  });
+
+  describe("GET /tags/:id", () => {
+    test("basic", async () => {
+      const tag = new FileSystemTag({ owner: user, name: "name" });
+      await database.persist(tag);
+      const response = await requester.request(
+        HttpRequest.GET(`/tags/${tag.id}`),
+      );
+      expect(response.json).toEqual({
+        id: tag.id,
+        owner: user.id,
+        name: "name",
+        createdAt: expect.any(String),
+      });
+    });
+  });
+
+  describe("PATCH /tags/:id", () => {
+    test("basic", async () => {
+      const tag = new FileSystemTag({ owner: user, name: "name" });
+      await database.persist(tag);
+      const response = await requester.request(
+        HttpRequest.PATCH(`/tags/${tag.id}`).json({ name: "new name" }),
+      );
+      expect(response.json).toEqual({
+        id: tag.id,
+        owner: user.id,
+        name: "new name",
+        createdAt: expect.any(String),
+      });
+    });
+  });
+
+  describe("DELETE /tags/:id", () => {
+    test("basic", async () => {
+      const tag = new FileSystemTag({ owner: user, name: "name" });
+      await database.persist(tag);
+      const response = await requester.request(
+        HttpRequest.DELETE(`/tags/${tag.id}`),
+      );
+      expect(response.bodyString).toBe("");
+      expect(response.statusCode).toBe(204);
     });
   });
 });

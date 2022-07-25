@@ -9,27 +9,27 @@ import { ResponseReturnType, RestCrudKernel } from "src/rest/crud/rest-crud";
 import { RestSerializationCustomizations } from "src/rest/crud/rest-serialization";
 import { User } from "src/user/user.entity";
 
-import { Tag } from "./tag.entity";
+import { FileSystemTag } from "./file-system-tag.entity";
 
-@rest.resource(Tag)
-export class TagResource
-  extends AppResource<Tag>
-  implements RestSerializationCustomizations<Tag>
+@rest.resource(FileSystemTag, "tags")
+export class FileSystemTagResource
+  extends AppResource<FileSystemTag>
+  implements RestSerializationCustomizations<FileSystemTag>
 {
-  readonly serializer = TagSerializer;
+  readonly serializer = FileSystemTagSerializer;
 
   constructor(
     database: Database,
     private context: RequestContext,
     private databaseSession: InjectDatabaseSession,
-    private crud: RestCrudKernel<Tag>,
+    private crud: RestCrudKernel<FileSystemTag>,
   ) {
     super(database);
   }
 
-  getQuery(): Query<Tag> {
+  getQuery(): Query<FileSystemTag> {
     const userRef = this.database.getReference(User, this.context.user.id);
-    return this.databaseSession.query(Tag).filter({ owner: userRef });
+    return this.databaseSession.query(FileSystemTag).filter({ owner: userRef });
   }
 
   @rest.action("GET")
@@ -63,10 +63,10 @@ export class TagResource
   }
 }
 
-export class TagSerializer extends AppEntitySerializer<Tag> {
+export class FileSystemTagSerializer extends AppEntitySerializer<FileSystemTag> {
   protected database!: InjectDatabaseSession;
   protected requestContext!: Inject<RequestContext>;
-  protected override createEntity(data: Partial<Tag>): Tag {
+  protected override createEntity(data: Partial<FileSystemTag>): FileSystemTag {
     const userId = this.requestContext.user.id;
     data.owner = this.database.getReference(User, userId);
     return super.createEntity(data);

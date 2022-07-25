@@ -1,6 +1,6 @@
 import { entity, Reference } from "@deepkit/type";
 import { FileSystemRecord } from "src/file/file-system-record.entity";
-import { Tag } from "src/tag/tag.entity";
+import { FileSystemTag } from "src/file/file-system-tag.entity";
 
 import { AppEntity } from "./entity";
 
@@ -10,5 +10,5 @@ export class FileRecordToTag extends AppEntity<
   "file" | "tag"
 > {
   file!: FileSystemRecord & Reference;
-  tag!: Tag & Reference;
+  tag!: FileSystemTag & Reference;
 }

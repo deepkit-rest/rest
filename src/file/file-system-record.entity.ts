@@ -9,11 +9,11 @@ import {
 import { PartialRequired } from "src/common/utilities";
 import { AppEntity } from "src/core/entity";
 import { FileRecordToTag } from "src/core/entity-pivots";
+import { FileSystemTag } from "src/file/file-system-tag.entity";
 import { InCreation } from "src/rest/crud-models/rest-creation-schema";
 import { Filterable } from "src/rest/crud-models/rest-filter-map";
 import { Orderable } from "src/rest/crud-models/rest-order-map";
 import { InUpdate } from "src/rest/crud-models/rest-update-schema";
-import { Tag } from "src/tag/tag.entity";
 import { User } from "src/user/user.entity";
 
 // prettier-ignore
@@ -26,7 +26,7 @@ export class FileSystemRecord extends AppEntity<
   parent?: FileSystemRecord & Reference & Filterable & Orderable & InCreation & InUpdate = undefined;
   children: FileSystemRecord[] & BackReference & Group<"internal"> = [];
   name!: string & Filterable & Orderable & InCreation & InUpdate;
-  tags: Tag[] & BackReference<{ via: typeof FileRecordToTag }> & Group<"internal"> = [];
+  tags: FileSystemTag[] & BackReference<{ via: typeof FileRecordToTag }> & Group<"internal"> = [];
   contentKey?: string = undefined;
   contentIntegrity?: string = undefined;
   contentSize?: integer & Positive & Filterable & Orderable = undefined;
