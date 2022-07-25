@@ -16,17 +16,17 @@ import { InUpdate } from "src/rest/crud-models/rest-update-schema";
 import { Tag } from "src/tag/tag.entity";
 import { User } from "src/user/user.entity";
 
-type BackRefViaPivot = BackReference<{ via: typeof FileRecordToTag }>;
-
-@entity.name("file-record").collection("file-records")
-export class FileRecord extends AppEntity<
-  FileRecord,
-  "owner" | "name" | "path"
+// prettier-ignore
+@entity.name("file-system-record").collection("file-system-records")
+export class FileSystemRecord extends AppEntity<
+  FileSystemRecord,
+  "owner" | "name" | "parent"
 > {
   owner!: User & Reference & Filterable & Orderable;
+  parent?: FileSystemRecord & Reference & Filterable & Orderable & InCreation & InUpdate = undefined;
+  children: FileSystemRecord[] & BackReference & Group<"internal"> = [];
   name!: string & Filterable & Orderable & InCreation & InUpdate;
-  path!: string & Filterable & Orderable & InCreation & InUpdate;
-  tags: Tag[] & BackRefViaPivot & Group<"internal"> = [];
+  tags: Tag[] & BackReference<{ via: typeof FileRecordToTag }> & Group<"internal"> = [];
   contentKey?: string = undefined;
   contentIntegrity?: string = undefined;
   contentSize?: integer & Positive & Filterable & Orderable = undefined;
@@ -38,6 +38,6 @@ export class FileRecord extends AppEntity<
 
 export interface FileRecordContentDefined
   extends PartialRequired<
-    FileRecord,
+    FileSystemRecord,
     "contentKey" | "contentIntegrity" | "contentSize"
   > {}

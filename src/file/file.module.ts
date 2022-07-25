@@ -3,7 +3,7 @@ import { createModule } from "@deepkit/app";
 import {
   FileRecordResource,
   FileRecordSerializer,
-} from "./file-record.resource";
+} from "./file-system-record.resource";
 
 export class FileModule extends createModule(
   {

@@ -13,8 +13,8 @@ import { User } from "src/user/user.entity";
 import { Readable } from "stream";
 
 import { FileModule } from "./file.module";
-import { FileRecord } from "./file-record.entity";
 import { FileStreamUtils } from "./file-stream.utils";
+import { FileSystemRecord } from "./file-system-record.entity";
 
 describe("File", () => {
   let facade: TestingFacade<App<any>>;
@@ -54,17 +54,19 @@ describe("File", () => {
 
   describe("POST /files", () => {
     it("should work", async () => {
+      const record = new FileSystemRecord({ owner: user, name: "a.txt" });
+      await database.persist(record);
       const response = await requester.request(
         HttpRequest.POST("/files").json({
           name: "test.txt",
-          path: "/dir",
+          parent: record.id,
         }),
       );
       expect(response.json).toEqual({
         id: expect.any(String),
         owner: user.id,
+        parent: null,
         name: "test.txt",
-        path: "/dir",
         contentSize: null,
         contentKey: null,
         contentIntegrity: null,
@@ -81,8 +83,8 @@ describe("File", () => {
         password: "password",
       });
       await database.persist(
-        new FileRecord({ owner: user, name: "test.txt", path: "/dir" }),
-        new FileRecord({ owner: user2, name: "test2.txt", path: "/dir" }),
+        new FileSystemRecord({ owner: user, name: "test.txt" }),
+        new FileSystemRecord({ owner: user2, name: "test2.txt" }),
       );
       const response = await requester.request(HttpRequest.GET("/files"));
       expect(response.json).toEqual({
@@ -91,8 +93,8 @@ describe("File", () => {
           {
             id: expect.any(String),
             owner: user.id,
+            parent: null,
             name: "test.txt",
-            path: "/dir",
             contentKey: null,
             contentIntegrity: null,
             contentSize: null,
@@ -104,16 +106,8 @@ describe("File", () => {
 
     test("pagination", async () => {
       await database.persist(
-        new FileRecord({
-          owner: user,
-          name: "test1.txt",
-          path: "/dir",
-        }),
-        new FileRecord({
-          owner: user,
-          name: "test2.txt",
-          path: "/dir",
-        }),
+        new FileSystemRecord({ owner: user, name: "test1.txt" }),
+        new FileSystemRecord({ owner: user, name: "test2.txt" }),
       );
       const response = await requester.request(
         HttpRequest.GET("/files?limit=1"),
@@ -126,11 +120,7 @@ describe("File", () => {
 
     test("filter", async () => {
       await database.persist(
-        new FileRecord({
-          owner: user,
-          name: "test1.txt",
-          path: "/dir",
-        }),
+        new FileSystemRecord({ owner: user, name: "test1.txt" }),
       );
       const response = await requester.request(
         HttpRequest.GET("/files?filter[id][$eq]=notfound"),
@@ -140,8 +130,8 @@ describe("File", () => {
 
     test("order", async () => {
       const records = [
-        new FileRecord({ owner: user, name: "test1.txt", path: "/dir" }),
-        new FileRecord({ owner: user, name: "test2.txt", path: "/dir" }),
+        new FileSystemRecord({ owner: user, name: "test1.txt" }),
+        new FileSystemRecord({ owner: user, name: "test2.txt" }),
       ];
       await database.persist(...records);
       const response = await requester.request(
@@ -156,11 +146,7 @@ describe("File", () => {
 
   describe("GET /files/:id", () => {
     it("should work", async () => {
-      const record = new FileRecord({
-        owner: user,
-        name: "test.txt",
-        path: "/dir",
-      });
+      const record = new FileSystemRecord({ owner: user, name: "test.txt" });
       await database.persist(record);
       const response = await requester.request(
         HttpRequest.GET(`/files/${record.id}`),
@@ -168,8 +154,8 @@ describe("File", () => {
       expect(response.json).toEqual({
         id: record.id,
         owner: user.id,
+        parent: null,
         name: record.name,
-        path: record.path,
         contentKey: null,
         contentIntegrity: null,
         contentSize: null,
@@ -180,11 +166,7 @@ describe("File", () => {
 
   describe("PATCH /files/:id", () => {
     it("should work", async () => {
-      const record = new FileRecord({
-        owner: user,
-        name: "test.txt",
-        path: "/dir",
-      });
+      const record = new FileSystemRecord({ owner: user, name: "test.txt" });
       await database.persist(record);
       const response = await requester.request(
         HttpRequest.PATCH(`/files/${record.id}`).json({ name: "updated" }),
@@ -192,42 +174,34 @@ describe("File", () => {
       expect(response.json).toEqual({
         id: record.id,
         owner: user.id,
+        parent: null,
         name: "updated",
-        path: record.path,
         contentKey: null,
         contentIntegrity: null,
         contentSize: null,
         createdAt: record.createdAt.toISOString(),
       });
-      const recordNew = await database.query(FileRecord).findOne();
+      const recordNew = await database.query(FileSystemRecord).findOne();
       expect(recordNew).toMatchObject({ name: "updated" });
     });
   });
 
   describe("DELETE /files/:id", () => {
     it("should work", async () => {
-      const record = new FileRecord({
-        owner: user,
-        name: "test.txt",
-        path: "/dir",
-      });
+      const record = new FileSystemRecord({ owner: user, name: "test.txt" });
       await database.persist(record);
       const response = await requester.request(
         HttpRequest.DELETE(`/files/${record.id}`),
       );
       expect(response.statusCode).toBe(204);
       expect(response.bodyString).toBe("");
-      await expect(database.query(FileRecord).count()).resolves.toBe(0);
+      await expect(database.query(FileSystemRecord).count()).resolves.toBe(0);
     });
   });
 
   describe("PUT /files/:id/content", () => {
     it("should work", async () => {
-      const record = new FileRecord({
-        owner: user,
-        name: "test.txt",
-        path: "/dir",
-      });
+      const record = new FileSystemRecord({ owner: user, name: "test.txt" });
       await database.persist(record);
       const fileEngine = facade.app.get(FileEngine);
       const fileEngineStoreSpy = jest
@@ -238,13 +212,13 @@ describe("File", () => {
       );
       expect(response.statusCode).toBe(204);
       expect(response.bodyString).toBe("");
-      await expect(database.query(FileRecord).findOne()).resolves.toMatchObject(
-        {
-          contentKey: "ref",
-          contentIntegrity: expect.any(String),
-          contentSize: 1,
-        },
-      );
+      await expect(
+        database.query(FileSystemRecord).findOne(),
+      ).resolves.toMatchObject({
+        contentKey: "ref",
+        contentIntegrity: expect.any(String),
+        contentSize: 1,
+      });
       expect(fileEngineStoreSpy).toHaveBeenCalledTimes(1);
       expect(fileEngineStoreSpy).toHaveBeenCalledWith(expect.any(Readable));
     });
@@ -252,11 +226,7 @@ describe("File", () => {
 
   describe("GET /files/:id/content", () => {
     it("should work", async () => {
-      const record = new FileRecord({
-        owner: user,
-        name: "test.txt",
-        path: "/dir",
-      });
+      const record = new FileSystemRecord({ owner: user, name: "test.txt" });
       record.contentKey = "ref";
       record.contentIntegrity = "integrity";
       record.contentSize = 1;
@@ -276,11 +246,7 @@ describe("File", () => {
     });
 
     it("should work in partial mode", async () => {
-      const record = new FileRecord({
-        owner: user,
-        name: "test.txt",
-        path: "/dir",
-      });
+      const record = new FileSystemRecord({ owner: user, name: "test.txt" });
       record.contentKey = "ref";
       record.contentIntegrity = "integrity";
       record.contentSize = 1;
@@ -300,11 +266,7 @@ describe("File", () => {
     });
 
     it("should return 404 when content not uploaded", async () => {
-      const record = new FileRecord({
-        owner: user,
-        name: "test.txt",
-        path: "/dir",
-      });
+      const record = new FileSystemRecord({ owner: user, name: "test.txt" });
       await database.persist(record);
       const fileEngine = facade.app.get(FileEngine);
       const fileEngineRetrieveSpy = jest.spyOn(fileEngine, "retrieve");
@@ -318,11 +280,7 @@ describe("File", () => {
 
   describe("GET /files/:id/integrity", () => {
     it("should return 204 if content is uploaded and complete", async () => {
-      const record = new FileRecord({
-        owner: user,
-        name: "test.txt",
-        path: "/dir",
-      });
+      const record = new FileSystemRecord({ owner: user, name: "test.txt" });
       const recordContent = Buffer.from("v");
       record.contentKey = "ref";
       record.contentIntegrity = await FileStreamUtils.hash(
@@ -343,11 +301,7 @@ describe("File", () => {
     });
 
     it("should return 404 if content is not uploaded", async () => {
-      const record = new FileRecord({
-        owner: user,
-        name: "test.txt",
-        path: "/dir",
-      });
+      const record = new FileSystemRecord({ owner: user, name: "test.txt" });
       await database.persist(record);
 
       const fileEngine = facade.app.get(FileEngine);
@@ -361,11 +315,7 @@ describe("File", () => {
     });
 
     it("should return 404 if content is broken", async () => {
-      const record = new FileRecord({
-        owner: user,
-        name: "test.txt",
-        path: "/dir",
-      });
+      const record = new FileSystemRecord({ owner: user, name: "test.txt" });
       const recordContent = Buffer.from("v");
       record.contentKey = "ref";
       record.contentIntegrity = "not-matching";

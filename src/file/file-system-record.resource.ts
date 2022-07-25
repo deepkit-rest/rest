@@ -24,13 +24,13 @@ import {
 import { RestSerializationCustomizations } from "src/rest/crud/rest-serialization";
 import { User } from "src/user/user.entity";
 
-import { FileRecord } from "./file-record.entity";
 import { FileStreamUtils } from "./file-stream.utils";
+import { FileSystemRecord } from "./file-system-record.entity";
 
-@rest.resource(FileRecord, "files")
+@rest.resource(FileSystemRecord, "files")
 export class FileRecordResource
-  extends AppResource<FileRecord>
-  implements RestSerializationCustomizations<FileRecord>
+  extends AppResource<FileSystemRecord>
+  implements RestSerializationCustomizations<FileSystemRecord>
 {
   readonly serializer = FileRecordSerializer;
 
@@ -38,17 +38,19 @@ export class FileRecordResource
     database: Database,
     private databaseSession: InjectDatabaseSession,
     private context: RequestContext,
-    private crud: RestCrudKernel<FileRecord>,
-    private crudContext: RestCrudActionContext<FileRecord>,
+    private crud: RestCrudKernel<FileSystemRecord>,
+    private crudContext: RestCrudActionContext<FileSystemRecord>,
     private engine: FileEngine,
     private rangeParser: HttpRangeParser,
   ) {
     super(database);
   }
 
-  getQuery(): Query<FileRecord> {
+  getQuery(): Query<FileSystemRecord> {
     const userRef = this.database.getReference(User, this.context.user.id);
-    return this.databaseSession.query(FileRecord).filter({ owner: userRef });
+    return this.databaseSession
+      .query(FileSystemRecord)
+      .filter({ owner: userRef });
   }
 
   @rest.action("GET")
@@ -135,10 +137,12 @@ export class FileRecordResource
   }
 }
 
-export class FileRecordSerializer extends AppEntitySerializer<FileRecord> {
+export class FileRecordSerializer extends AppEntitySerializer<FileSystemRecord> {
   protected database!: InjectDatabaseSession;
   protected requestContext!: Inject<RequestContext>;
-  protected override createEntity(data: Partial<FileRecord>): FileRecord {
+  protected override createEntity(
+    data: Partial<FileSystemRecord>,
+  ): FileSystemRecord {
     const userId = this.requestContext.user.id;
     data.owner = this.database.getReference(User, userId);
     return super.createEntity(data);

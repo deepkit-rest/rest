@@ -9,7 +9,7 @@ import {
 } from "@deepkit/type";
 import { compare, hash } from "bcryptjs";
 import { AppEntity } from "src/core/entity";
-import { FileRecord } from "src/file/file-record.entity";
+import { FileSystemRecord } from "src/file/file-system-record.entity";
 import { InCreation } from "src/rest/crud-models/rest-creation-schema";
 import { Filterable } from "src/rest/crud-models/rest-filter-map";
 import { Orderable } from "src/rest/crud-models/rest-order-map";
@@ -23,7 +23,7 @@ export class User extends AppEntity<User, "name" | "email" | "password"> {
   name!: string & MinLength<1> & MaxLength<20> & Filterable & Orderable & InCreation & InUpdate;
   email!: Email & Unique & Filterable & Orderable & InCreation & InUpdate;
   password!: string & MinLength<6> & MaxLength<typeof HASH_LENGTH> & InCreation & InUpdate & Group<"internal">;
-  files: FileRecord[] & BackReference & Group<"internal"> = [];
+  files: FileSystemRecord[] & BackReference & Group<"internal"> = [];
   verifiedAt?: Date = undefined;
 
   async hashPassword(): Promise<void> {
