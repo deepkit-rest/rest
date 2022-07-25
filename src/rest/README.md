@@ -44,15 +44,15 @@ class BookResource implements RestResource<Book> {
 }
 ```
 
-`getQuery()` is a good place to filter the entities that the user can view. For example you can allow the user to view only his own `Book`:
-
-```ts
-getQuery() {
-    const userId = this.somehowGetUserId()
-    const userRef = this.database.getRef(User, userId);
-    return this.database.query(Book).filter({ owner: userRef });
-}
-```
+> `getQuery()` is a good place to filter the entities that the user can view. For example you can allow the user to view only his own `Book`:
+>
+> ```ts
+> getQuery() {
+>     const userId = this.somehowGetUserId()
+>     const userRef = this.database.getRef(User, userId);
+>     return this.database.query(Book).filter({ owner: userRef });
+> }
+> ```
 
 To include our resource in a module, simply declare it in `controllers` of the module:
 
@@ -64,23 +64,16 @@ class BookModule extends createModule({
 
 You can basically regard a Resource as a special Controller, as Resources are in `http` scope and everything that works in regular HTTP Controllers works in REST Resources.
 
-The following code will generate a route at `/api/v1/books/:id`, where `api` is the the default API prefix, `v` is the default versioning prefix, and `books` is the path of the Resource inferred from the entity's collection name because we didn't manually specify a path:
+The following code will generate a route at `/api/v1/books/:id`, where `api` is the the default API prefix, `v` is the default versioning prefix:
 
 ```ts
-@entity.name("book").collection("books")
-class Book {
-  // ...
-}
-
-@rest.resource(Book).version(1)
+@rest.resource(Book, "books").version(1)
 class BookResource implements RestResource<Book> {
   // ...
   @http.GET(":id")
   async route(id: string) {}
 }
 ```
-
-> `v1` will not appear if Resource is not decorated using `@rest.version()` or versioning is disabled.
 
 The API prefix and versioning prefix can be configured when instantiating `RestModule`:
 
@@ -91,18 +84,31 @@ new RestModule({ prefix: "api-prefix", versioning: "versioning-prefix" });
 new RestModule({ prefix: "", versioning: false });
 ```
 
-And Resource path can be manually specified via:
+> The URL will not include `v1` if `@rest.version()` is not applied or versioning is disabled.
+
+For simple resources, we can omit the second parameter of `@rest.resource()` to infer the resource's path from the entity's collection name:
 
 ```ts
-@rest.resource(Book, "my-books")
+@entity.name("book").collection("books")
+class Book {
+  // ...
+}
 ```
 
-> It would cause an error if there is no path specified for the resource and also no collection name specified for the entity.
+```ts
+@rest.resource(Book)
+class BookResource implements RestResource<Book> {
+  // ...
+}
+```
 
-> The route generation process of DeepKit REST doesn't use `baseUrl`, thus we can define path parameters in the Resource path:
+> The route generation process of DeepKit REST doesn't define any `baseUrl`, so we can define path parameters in the Resource path to implement nested resources.
+>
+> For example:
 >
 > ```ts
-> @rest.resource(Book, "user/:userId/books")
+> @rest.resource(Book, "users/:userId/books")
+> class UserBookResource {}
 > ```
 >
 > You can utilize the DeepKit Http Extension library to parse the path parameters.
@@ -114,30 +120,12 @@ Regular HTTP Actions/Routes are replaced by REST Actions(Action for short).
 Actions can be defined using the combination of the new `@rest` decorator and the regular `@http` decorator.
 
 ```ts
-@rest.action("GET")
+@rest.action("GET", ":id/path")
 @http.group('auth-required')
 action() {}
 ```
 
-> You MUST NOT define Actions using ONLY the `@http` decorator, which means you should avoid decorations like `@http.GET()` and `@http.POST()` because this would make the Action a regular HTTP Action rather than a REST Action and most features of this library are not available for a regular HTTP Action.
-
-Actions can be "detailed":
-
-```ts
-@rest.action("GET").detailed()
-```
-
-Detailed Actions are actions performed on a specific entity, thus will be suffixed with a path parameter, which is `:pk` by default. The path parameter name can be customized via `@rest.lookup()`:
-
-```ts
-@rest.resource(Book).lookup("id")
-```
-
-Actions can also have additional custom path suffixed:
-
-```ts
-@rest.action("GET").detailed().path('suffixed-path')
-```
+You MUST NOT define Actions using ONLY the `@http` decorator, which means you should avoid decorations like `@http.GET()` and `@http.POST()` because this would make the Action a regular HTTP Action rather than a REST Action and most features of this library are not available for a regular HTTP Action.
 
 ## Action Context
 
@@ -154,7 +142,7 @@ class MyService {
 }
 ```
 
-> All methods in Action Context have caching implemented, so there's nothing to worry when calling a method multiple times.
+> Most methods in Action Context have caching implemented, so there's nothing to worry if you want to call a method multiple times.
 
 # CRUD
 
@@ -355,7 +343,7 @@ class AppSorter extends RestGenericSorter {
 A Retrieve Action can be implemented like this:
 
 ```ts
-@rest.action("GET").detailed()
+@rest.action("GET", ":pk")
 retrieve(): Promise<Response> {
   return this.crud.retrieve();
 }
@@ -372,16 +360,11 @@ class BookResource implements RestResource<Book>, RestRetrievingCustomizations {
 
 ### RestFieldBasedRetriever
 
-`RestFieldBasedRetriever` is the default Entity Retriever, which retrieves the entity based on the `lookup` metadata of the Resource:
+`RestFieldBasedRetriever` is the default Entity Retriever, which retrieves the entity based on the `:pk` path parameter and the entity's primary key by default.
 
-- If the metadata value is `pk`, the entity will be retrieved on its primary key: `lookup: pk` + `GET /books/1` -> `{ id: 1 }`
-- If the metadata value matches the name of one of the entities fields, the entity will be retrieved on the field: `lookup: name` + `GET /books/MyBook` -> `{ name: "MyBook" }`
-- If the metadata value doesn't match any of the cases above, an error is caused unless `retrievesOn` is specified (explained later)
+Its behavior can be customized by implementing the `retrievesOn` property of the `RestFieldBasedRetrieverCustomizations` interface:
 
-> The value of the `lookup` metadata of a Resource is specified via `@rest.lookup()`.  
-> The default value is `pk`.
-
-If you think that this approach is not type-safe, or you just don't want to bind the `lookup` metadata with the field to retrieve on, there is another approach for you to specify the field:
+The `retrievesOn` property have a simple form and a long form:
 
 ```ts
 @rest.resource(Book).lookup("anything")
@@ -392,10 +375,14 @@ class BookResource
     RestFieldBasedRetrieverCustomizations<Book>
 {
   retriever = RestFieldBasedRetriever;
-  retrievesOn = "id";
+  retrievesOn = "id"; // simple form
+  retrievesOn = "identity->username"; // long form
   // ...
 }
 ```
+
+- In the example of the simple form, the value of the path parameter `:id` will be used to retrieve the entity on its `id` field.
+- In the example of the long form, the value of the path parameter `:identity` will be used to retrieve the entity on its `username` field.
 
 ## Delete Action
 
