@@ -10,10 +10,7 @@ import { RequestContext } from "src/core/request-context";
 import { AppEntitySerializer, AppResource } from "src/core/rest";
 import { InjectDatabaseSession } from "src/database-extension/database-tokens";
 import { FileEngine } from "src/file-engine/file-engine.interface";
-import {
-  HttpRangeNotSatisfiableError,
-  NoContentResponse,
-} from "src/http-extension/http-common";
+import { NoContentResponse } from "src/http-extension/http-common";
 import { HttpRangeParser } from "src/http-extension/http-range-parser.service";
 import { rest } from "src/rest/core/rest-decoration";
 import {
@@ -114,9 +111,7 @@ export class FileSystemRecordResource
 
     const rangesRaw = request.headers["range"];
     const { contentKey, contentSize } = record;
-    const ranges = this.rangeParser.parse(rangesRaw, contentSize);
-    if (ranges.length > 1) throw new HttpRangeNotSatisfiableError();
-    const [[start, end]] = ranges;
+    const [start, end] = this.rangeParser.parseSingle(rangesRaw, contentSize);
     const stream = await this.engine.retrieve(contentKey, { start, end });
     response.writeHead(206); // `.status()` would accidentally `.end()` the response, and will be removed in the future, so we call `writeHead()` here.
     return stream.pipe(response);

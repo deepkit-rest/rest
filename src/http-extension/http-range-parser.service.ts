@@ -12,7 +12,7 @@ export class HttpRangeParser {
    * @param input
    * @param maxBytes
    */
-  parse(input: string, maxBytes?: number): HttpParsedRange[] {
+  parseMulti(input: string, maxBytes?: number): HttpParsedRange[] {
     const regexp = /^(?<unit>\w+)=(?<ranges>.+)$/u;
     const regexpMatchGroups = input.match(regexp)?.groups;
     if (!regexpMatchGroups) throw new HttpRangeNotSatisfiableError();
@@ -22,6 +22,12 @@ export class HttpRangeParser {
       .split(",")
       .map((raw) => this.parseRange(raw, unit, maxBytes));
     return ranges;
+  }
+
+  parseSingle(input: string, maxBytes?: number): HttpParsedRange {
+    const ranges = this.parseMulti(input, maxBytes);
+    if (ranges.length !== 1) throw new HttpRangeNotSatisfiableError();
+    return ranges[0];
   }
 
   private parseRange(

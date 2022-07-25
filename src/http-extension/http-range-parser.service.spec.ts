@@ -8,7 +8,7 @@ describe("HttpRangeParser", () => {
     parser = new HttpRangeParser();
   });
 
-  describe("parse", () => {
+  describe("parseMulti", () => {
     it.each`
       input              | max          | expected
       ${"bytes=1-2"}     | ${undefined} | ${[[1, 2]]}
@@ -18,7 +18,7 @@ describe("HttpRangeParser", () => {
     `(
       "should work with input: $input; max: $max",
       async ({ input, max, expected }) => {
-        expect(parser.parse(input, max)).toEqual(expected);
+        expect(parser.parseMulti(input, max)).toEqual(expected);
       },
     );
 
@@ -31,8 +31,19 @@ describe("HttpRangeParser", () => {
       ${"bytes=1"}       | ${undefined}
       ${"bytes=-1"}      | ${undefined}
     `("should fail with input: $input; max: $max", async ({ input, max }) => {
-      const fn = () => parser.parse(input, max);
+      const fn = () => parser.parseMulti(input, max);
       expect(fn).toThrow(HttpRangeNotSatisfiableError);
+    });
+  });
+
+  describe("parseSingle", () => {
+    it("should work", async () => {
+      const range = parser.parseSingle("bytes=1-2");
+      expect(range).toEqual([1, 2]);
+    });
+
+    it("should fail", async () => {
+      expect(() => parser.parseSingle("bytes=1-2,4-6")).toThrow();
     });
   });
 });
