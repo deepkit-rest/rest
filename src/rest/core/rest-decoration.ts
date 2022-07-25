@@ -51,16 +51,9 @@ export class RestPropertyDecoratorApi extends PrettifiedDecoratorApi<RestActionM
     this.meta.name = property;
   }
 
-  action(method: HttpMethod): void {
+  action(method: HttpMethod, path?: string): void {
     this.meta.method = method;
-  }
-
-  detailed(): void {
-    this.meta.detailed = true;
-  }
-
-  path(suffixPath: string): void {
-    this.meta.path = suffixPath;
+    this.meta.path = path;
   }
 }
 

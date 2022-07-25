@@ -63,25 +63,25 @@ export class FileRecordResource
     return this.crud.create();
   }
 
-  @rest.action("GET").detailed()
+  @rest.action("GET", ":id")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   async retrieve(): Promise<ResponseReturnType> {
     return this.crud.retrieve();
   }
 
-  @rest.action("PATCH").detailed()
+  @rest.action("PATCH", ":id")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   async update(): Promise<ResponseReturnType> {
     return this.crud.update();
   }
 
-  @rest.action("DELETE").detailed()
+  @rest.action("DELETE", ":id")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   async delete(): Promise<ResponseReturnType> {
     return this.crud.delete();
   }
 
-  @rest.action("PUT").detailed().path("content")
+  @rest.action("PUT", ":id/content")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   async upload(request: HttpRequest): Promise<NoContentResponse> {
     const record = await this.crudContext.getEntity();
@@ -96,7 +96,7 @@ export class FileRecordResource
     return new NoContentResponse();
   }
 
-  @rest.action("GET").detailed().path("content")
+  @rest.action("GET", ":id/content")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   async download(
     response: HttpResponse,
@@ -120,7 +120,7 @@ export class FileRecordResource
     return stream.pipe(response);
   }
 
-  @rest.action("GET").detailed().path("integrity")
+  @rest.action("GET", ":id/integrity")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   @http
     .response(204, "File integrity verified")

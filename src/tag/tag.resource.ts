@@ -44,19 +44,19 @@ export class TagResource
     return this.crud.create();
   }
 
-  @rest.action("GET").detailed()
+  @rest.action("GET", ":id")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   async retrieve(): Promise<ResponseReturnType> {
     return this.crud.retrieve();
   }
 
-  @rest.action("PATCH").detailed()
+  @rest.action("PATCH", ":id")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   async update(): Promise<ResponseReturnType> {
     return this.crud.update();
   }
 
-  @rest.action("DELETE").detailed()
+  @rest.action("DELETE", ":id")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   async delete(): Promise<ResponseReturnType> {
     return this.crud.delete();

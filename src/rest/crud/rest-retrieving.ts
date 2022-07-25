@@ -23,6 +23,8 @@ export class RestFieldBasedRetriever implements RestEntityRetriever {
   processQuery<Entity>(query: Query<Entity>): Query<Entity> {
     const lookupName = this.context.getResourceMeta().lookup;
     const valueRaw = this.request.getPathParams()[lookupName];
+    if (!valueRaw)
+      throw new Error("Path parameter missing for entity retrieving");
     const entitySchema = this.context.getEntitySchema();
     const fieldName = this.getFieldName();
     const fieldSchema = entitySchema.getProperty(fieldName);

@@ -86,9 +86,7 @@ export class RestResourceInstaller {
     resourcePath: string,
     actionMeta: RestActionMetaValidated,
   ): string {
-    const resourceMeta = actionMeta.resource.validate();
     let path = resourcePath;
-    if (actionMeta.detailed) path = join(path, `:${resourceMeta.lookup}`);
     if (actionMeta.path) path = join(path, actionMeta.path);
     return path;
   }

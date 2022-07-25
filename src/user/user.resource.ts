@@ -58,20 +58,20 @@ export class UserResource
     return this.crud.list();
   }
 
-  @rest.action("GET").detailed()
+  @rest.action("GET", ":id")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   async retrieve(): Promise<ResponseReturnType> {
     return this.crud.retrieve();
   }
 
-  @rest.action("PATCH").detailed()
+  @rest.action("PATCH", ":id")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   async update(id: User["id"]): Promise<ResponseReturnType> {
     if (id !== "me") throw new HttpAccessDeniedError();
     return this.crud.update();
   }
 
-  @rest.action("PUT").detailed().path("verification")
+  @rest.action("PUT", ":id/verification")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   @http
     .response(204, "Verification requested")
@@ -86,7 +86,7 @@ export class UserResource
     return new NoContentResponse();
   }
 
-  @rest.action("GET").detailed().path("verification")
+  @rest.action("GET", ":id/verification")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   @http
     .response(204, "Pending verification exists")
@@ -98,7 +98,7 @@ export class UserResource
     return new NoContentResponse();
   }
 
-  @rest.action("PUT").detailed().path("verification/confirmation")
+  @rest.action("PUT", ":id/verification/confirmation")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   @http
     .response(204, "Verified")

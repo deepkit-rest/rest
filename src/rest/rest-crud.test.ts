@@ -387,7 +387,7 @@ describe("REST CRUD", () => {
     describe("Basic", () => {
       @rest.resource(MyEntity, "api").lookup("id")
       class TestingResource extends MyResource {
-        @rest.action("GET").detailed()
+        @rest.action("GET", ":id")
         retrieve() {
           return this.crud.retrieve();
         }
@@ -408,7 +408,7 @@ describe("REST CRUD", () => {
           implements RestRetrievingCustomizations
         {
           readonly retriever = RestFieldBasedRetriever;
-          @rest.action("GET").detailed()
+          @rest.action("GET", ":id")
           retrieve() {
             return this.crud.retrieve();
           }
@@ -420,13 +420,13 @@ describe("REST CRUD", () => {
       });
 
       test("primary key as target field", async () => {
-        @rest.resource(MyEntity, "api").lookup("pk")
+        @rest.resource(MyEntity, "api").lookup("id")
         class TestingResource
           extends MyResource
           implements RestRetrievingCustomizations
         {
           readonly retriever = RestFieldBasedRetriever;
-          @rest.action("GET").detailed()
+          @rest.action("GET", ":id")
           retrieve() {
             return this.crud.retrieve();
           }
@@ -447,7 +447,7 @@ describe("REST CRUD", () => {
         {
           readonly retriever = RestFieldBasedRetriever;
           readonly retrievesOn = "name";
-          @rest.action("GET").detailed()
+          @rest.action("GET", ":id")
           retrieve() {
             return this.crud.retrieve();
           }
@@ -465,7 +465,7 @@ describe("REST CRUD", () => {
           implements RestRetrievingCustomizations
         {
           readonly retriever = RestFieldBasedRetriever;
-          @rest.action("GET").detailed()
+          @rest.action("GET", ":id")
           retrieve() {
             return this.crud.retrieve();
           }
@@ -484,7 +484,7 @@ describe("REST CRUD", () => {
         implements RestRetrievingCustomizations
       {
         readonly retriever = TestingRetriever;
-        @rest.action("GET").detailed()
+        @rest.action("GET", ":id")
         retrieve() {
           return this.crud.retrieve();
         }
@@ -515,7 +515,7 @@ describe("REST CRUD", () => {
         id: number & AutoIncrement & PrimaryKey = 0;
         name!: string & MaxLength<10> & InUpdate;
       }
-      @rest.resource(TestingEntity, "api")
+      @rest.resource(TestingEntity, "api").lookup("id")
       class TestingResource implements RestResource<TestingEntity> {
         constructor(
           private crud: RestCrudKernel<TestingEntity>,
@@ -527,7 +527,7 @@ describe("REST CRUD", () => {
         getQuery(): Query<TestingEntity> {
           return this.database.query(TestingEntity);
         }
-        @rest.action("PATCH").detailed()
+        @rest.action("PATCH", ":id")
         update() {
           return this.crud.update();
         }
@@ -574,9 +574,9 @@ describe("REST CRUD", () => {
 
   describe("Delete", () => {
     test("response", async () => {
-      @rest.resource(MyEntity, "api")
+      @rest.resource(MyEntity, "api").lookup("id")
       class TestingResource extends MyResource {
-        @rest.action("DELETE").detailed()
+        @rest.action("DELETE", ":id")
         delete() {
           return this.crud.delete();
         }

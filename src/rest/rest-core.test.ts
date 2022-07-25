@@ -62,34 +62,24 @@ describe("REST Core", () => {
   }
 
   describe("Routing", () => {
-    test("inferred resource name from entity collection name", async () => {
-      @rest.resource(User).lookup("id")
+    test("basic", async () => {
+      @rest.resource(User, "api")
       class TestingResource extends UserRestResource {
         @rest.action("POST")
         route1() {}
-        @rest.action("GET").detailed()
+        @rest.action("GET", "path")
         route2() {}
-        @rest.action("DELETE").path("suffix")
-        route3() {}
-        @rest.action("PATCH").detailed().path("suffix")
-        route4() {}
       }
       await setup({ prefix: "prefix", versioning: false }, [TestingResource]);
       const routes = facade.app.get(HttpRouter).getRoutes();
       expect(routes).toMatchObject<Partial<RouteConfig>[]>([
-        { baseUrl: "", path: "prefix/users", httpMethods: ["POST"] },
-        { baseUrl: "", path: "prefix/users/:id", httpMethods: ["GET"] },
-        { baseUrl: "", path: "prefix/users/suffix", httpMethods: ["DELETE"] },
-        {
-          baseUrl: "",
-          path: "prefix/users/:id/suffix",
-          httpMethods: ["PATCH"],
-        },
+        { baseUrl: "", path: "prefix/api", httpMethods: ["POST"] },
+        { baseUrl: "", path: "prefix/api/path", httpMethods: ["GET"] },
       ]);
     });
 
-    test("explicitly specified resource name", async () => {
-      @rest.resource(User, "name").lookup("id")
+    test("inferred resource path", async () => {
+      @rest.resource(User)
       class TestingResource extends UserRestResource {
         @rest.action("GET")
         route1() {}
@@ -97,17 +87,17 @@ describe("REST Core", () => {
       await setup({ prefix: "prefix", versioning: false }, [TestingResource]);
       const routes = facade.app.get(HttpRouter).getRoutes();
       expect(routes).toMatchObject<Partial<RouteConfig>[]>([
-        { baseUrl: "", path: "prefix/name", httpMethods: ["GET"] },
+        { baseUrl: "", path: "prefix/users", httpMethods: ["GET"] },
       ]);
     });
 
     test("versioning", async () => {
-      @rest.resource(User, "name").lookup("id").version(1)
+      @rest.resource(User, "api").version(1)
       class TestingResourceV1 extends UserRestResource {
         @rest.action("GET")
         route1() {}
       }
-      @rest.resource(User, "name").lookup("id").version(2)
+      @rest.resource(User, "api").version(2)
       class TestingResourceV2 extends UserRestResource {
         @rest.action("POST")
         route1() {}
@@ -118,17 +108,17 @@ describe("REST Core", () => {
       ]);
       const routes = facade.app.get(HttpRouter).getRoutes();
       expect(routes).toMatchObject<Partial<RouteConfig>[]>([
-        { baseUrl: "", path: "prefix/v1/name", httpMethods: ["GET"] },
-        { baseUrl: "", path: "prefix/v2/name", httpMethods: ["POST"] },
+        { baseUrl: "", path: "prefix/v1/api", httpMethods: ["GET"] },
+        { baseUrl: "", path: "prefix/v2/api", httpMethods: ["POST"] },
       ]);
     });
 
     test("@http", async () => {
-      @rest.resource(User)
+      @rest.resource(User, "api")
       class MyResource extends UserRestResource {
         @http.GET("http")
         action1() {}
-        @rest.action("POST")
+        @rest.action("POST", "rest")
         @http.group("test")
         action2() {}
       }
@@ -136,18 +126,23 @@ describe("REST Core", () => {
       const routes = facade.app.get(HttpRouter).getRoutes();
       expect(routes).toHaveLength(2);
       expect(routes).toMatchObject<Partial<RouteConfig>[]>([
-        { baseUrl: "", path: "prefix/users/http", httpMethods: ["GET"] },
-        { baseUrl: "", path: "prefix/users", httpMethods: ["POST"] },
+        { baseUrl: "", path: "prefix/api/http", httpMethods: ["GET"] },
+        {
+          baseUrl: "",
+          path: "prefix/api/rest",
+          httpMethods: ["POST"],
+          groups: ["test"],
+        },
       ]);
     });
   });
 
   test("action context", async () => {
     let assertion!: () => void;
-    @rest.resource(User).lookup("id")
+    @rest.resource(User, "api")
     class TestingResource extends UserRestResource {
       private context!: Inject<RestActionContext>;
-      @rest.action("GET").detailed()
+      @rest.action("GET")
       retrieve(context: RestActionContext) {
         assertion = () => {
           expect(context).toBe(this.context);
@@ -157,15 +152,13 @@ describe("REST Core", () => {
     }
     await setup({ prefix: "prefix", versioning: false }, [TestingResource]);
     await database.persist(new User());
-    const response = await requester.request(
-      HttpRequest.GET("/prefix/users/1"),
-    );
+    const response = await requester.request(HttpRequest.GET("/prefix/api"));
     expect(response.statusCode).toBe(200);
     assertion();
   });
 
   test("http scope injection", async () => {
-    @rest.resource(User)
+    @rest.resource(User, "api")
     class MyResource extends UserRestResource {
       constructor(private dep: Dep, database: Database) {
         super(database);
@@ -181,6 +174,6 @@ describe("REST Core", () => {
       [{ provide: Dep, scope: "http" }],
     );
     await expect(promise).resolves.toBeUndefined();
-    await requester.request(HttpRequest.GET("/prefix/users"));
+    await requester.request(HttpRequest.GET("/prefix/api"));
   });
 });

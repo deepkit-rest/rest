@@ -41,7 +41,6 @@ export interface RestResourceMetaValidated<Entity = unknown>
 export class RestActionMeta extends RestMeta<RestActionMetaValidated> {
   resource?: RestResourceMeta;
   name?: string;
-  detailed = false;
   method?: HttpMethod;
   path?: string;
 
