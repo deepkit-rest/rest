@@ -53,26 +53,26 @@ export class UserResource
   }
 
   @rest.action("GET")
-  @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
+  @http.serialization({ groupsExclude: ["internal"] }).group("auth-required")
   async list(): Promise<ResponseReturnType> {
     return this.crud.list();
   }
 
   @rest.action("GET", ":pk")
-  @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
+  @http.serialization({ groupsExclude: ["internal"] }).group("auth-required")
   async retrieve(): Promise<ResponseReturnType> {
     return this.crud.retrieve();
   }
 
   @rest.action("PATCH", ":pk")
-  @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
+  @http.serialization({ groupsExclude: ["internal"] }).group("auth-required")
   async update(pk: User["id"]): Promise<ResponseReturnType> {
     if (pk !== "me") throw new HttpAccessDeniedError();
     return this.crud.update();
   }
 
   @rest.action("PUT", ":pk/verification")
-  @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
+  @http.serialization({ groupsExclude: ["internal"] }).group("auth-required")
   @http
     .response(204, "Verification requested")
     .response(403, "Duplicate verification request")
@@ -87,7 +87,7 @@ export class UserResource
   }
 
   @rest.action("GET", ":pk/verification")
-  @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
+  @http.serialization({ groupsExclude: ["internal"] }).group("auth-required")
   @http
     .response(204, "Pending verification exists")
     .response(404, "No pending verification")
@@ -99,7 +99,7 @@ export class UserResource
   }
 
   @rest.action("PUT", ":pk/verification/confirmation")
-  @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
+  @http.serialization({ groupsExclude: ["internal"] }).group("auth-required")
   @http
     .response(204, "Verified")
     .response(400, "Code not match")

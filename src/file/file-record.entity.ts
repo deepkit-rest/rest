@@ -26,7 +26,7 @@ export class FileRecord extends AppEntity<
   owner!: User & Reference & Filterable & Orderable;
   name!: string & Filterable & Orderable & InCreation & InUpdate;
   path!: string & Filterable & Orderable & InCreation & InUpdate;
-  tags: Tag[] & BackRefViaPivot & Group<"hidden"> = [];
+  tags: Tag[] & BackRefViaPivot & Group<"internal"> = [];
   contentKey?: string = undefined;
   contentIntegrity?: string = undefined;
   contentSize?: integer & Positive & Filterable & Orderable = undefined;

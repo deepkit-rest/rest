@@ -33,31 +33,31 @@ export class TagResource
   }
 
   @rest.action("GET")
-  @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
+  @http.serialization({ groupsExclude: ["internal"] }).group("auth-required")
   async list(): Promise<ResponseReturnType> {
     return this.crud.list();
   }
 
   @rest.action("POST")
-  @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
+  @http.serialization({ groupsExclude: ["internal"] }).group("auth-required")
   async create(): Promise<ResponseReturnType> {
     return this.crud.create();
   }
 
   @rest.action("GET", ":pk")
-  @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
+  @http.serialization({ groupsExclude: ["internal"] }).group("auth-required")
   async retrieve(): Promise<ResponseReturnType> {
     return this.crud.retrieve();
   }
 
   @rest.action("PATCH", ":pk")
-  @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
+  @http.serialization({ groupsExclude: ["internal"] }).group("auth-required")
   async update(): Promise<ResponseReturnType> {
     return this.crud.update();
   }
 
   @rest.action("DELETE", ":pk")
-  @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
+  @http.serialization({ groupsExclude: ["internal"] }).group("auth-required")
   async delete(): Promise<ResponseReturnType> {
     return this.crud.delete();
   }

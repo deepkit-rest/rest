@@ -14,5 +14,5 @@ type BackRefViaPivot = BackReference<{ via: typeof FileRecordToTag }>;
 export class Tag extends AppEntity<Tag, "owner" | "name"> {
   owner!: User & Reference & Filterable & Orderable;
   name!: string & Filterable & Orderable & InCreation & InUpdate;
-  files: FileRecord[] & BackRefViaPivot & Group<"hidden"> = [];
+  files: FileRecord[] & BackRefViaPivot & Group<"internal"> = [];
 }

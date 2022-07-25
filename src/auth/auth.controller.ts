@@ -17,7 +17,7 @@ export class AuthController {
     private tokenService: AuthTokenService,
   ) {}
 
-  @http.POST("login").serialization({ groupsExclude: ["hidden"] })
+  @http.POST("login").serialization({ groupsExclude: ["internal"] })
   async login(payload: HttpBody<AuthLoginPayload>): Promise<AuthResult> {
     const user = await this.db
       .query(User)
@@ -31,7 +31,7 @@ export class AuthController {
     return { user, refreshToken, accessToken };
   }
 
-  @http.POST("register").serialization({ groupsExclude: ["hidden"] })
+  @http.POST("register").serialization({ groupsExclude: ["internal"] })
   async register(payload: HttpBody<AuthRegisterPayload>): Promise<AuthResult> {
     const user = new User(payload);
     this.db.add(user);
@@ -40,7 +40,7 @@ export class AuthController {
     return { user, refreshToken, accessToken };
   }
 
-  @http.POST("refresh").serialization({ groupsExclude: ["hidden"] })
+  @http.POST("refresh").serialization({ groupsExclude: ["internal"] })
   async refresh(payload: HttpBody<AuthRefreshPayload>): Promise<string> {
     return this.tokenService.signAccess(payload.refreshToken).catch(() => {
       throw new HttpBadRequestError();
@@ -49,7 +49,7 @@ export class AuthController {
 
   @http
     .POST("logout")
-    .serialization({ groupsExclude: ["hidden"] })
+    .serialization({ groupsExclude: ["internal"] })
     .group("auth-required")
   // TODO: implement token revoking
   async logout(): Promise<void> {

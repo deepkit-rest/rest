@@ -22,8 +22,8 @@ const HASH_LENGTH = 60;
 export class User extends AppEntity<User, "name" | "email" | "password"> {
   name!: string & MinLength<1> & MaxLength<20> & Filterable & Orderable & InCreation & InUpdate;
   email!: Email & Unique & Filterable & Orderable & InCreation & InUpdate;
-  password!: string & MinLength<6> & MaxLength<typeof HASH_LENGTH> & InCreation & InUpdate & Group<"hidden">;
-  files: FileRecord[] & BackReference & Group<"hidden"> = [];
+  password!: string & MinLength<6> & MaxLength<typeof HASH_LENGTH> & InCreation & InUpdate & Group<"internal">;
+  files: FileRecord[] & BackReference & Group<"internal"> = [];
   verifiedAt?: Date = undefined;
 
   async hashPassword(): Promise<void> {
