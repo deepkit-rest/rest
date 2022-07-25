@@ -23,7 +23,6 @@ export class RestResourceMeta<
   path?: string;
   entityType?: ClassType<Entity>;
   version?: number;
-  lookup: string = "pk";
   actions: Record<string, RestActionMeta> = {};
 
   protected validateInternal(): void {

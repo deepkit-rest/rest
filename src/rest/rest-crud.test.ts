@@ -385,9 +385,9 @@ describe("REST CRUD", () => {
 
   describe("Retrieve", () => {
     describe("Basic", () => {
-      @rest.resource(MyEntity, "api").lookup("id")
+      @rest.resource(MyEntity, "api")
       class TestingResource extends MyResource {
-        @rest.action("GET", ":id")
+        @rest.action("GET", ":pk")
         retrieve() {
           return this.crud.retrieve();
         }
@@ -401,14 +401,14 @@ describe("REST CRUD", () => {
     });
 
     describe("RestFieldBasedRetriever", () => {
-      test("lookup name as target field", async () => {
-        @rest.resource(MyEntity, "api").lookup("id")
+      test("basic", async () => {
+        @rest.resource(MyEntity, "api")
         class TestingResource
           extends MyResource
           implements RestRetrievingCustomizations
         {
           readonly retriever = RestFieldBasedRetriever;
-          @rest.action("GET", ":id")
+          @rest.action("GET", ":pk")
           retrieve() {
             return this.crud.retrieve();
           }
@@ -419,26 +419,8 @@ describe("REST CRUD", () => {
         expect(response.json).toMatchObject({ id: 1 });
       });
 
-      test("primary key as target field", async () => {
-        @rest.resource(MyEntity, "api").lookup("id")
-        class TestingResource
-          extends MyResource
-          implements RestRetrievingCustomizations
-        {
-          readonly retriever = RestFieldBasedRetriever;
-          @rest.action("GET", ":id")
-          retrieve() {
-            return this.crud.retrieve();
-          }
-        }
-        await prepare(TestingResource, [MyEntity]);
-        await database.persist(new MyEntity());
-        const response = await requester.request(HttpRequest.GET("/api/1"));
-        expect(response.json).toMatchObject({ id: 1 });
-      });
-
-      test("custom field as target field", async () => {
-        @rest.resource(MyEntity, "api").lookup("id")
+      test("customized: simple form", async () => {
+        @rest.resource(MyEntity, "api")
         class TestingResource
           extends MyResource
           implements
@@ -446,8 +428,29 @@ describe("REST CRUD", () => {
             RestFieldBasedRetrieverCustomizations<MyEntity>
         {
           readonly retriever = RestFieldBasedRetriever;
-          readonly retrievesOn = "name";
+          readonly retrievesOn = "id";
           @rest.action("GET", ":id")
+          retrieve() {
+            return this.crud.retrieve();
+          }
+        }
+        await prepare(TestingResource, [MyEntity]);
+        await database.persist(new MyEntity());
+        const response = await requester.request(HttpRequest.GET("/api/1"));
+        expect(response.json).toMatchObject({ id: 1 });
+      });
+
+      test("customized: long form", async () => {
+        @rest.resource(MyEntity, "api")
+        class TestingResource
+          extends MyResource
+          implements
+            RestRetrievingCustomizations,
+            RestFieldBasedRetrieverCustomizations<MyEntity>
+        {
+          readonly retriever = RestFieldBasedRetriever;
+          readonly retrievesOn = "param->name";
+          @rest.action("GET", ":param")
           retrieve() {
             return this.crud.retrieve();
           }
@@ -458,27 +461,27 @@ describe("REST CRUD", () => {
         expect(response.json).toMatchObject({ id: 1 });
       });
 
-      test("invalid lookup name and no custom field specified", async () => {
-        @rest.resource(MyEntity, "api").lookup("invalid")
+      test("missing path param", async () => {
+        @rest.resource(MyEntity, "api")
         class TestingResource
           extends MyResource
           implements RestRetrievingCustomizations
         {
           readonly retriever = RestFieldBasedRetriever;
-          @rest.action("GET", ":id")
+          @rest.action("GET", ":missing")
           retrieve() {
             return this.crud.retrieve();
           }
         }
         await prepare(TestingResource, [MyEntity]);
-        await database.persist(new MyEntity("name"));
-        const response = await requester.request(HttpRequest.GET("/api/name"));
+        await database.persist(new MyEntity());
+        const response = await requester.request(HttpRequest.GET("/api/1"));
         expect(response.statusCode).toBe(500);
       });
     });
 
     describe("Custom Lookup", () => {
-      @rest.resource(MyEntity, "api").lookup("test")
+      @rest.resource(MyEntity, "api")
       class TestingResource
         extends MyResource
         implements RestRetrievingCustomizations
@@ -515,7 +518,7 @@ describe("REST CRUD", () => {
         id: number & AutoIncrement & PrimaryKey = 0;
         name!: string & MaxLength<10> & InUpdate;
       }
-      @rest.resource(TestingEntity, "api").lookup("id")
+      @rest.resource(TestingEntity, "api")
       class TestingResource implements RestResource<TestingEntity> {
         constructor(
           private crud: RestCrudKernel<TestingEntity>,
@@ -527,7 +530,7 @@ describe("REST CRUD", () => {
         getQuery(): Query<TestingEntity> {
           return this.database.query(TestingEntity);
         }
-        @rest.action("PATCH", ":id")
+        @rest.action("PATCH", ":pk")
         update() {
           return this.crud.update();
         }
@@ -574,9 +577,9 @@ describe("REST CRUD", () => {
 
   describe("Delete", () => {
     test("response", async () => {
-      @rest.resource(MyEntity, "api").lookup("id")
+      @rest.resource(MyEntity, "api")
       class TestingResource extends MyResource {
-        @rest.action("DELETE", ":id")
+        @rest.action("DELETE", ":pk")
         delete() {
           return this.crud.delete();
         }

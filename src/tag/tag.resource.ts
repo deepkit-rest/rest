@@ -11,7 +11,7 @@ import { User } from "src/user/user.entity";
 
 import { Tag } from "./tag.entity";
 
-@rest.resource(Tag).lookup("id")
+@rest.resource(Tag)
 export class TagResource
   extends AppResource<Tag>
   implements RestSerializationCustomizations<Tag>
@@ -44,19 +44,19 @@ export class TagResource
     return this.crud.create();
   }
 
-  @rest.action("GET", ":id")
+  @rest.action("GET", ":pk")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   async retrieve(): Promise<ResponseReturnType> {
     return this.crud.retrieve();
   }
 
-  @rest.action("PATCH", ":id")
+  @rest.action("PATCH", ":pk")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   async update(): Promise<ResponseReturnType> {
     return this.crud.update();
   }
 
-  @rest.action("DELETE", ":id")
+  @rest.action("DELETE", ":pk")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   async delete(): Promise<ResponseReturnType> {
     return this.crud.delete();

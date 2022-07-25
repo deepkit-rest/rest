@@ -124,13 +124,14 @@ export class RestCrudActionContext<Entity> extends RestActionContext {
     });
   }
 
-  override getResource(): RestResource<Entity> &
+  override getResource<Customizations>(): RestResource<Entity> &
     RestRetrievingCustomizations &
     RestPaginationCustomizations &
     RestFilteringCustomizations &
     RestSortingCustomizations &
-    RestSerializationCustomizations<Entity> {
-    return super.getResource();
+    RestSerializationCustomizations<Entity> &
+    Customizations {
+    return super.getResource() as any;
   }
 
   getRetriever(): RestEntityRetriever {

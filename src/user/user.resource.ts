@@ -27,7 +27,7 @@ import { RestSerializationCustomizations } from "src/rest/crud/rest-serializatio
 import { User } from "./user.entity";
 import { UserVerificationService } from "./user-verification.service";
 
-@rest.resource(User).lookup("id")
+@rest.resource(User)
 export class UserResource
   extends AppResource<User>
   implements
@@ -58,26 +58,26 @@ export class UserResource
     return this.crud.list();
   }
 
-  @rest.action("GET", ":id")
+  @rest.action("GET", ":pk")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   async retrieve(): Promise<ResponseReturnType> {
     return this.crud.retrieve();
   }
 
-  @rest.action("PATCH", ":id")
+  @rest.action("PATCH", ":pk")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
-  async update(id: User["id"]): Promise<ResponseReturnType> {
-    if (id !== "me") throw new HttpAccessDeniedError();
+  async update(pk: User["id"]): Promise<ResponseReturnType> {
+    if (pk !== "me") throw new HttpAccessDeniedError();
     return this.crud.update();
   }
 
-  @rest.action("PUT", ":id/verification")
+  @rest.action("PUT", ":pk/verification")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   @http
     .response(204, "Verification requested")
     .response(403, "Duplicate verification request")
-  async requestVerification(id: User["id"]): Promise<NoContentResponse> {
-    if (id !== "me") throw new HttpAccessDeniedError();
+  async requestVerification(pk: User["id"]): Promise<NoContentResponse> {
+    if (pk !== "me") throw new HttpAccessDeniedError();
     try {
       this.verificationService.request(this.requestContext.user.id);
     } catch (error) {
@@ -86,29 +86,29 @@ export class UserResource
     return new NoContentResponse();
   }
 
-  @rest.action("GET", ":id/verification")
+  @rest.action("GET", ":pk/verification")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   @http
     .response(204, "Pending verification exists")
     .response(404, "No pending verification")
-  async inspectVerification(id: User["id"]): Promise<NoContentResponse> {
-    if (id !== "me") throw new HttpAccessDeniedError();
+  async inspectVerification(pk: User["id"]): Promise<NoContentResponse> {
+    if (pk !== "me") throw new HttpAccessDeniedError();
     if (!this.verificationService.exists(this.requestContext.user.id))
       throw new HttpNotFoundError("No pending verification");
     return new NoContentResponse();
   }
 
-  @rest.action("PUT", ":id/verification/confirmation")
+  @rest.action("PUT", ":pk/verification/confirmation")
   @http.serialization({ groupsExclude: ["hidden"] }).group("auth-required")
   @http
     .response(204, "Verified")
     .response(400, "Code not match")
     .response(404, "No pending verification")
   async confirmVerification(
-    id: User["id"],
+    pk: User["id"],
     { code }: HttpBody<{ code: string }>, //
   ): Promise<NoContentResponse> {
-    if (id !== "me") throw new HttpAccessDeniedError();
+    if (pk !== "me") throw new HttpAccessDeniedError();
     if (!this.verificationService.exists(this.requestContext.user.id))
       throw new HttpNotFoundError("No pending verification");
     const user = await this.crudContext.getEntity();
