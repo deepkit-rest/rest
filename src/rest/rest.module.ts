@@ -17,7 +17,7 @@ import {
   RestOffsetLimitPaginator,
   RestPageNumberPaginator,
 } from "./crud/rest-pagination";
-import { RestFieldBasedRetriever } from "./crud/rest-retrieving";
+import { RestSingleFieldRetriever } from "./crud/rest-retrieving";
 import { RestGenericSerializer } from "./crud/rest-serialization";
 import { RestGenericSorter } from "./crud/rest-sorting";
 import { RestCreationSchemaFactory } from "./crud-models/rest-creation-schema";
@@ -41,7 +41,7 @@ export class RestModule extends createModule(
       { provide: RestNoopPaginator, scope: "http" },
       { provide: RestOffsetLimitPaginator, scope: "http" },
       { provide: RestPageNumberPaginator, scope: "http" },
-      { provide: RestFieldBasedRetriever, scope: "http" },
+      { provide: RestSingleFieldRetriever, scope: "http" },
       { provide: RestGenericFilter, scope: "http" },
       { provide: RestGenericSorter, scope: "http" },
       { provide: RestGenericSerializer, scope: "http" },

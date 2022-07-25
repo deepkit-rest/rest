@@ -12,7 +12,7 @@ export interface RestRetrievingCustomizations {
 
 export interface RestEntityRetriever extends RestQueryProcessor {}
 
-export class RestFieldBasedRetriever implements RestEntityRetriever {
+export class RestSingleFieldRetriever implements RestEntityRetriever {
   constructor(
     protected request: HttpRequestParsed,
     protected context: RestCrudActionContext<never>,
@@ -30,7 +30,9 @@ export class RestFieldBasedRetriever implements RestEntityRetriever {
 
   getParamNameAndFieldName<Entity>(): [string, FieldName<Entity>] {
     const resource =
-      this.context.getResource<RestFieldBasedRetrieverCustomizations<Entity>>();
+      this.context.getResource<
+        RestSingleFieldRetrieverCustomizations<Entity>
+      >();
     const entitySchema = this.context.getEntitySchema();
     if (!resource.retrievesOn)
       return ["pk", entitySchema.getPrimary().getName() as FieldName<Entity>];
@@ -48,6 +50,6 @@ export class RestFieldBasedRetriever implements RestEntityRetriever {
   }
 }
 
-export interface RestFieldBasedRetrieverCustomizations<Entity> {
+export interface RestSingleFieldRetrieverCustomizations<Entity> {
   retrievesOn?: FieldName<Entity> | `${string}->${FieldName<Entity>}`;
 }

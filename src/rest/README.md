@@ -353,16 +353,16 @@ The behavior of Retrieve Action completely depends on the Entity Retriever in us
 
 ```ts
 class BookResource implements RestResource<Book>, RestRetrievingCustomizations {
-  retriever = RestFieldBasedRetriever;
+  retriever = RestSingleFieldRetriever;
   // ...
 }
 ```
 
-### RestFieldBasedRetriever
+### RestSingleFieldRetriever
 
-`RestFieldBasedRetriever` is the default Entity Retriever, which retrieves the entity based on the `:pk` path parameter and the entity's primary key by default.
+`RestSingleFieldRetriever` is the default Entity Retriever, which retrieves the entity based on the `:pk` path parameter and the entity's primary key by default.
 
-Its behavior can be customized by implementing the `retrievesOn` property of the `RestFieldBasedRetrieverCustomizations` interface:
+Its behavior can be customized by implementing the `retrievesOn` property of the `RestSingleFieldRetrieverCustomizations` interface:
 
 The `retrievesOn` property have a simple form and a long form:
 
@@ -372,9 +372,9 @@ class BookResource
   implements
     RestResource<Book>,
     RestRetrievingCustomizations,
-    RestFieldBasedRetrieverCustomizations<Book>
+    RestSingleFieldRetrieverCustomizations<Book>
 {
-  retriever = RestFieldBasedRetriever;
+  retriever = RestSingleFieldRetriever;
   retrievesOn = "id"; // simple form
   retrievesOn = "identity->username"; // long form
   // ...

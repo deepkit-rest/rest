@@ -16,8 +16,8 @@ import {
 } from "./rest-pagination";
 import {
   RestEntityRetriever,
-  RestFieldBasedRetriever,
   RestRetrievingCustomizations,
+  RestSingleFieldRetriever,
 } from "./rest-retrieving";
 import {
   RestEntitySerializer,
@@ -136,7 +136,7 @@ export class RestCrudActionContext<Entity> extends RestActionContext {
 
   getRetriever(): RestEntityRetriever {
     const resource = this.getResource();
-    return this.resolveDep(resource.retriever ?? RestFieldBasedRetriever);
+    return this.resolveDep(resource.retriever ?? RestSingleFieldRetriever);
   }
 
   getPaginator(): RestEntityPaginator {

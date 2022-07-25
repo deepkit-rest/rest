@@ -28,9 +28,9 @@ import {
   RestPaginationCustomizations,
 } from "./crud/rest-pagination";
 import {
-  RestFieldBasedRetriever,
-  RestFieldBasedRetrieverCustomizations,
   RestRetrievingCustomizations,
+  RestSingleFieldRetriever,
+  RestSingleFieldRetrieverCustomizations,
 } from "./crud/rest-retrieving";
 import {
   RestGenericSorter,
@@ -400,14 +400,14 @@ describe("REST CRUD", () => {
       });
     });
 
-    describe("RestFieldBasedRetriever", () => {
+    describe("RestSingleFieldRetriever", () => {
       test("basic", async () => {
         @rest.resource(MyEntity, "api")
         class TestingResource
           extends MyResource
           implements RestRetrievingCustomizations
         {
-          readonly retriever = RestFieldBasedRetriever;
+          readonly retriever = RestSingleFieldRetriever;
           @rest.action("GET", ":pk")
           retrieve() {
             return this.crud.retrieve();
@@ -425,9 +425,9 @@ describe("REST CRUD", () => {
           extends MyResource
           implements
             RestRetrievingCustomizations,
-            RestFieldBasedRetrieverCustomizations<MyEntity>
+            RestSingleFieldRetrieverCustomizations<MyEntity>
         {
-          readonly retriever = RestFieldBasedRetriever;
+          readonly retriever = RestSingleFieldRetriever;
           readonly retrievesOn = "id";
           @rest.action("GET", ":id")
           retrieve() {
@@ -446,9 +446,9 @@ describe("REST CRUD", () => {
           extends MyResource
           implements
             RestRetrievingCustomizations,
-            RestFieldBasedRetrieverCustomizations<MyEntity>
+            RestSingleFieldRetrieverCustomizations<MyEntity>
         {
-          readonly retriever = RestFieldBasedRetriever;
+          readonly retriever = RestSingleFieldRetriever;
           readonly retrievesOn = "param->name";
           @rest.action("GET", ":param")
           retrieve() {
@@ -467,7 +467,7 @@ describe("REST CRUD", () => {
           extends MyResource
           implements RestRetrievingCustomizations
         {
-          readonly retriever = RestFieldBasedRetriever;
+          readonly retriever = RestSingleFieldRetriever;
           @rest.action("GET", ":missing")
           retrieve() {
             return this.crud.retrieve();

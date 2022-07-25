@@ -19,8 +19,8 @@ import {
   RestCrudKernel,
 } from "src/rest/crud/rest-crud";
 import {
-  RestFieldBasedRetriever,
   RestRetrievingCustomizations,
+  RestSingleFieldRetriever,
 } from "src/rest/crud/rest-retrieving";
 import { RestSerializationCustomizations } from "src/rest/crud/rest-serialization";
 
@@ -119,7 +119,7 @@ export class UserResource
   }
 }
 
-export class UserRetriever extends RestFieldBasedRetriever {
+export class UserRetriever extends RestSingleFieldRetriever {
   private requestContext!: Inject<RequestContext>;
 
   protected override transformValue(
