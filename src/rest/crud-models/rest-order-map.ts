@@ -10,8 +10,6 @@ import { ReflectionClassAddPropertyOptions } from "src/common/type";
 
 import { RestEntityModelFactory } from "./rest-entity-model";
 
-// TODO: move to a better place
-
 export type Orderable = Data<"orderable", true>;
 
 export class RestOrderMapFactory extends RestEntityModelFactory {
