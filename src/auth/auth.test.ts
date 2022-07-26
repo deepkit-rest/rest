@@ -1,15 +1,17 @@
 import { App } from "@deepkit/app";
+import { createTestingApp, TestingFacade } from "@deepkit/framework";
 import { http, HttpKernel, HttpModule, HttpRequest } from "@deepkit/http";
+import { Database } from "@deepkit/orm";
 import { CoreModule } from "src/core/core.module";
 import { RequestContext } from "src/core/request-context";
 import { DatabaseExtensionModule } from "src/database-extension/database-extension.module";
-import { DatabaseInitializer } from "src/database-extension/database-initializer.service";
 import { JwtModule } from "src/jwt/jwt.module";
 import { User } from "src/user/user.entity";
 
-import { AuthController } from "./auth.controller";
 import { AuthGuard } from "./auth.guard";
 import { AuthListener } from "./auth.listener";
+import { AuthModule } from "./auth.module";
+import { AuthCaptchaService } from "./auth-captcha.service";
 import { AuthTokenService } from "./auth-token.service";
 
 describe("Auth", () => {
@@ -78,31 +80,52 @@ describe("Auth", () => {
     });
   });
 
-  describe("Controller", () => {
-    describe("register", () => {
-      it("should work", async () => {
-        app = new App({
-          imports: [
-            new HttpModule(),
-            new CoreModule(),
-            new DatabaseExtensionModule(),
-            new JwtModule({ secret: "secret" }),
-          ],
-          controllers: [AuthController],
-          providers: [AuthTokenService],
+  describe("API", () => {
+    let facade: TestingFacade<App<any>>;
+    let database: Database;
+
+    beforeEach(async () => {
+      facade = createTestingApp({
+        imports: [
+          new CoreModule(),
+          new DatabaseExtensionModule(),
+          new JwtModule({ secret: "secret" }),
+          new AuthModule(),
+        ],
+      });
+      database = facade.app.get(Database);
+      await database.migrate();
+      await facade.startServer();
+    });
+
+    describe("POST /auth/captcha", () => {
+      test("response", async () => {
+        const response = await facade.request(
+          HttpRequest.POST("/api/auth/captcha"),
+        );
+        expect(response.statusCode).toBe(200);
+        expect(response.json).toEqual({
+          key: expect.any(String),
+          svg: expect.stringMatching(/<svg .*><\/svg>/u),
         });
+      });
+    });
 
-        const database = await app.get(DatabaseInitializer).initialize();
-        await database.migrate();
-        await database.query(User).find();
-
-        const response = await app.get(HttpKernel).request(
+    describe("POST /auth/register", () => {
+      test("response", async () => {
+        const spy = jest
+          .spyOn(AuthCaptchaService.prototype, "verify")
+          .mockReturnValue();
+        const response = await facade.request(
           HttpRequest.POST("/api/auth/register").json({
             name: "name",
             email: "email@email.com",
             password: "password",
+            captchaKey: "key",
+            captchaResult: "result",
           }),
         );
+        expect(spy).toHaveBeenCalled();
         expect(response.statusCode).toBe(200);
         const user = await database.query(User).findOne();
         const { id, name, email } = user;

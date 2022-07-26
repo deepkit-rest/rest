@@ -8,6 +8,7 @@ import { EmailEngineModule } from "./email-engine/email-engine.module";
 import { FileModule } from "./file/file.module";
 import { FileEngineModule } from "./file-engine/file-engine.module";
 import { HttpExtensionModule } from "./http-extension/http-extension.module";
+import { JwtModule } from "./jwt/jwt.module";
 import { RestModule } from "./rest/rest.module";
 import { UserModule } from "./user/user.module";
 
@@ -20,6 +21,7 @@ new App({
     new RestModule(),
     new FileEngineModule(),
     new EmailEngineModule(),
+    new JwtModule(),
     new AuthModule(),
     new UserModule(),
     new FileModule(),
