@@ -11,6 +11,7 @@ import { ReflectionProperty } from "@deepkit/type";
 import { RequestContext } from "src/core/request-context";
 import { AppEntitySerializer, AppResource } from "src/core/rest";
 import { InjectDatabaseSession } from "src/database-extension/database-tokens";
+import { EmailEngine } from "src/email-engine/email-engine.interface";
 import { NoContentResponse } from "src/http-extension/http-common";
 import { rest } from "src/rest/core/rest-decoration";
 import {
@@ -25,7 +26,7 @@ import {
 import { RestSerializationCustomizations } from "src/rest/crud/rest-serialization";
 
 import { User } from "./user.entity";
-import { UserVerificationService } from "./user-verification.service";
+import { UserVerificationCodePool } from "./user-verification-code";
 
 @rest.resource(User)
 export class UserResource
@@ -43,7 +44,8 @@ export class UserResource
     private databaseSession: InjectDatabaseSession,
     private crud: RestCrudKernel<User>,
     private crudContext: RestCrudActionContext<User>,
-    private verificationService: UserVerificationService,
+    private mailer: EmailEngine,
+    private verificationCodePool: UserVerificationCodePool,
   ) {
     super(database);
   }
@@ -79,7 +81,15 @@ export class UserResource
   async requestVerification(pk: User["id"]): Promise<NoContentResponse> {
     if (pk !== "me") throw new HttpAccessDeniedError();
     try {
-      this.verificationService.request(this.requestContext.user.id);
+      const userId = this.requestContext.user.id;
+      const code = this.verificationCodePool.request(userId);
+      const user = await this.crudContext.getEntity();
+      await this.mailer.send({
+        subject: "Verify Your Email",
+        content: `Verification Code: ${code}`,
+        contentInHtml: `Verification Code: <b>${code}</b>`,
+        recipients: [{ address: user.email }],
+      });
     } catch (error) {
       throw new HttpAccessDeniedError("Duplicate verification request");
     }
@@ -93,8 +103,8 @@ export class UserResource
     .response(404, "No pending verification")
   async inspectVerification(pk: User["id"]): Promise<NoContentResponse> {
     if (pk !== "me") throw new HttpAccessDeniedError();
-    if (!this.verificationService.exists(this.requestContext.user.id))
-      throw new HttpNotFoundError("No pending verification");
+    const code = this.verificationCodePool.obtain(this.requestContext.user.id);
+    if (!code) throw new HttpNotFoundError("No pending verification");
     return new NoContentResponse();
   }
 
@@ -109,11 +119,12 @@ export class UserResource
     { code }: HttpBody<{ code: string }>, //
   ): Promise<NoContentResponse> {
     if (pk !== "me") throw new HttpAccessDeniedError();
-    if (!this.verificationService.exists(this.requestContext.user.id))
-      throw new HttpNotFoundError("No pending verification");
+    const userId = this.requestContext.user.id;
+    const codeExpected = this.verificationCodePool.obtain(userId);
+    if (!codeExpected) throw new HttpNotFoundError("No pending verification");
     const user = await this.crudContext.getEntity();
-    const verified = this.verificationService.confirm(user.id, code);
-    if (!verified) throw new HttpBadRequestError("Code not match");
+    if (code !== codeExpected) throw new HttpBadRequestError("Code not match");
+    this.verificationCodePool.remove(userId);
     user.verifiedAt = new Date();
     return new NoContentResponse();
   }

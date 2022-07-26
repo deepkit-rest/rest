@@ -12,7 +12,7 @@ import { RestModule } from "src/rest/rest.module";
 
 import { User } from "./user.entity";
 import { UserModule } from "./user.module";
-import { UserVerificationService } from "./user-verification.service";
+import { UserVerificationCodePool } from "./user-verification-code";
 
 describe("User", () => {
   let facade: TestingFacade<App<any>>;
@@ -158,8 +158,8 @@ describe("User", () => {
     });
 
     it("should return 403 for duplications", async () => {
-      const service = facade.app.get(UserVerificationService, UserModule);
-      service.request(user.id);
+      const pool = facade.app.get(UserVerificationCodePool, UserModule);
+      pool.request(user.id);
       const response = await requester.request(
         HttpRequest.PUT(`/users/me/verification`),
       );
@@ -169,8 +169,8 @@ describe("User", () => {
 
   describe("GET /users/me/verification", () => {
     it("should return 204 when verification exists", async () => {
-      const service = facade.app.get(UserVerificationService, UserModule);
-      service.request(user.id);
+      const pool = facade.app.get(UserVerificationCodePool, UserModule);
+      pool.request(user.id);
       const response = await requester.request(
         HttpRequest.GET(`/users/me/verification`),
       );
@@ -188,8 +188,8 @@ describe("User", () => {
   describe("PUT /users/me/verification/confirmation", () => {
     test("code matched", async () => {
       const mapSetSpy = jest.spyOn(ExpirableMap.prototype, "set");
-      const service = facade.app.get(UserVerificationService, UserModule);
-      service.request(user.id);
+      const pool = facade.app.get(UserVerificationCodePool, UserModule);
+      pool.request(user.id);
       expect(mapSetSpy).toHaveBeenCalledTimes(1);
       const code = mapSetSpy.mock.lastCall[1];
       const request = HttpRequest.PUT(`/users/me/verification/confirmation`);
@@ -200,8 +200,8 @@ describe("User", () => {
     });
 
     test("code not matched", async () => {
-      const service = facade.app.get(UserVerificationService, UserModule);
-      service.request(user.id);
+      const pool = facade.app.get(UserVerificationCodePool, UserModule);
+      pool.request(user.id);
       const response = await requester.request(
         HttpRequest.PUT(`/users/me/verification/confirmation`).json({
           code: "not-match",
