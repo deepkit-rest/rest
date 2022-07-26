@@ -143,6 +143,28 @@ describe("File", () => {
         items: [{ id: records[1].id }, { id: records[0].id }],
       });
     });
+
+    test("?path=<valid>", async () => {
+      const owner = user;
+      const dir = new FileSystemRecord({ owner, name: "dir" });
+      const file = new FileSystemRecord({ owner, name: "file", parent: dir });
+      await database.persist(dir, file);
+      const response = await requester.request(
+        HttpRequest.GET(`/files?path=/dir/file`),
+      );
+      expect(response.json).toMatchObject({
+        total: 1,
+        items: [{ id: file.id }],
+      });
+    });
+
+    test("?path=<invalid>", async () => {
+      const response = await requester.request(
+        HttpRequest.GET(`/files?path=should/not/exist`),
+      );
+      expect(response.statusCode).toBe(200);
+      expect(response.json).toEqual({ total: 0, items: [] });
+    });
   });
 
   describe("GET /files/:id", () => {

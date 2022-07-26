@@ -1,6 +1,7 @@
 import {
   http,
   HttpNotFoundError,
+  HttpQuery,
   HttpRequest,
   HttpResponse,
 } from "@deepkit/http";
@@ -23,6 +24,7 @@ import { User } from "src/user/user.entity";
 
 import { FileStreamUtils } from "./file-stream.utils";
 import { FileSystemRecord } from "./file-system-record.entity";
+import { FileSystemRecordBrowser } from "./file-system-record-browser.service";
 
 @rest.resource(FileSystemRecord, "files")
 export class FileSystemRecordResource
@@ -39,6 +41,7 @@ export class FileSystemRecordResource
     private crudContext: RestCrudActionContext<FileSystemRecord>,
     private engine: FileEngine,
     private rangeParser: HttpRangeParser,
+    private browser: FileSystemRecordBrowser,
   ) {
     super(database);
   }
@@ -52,8 +55,17 @@ export class FileSystemRecordResource
 
   @rest.action("GET")
   @http.serialization({ groupsExclude: ["internal"] }).group("auth-required")
-  async list(): Promise<ResponseReturnType> {
-    return this.crud.list();
+  async list(path?: HttpQuery<string>): Promise<ResponseReturnType> {
+    if (!path) return this.crud.list();
+    const record = await this.browser.trackPath(path, this.getQuery());
+    const records = record ? [record] : [];
+    const serializer = this.crudContext.getSerializer();
+    const paginator = this.crudContext.getPaginator();
+    const body = await paginator.buildBody(
+      async () => Promise.all(records.map((r) => serializer.serialize(r))),
+      async () => records.length,
+    );
+    return body;
   }
 
   @rest.action("POST")
