@@ -11,8 +11,12 @@ import { User } from "src/user/user.entity";
 type BackRefViaPivot = BackReference<{ via: typeof FileSystemRecordToTag }>;
 
 @entity.name("file-system-tag").collection("file-system-tags")
-export class FileSystemTag extends AppEntity<FileSystemTag, "owner" | "name"> {
+export class FileSystemTag extends AppEntity<FileSystemTag> {
   owner!: User & Reference & Filterable & Orderable;
   name!: string & Filterable & Orderable & InCreation & InUpdate;
   files: FileSystemRecord[] & BackRefViaPivot & Group<"internal"> = [];
+  constructor(input: Pick<FileSystemTag, "owner" | "name">) {
+    super();
+    this.assign(input);
+  }
 }

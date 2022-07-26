@@ -37,15 +37,18 @@ export abstract class AppResource<Entity extends AppEntity<Entity>>
 }
 
 export abstract class AppEntitySerializer<
-  E extends AppEntity<E>,
-> extends RestGenericSerializer<E> {
-  protected override createEntity(data: Partial<E>): E {
+  Entity extends AppEntity<Entity>,
+> extends RestGenericSerializer<Entity> {
+  protected override createEntity(data: Partial<Entity>): Entity {
     const entityType = this.context.getEntitySchema().getClassType();
     if (!isAppEntityType(entityType)) throw new Error("Invalid entity class");
-    return new entityType(data) as E;
+    return new entityType(data) as Entity;
   }
 
-  protected override updateEntity(entity: E, data: Partial<E>): E {
+  protected override updateEntity(
+    entity: Entity,
+    data: Partial<Entity>,
+  ): Entity {
     return entity.assign(data);
   }
 }

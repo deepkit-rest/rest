@@ -55,18 +55,18 @@ describe("File", () => {
 
   describe("POST /files", () => {
     it("should work", async () => {
-      const record = new FileSystemRecord({ owner: user, name: "a.txt" });
-      await database.persist(record);
+      const parent = new FileSystemRecord({ owner: user, name: "dir" });
+      await database.persist(parent);
       const response = await requester.request(
         HttpRequest.POST("/files").json({
           name: "test.txt",
-          parent: record.id,
+          parent: parent.id,
         }),
       );
       expect(response.json).toEqual({
         id: expect.any(String),
         owner: user.id,
-        parent: null,
+        parent: parent.id,
         name: "test.txt",
         contentSize: null,
         contentKey: null,

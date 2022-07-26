@@ -19,12 +19,17 @@ const HASH_LENGTH = 60;
 
 // prettier-ignore
 @entity.name("user").collection("users")
-export class User extends AppEntity<User, "name" | "email" | "password"> {
+export class User extends AppEntity<User> {
   name!: string & MinLength<1> & MaxLength<20> & Filterable & Orderable & InCreation & InUpdate;
   email!: Email & Unique & Filterable & Orderable & InCreation & InUpdate;
   password!: string & MinLength<6> & MaxLength<typeof HASH_LENGTH> & InCreation & InUpdate & Group<"internal">;
   files: FileSystemRecord[] & BackReference & Group<"internal"> = [];
   verifiedAt?: Date = undefined;
+
+  constructor(input: Pick<User, "name" | "email" | "password">) {
+    super()
+    this.assign(input)
+  }
 
   async hashPassword(): Promise<void> {
     const hashed = this.password.length === HASH_LENGTH;

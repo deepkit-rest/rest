@@ -18,10 +18,7 @@ import { User } from "src/user/user.entity";
 
 // prettier-ignore
 @entity.name("file-system-record").collection("file-system-records")
-export class FileSystemRecord extends AppEntity<
-  FileSystemRecord,
-  "owner" | "name" | "parent"
-> {
+export class FileSystemRecord extends AppEntity<FileSystemRecord> {
   owner!: User & Reference & Filterable & Orderable;
   parent?: FileSystemRecord & Reference & Filterable & Orderable & InCreation & InUpdate = undefined;
   children: FileSystemRecord[] & BackReference & Group<"internal"> = [];
@@ -30,6 +27,11 @@ export class FileSystemRecord extends AppEntity<
   contentKey?: string = undefined;
   contentIntegrity?: string = undefined;
   contentSize?: integer & Positive & Filterable & Orderable = undefined;
+
+  constructor(input: Pick<FileSystemRecord, "owner" | "name" | "parent">) {
+    super();
+    this.assign(input)
+  }
 
   isContentDefined(): this is FileRecordContentDefined {
     return !!this.contentKey && !!this.contentIntegrity && !!this.contentSize;
