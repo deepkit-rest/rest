@@ -1,4 +1,4 @@
-export class FileEngineConfig {
+export class FileEngineModuleConfig {
   name!: string;
   options: string = "{}";
 }

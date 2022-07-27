@@ -1,3 +1,3 @@
-export class DatabaseExtensionConfig {
+export class DatabaseExtensionModuleConfig {
   logging: boolean = false;
 }

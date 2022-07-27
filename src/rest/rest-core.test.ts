@@ -16,7 +16,7 @@ import { HttpExtensionModule } from "src/http-extension/http-extension.module";
 import { RestActionContext } from "./core/rest-action";
 import { rest } from "./core/rest-decoration";
 import { RestResource } from "./core/rest-resource";
-import { RestConfig } from "./rest.config";
+import { RestModuleConfig } from "./rest.config";
 import { RestModule } from "./rest.module";
 
 describe("REST Core", () => {
@@ -25,7 +25,7 @@ describe("REST Core", () => {
   let database: Database;
 
   async function setup(
-    config: Partial<RestConfig>,
+    config: Partial<RestModuleConfig>,
     controllers: ClassType<RestResource<any>>[],
     providers: ProviderWithScope[] = [],
   ) {

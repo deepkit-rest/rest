@@ -24,12 +24,12 @@ import { RestCreationSchemaFactory } from "./crud-models/rest-creation-schema";
 import { RestFilterMapFactory } from "./crud-models/rest-filter-map";
 import { RestOrderMapFactory } from "./crud-models/rest-order-map";
 import { RestUpdateSchemaFactory } from "./crud-models/rest-update-schema";
-import { RestConfig } from "./rest.config";
+import { RestModuleConfig } from "./rest.config";
 import { RestListener } from "./rest.listener";
 
 export class RestModule extends createModule(
   {
-    config: RestConfig,
+    config: RestModuleConfig,
     providers: [
       { provide: RestActionContext, scope: "http" },
       { provide: RestCrudKernel, scope: "http" },

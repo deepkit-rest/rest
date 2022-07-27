@@ -1,3 +1,3 @@
-export class CoreConfig {
+export class CoreModuleConfig {
   databaseUrl: string = ":memory:";
 }

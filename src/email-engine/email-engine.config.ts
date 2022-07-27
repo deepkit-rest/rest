@@ -1,4 +1,4 @@
-export class EmailEngineConfig {
+export class EmailEngineModuleConfig {
   name!: string;
   options!: string;
 }

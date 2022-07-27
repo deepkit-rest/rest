@@ -9,10 +9,10 @@ import {
   VerifyCallback,
 } from "jsonwebtoken";
 
-import { JwtConfig } from "./jwt.config";
+import { JwtModuleConfig } from "./jwt.config";
 
 export class JwtService {
-  constructor(private secret: JwtConfig["secret"]) {}
+  constructor(private secret: JwtModuleConfig["secret"]) {}
 
   async sign<Payload extends JwtPayload>(
     payload: Payload,

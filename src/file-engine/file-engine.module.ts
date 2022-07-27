@@ -1,7 +1,7 @@
 import { createModule } from "@deepkit/app";
 import { EngineManager, EngineRegistryPlain } from "src/common/engine";
 
-import { FileEngineConfig } from "./file-engine.config";
+import { FileEngineModuleConfig } from "./file-engine.config";
 import { FileEngine } from "./file-engine.interface";
 import { FileEngineListener } from "./file-engine.listener";
 import { LocalFileEngine } from "./implementations/local";
@@ -9,7 +9,7 @@ import { MemoryFileEngine } from "./implementations/memory";
 
 export class FileEngineModule extends createModule(
   {
-    config: FileEngineConfig,
+    config: FileEngineModuleConfig,
     listeners: [FileEngineListener],
   },
   "fileEngine",

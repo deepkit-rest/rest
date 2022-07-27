@@ -1,14 +1,14 @@
 import { createModule } from "@deepkit/app";
 import { EngineManager } from "src/common/engine";
 
-import { EmailEngineConfig } from "./email-engine.config";
+import { EmailEngineModuleConfig } from "./email-engine.config";
 import { EmailEngine } from "./email-engine.interface";
 import { MemoryEmailEngine } from "./implementations/memory";
 import { NodemailerEmailEngine } from "./implementations/nodemailer";
 
 export class EmailEngineModule extends createModule(
   {
-    config: EmailEngineConfig,
+    config: EmailEngineModuleConfig,
   },
   "emailEngine",
 ) {
