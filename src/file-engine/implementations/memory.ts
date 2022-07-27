@@ -7,7 +7,7 @@ import {
 } from "../file-engine.interface";
 
 export class MemoryFileEngine implements FileEngine<object> {
-  protected storage = new Map<string, Buffer>();
+  static storage = new Map<string, Buffer>();
 
   constructor(public options: object) {}
 
@@ -16,7 +16,7 @@ export class MemoryFileEngine implements FileEngine<object> {
   async store(source: Readable): Promise<string> {
     const buffer = await stream2buffer(source);
     const key = uuid.v4();
-    this.storage.set(key, buffer);
+    MemoryFileEngine.storage.set(key, buffer);
     return key;
   }
 
@@ -25,13 +25,14 @@ export class MemoryFileEngine implements FileEngine<object> {
     { start, end }: FileEngineRetrieveOptions = {},
   ): Promise<Readable> {
     if (end) end += 1;
-    const buffer = this.storage.get(key)?.slice(start, end);
+    const buffer = MemoryFileEngine.storage.get(key)?.slice(start, end);
     if (!buffer) throw new Error("File not found");
     return buffer2stream(buffer);
   }
 
   async remove(key: string): Promise<void> {
-    if (!this.storage.delete(key)) throw new Error("File not found");
+    if (!MemoryFileEngine.storage.delete(key))
+      throw new Error("File not found");
   }
 }
 

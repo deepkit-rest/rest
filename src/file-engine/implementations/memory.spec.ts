@@ -11,12 +11,12 @@ describe("MemoryFileEngine", () => {
 
   describe("store", () => {
     it("should work", async () => {
-      const mapSetSpy = jest.spyOn(Map.prototype, "set");
+      const spy = jest.spyOn(MemoryFileEngine.storage, "set");
       const key = await engine.store(Readable.from([Buffer.from("hello")]));
-      expect(mapSetSpy).toHaveBeenCalledTimes(1);
-      expect(mapSetSpy.mock.lastCall[0]).toBe(key);
-      expect(mapSetSpy.mock.lastCall[1]).toBeInstanceOf(Buffer);
-      expect(mapSetSpy.mock.lastCall[1].toString()).toBe("hello");
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(spy.mock.lastCall[0]).toBe(key);
+      expect(spy.mock.lastCall[1]).toBeInstanceOf(Buffer);
+      expect(spy.mock.lastCall[1].toString()).toBe("hello");
     });
   });
 
@@ -29,12 +29,12 @@ describe("MemoryFileEngine", () => {
     `(
       "should work with start: $start; end: $end",
       async ({ start, end, expected }) => {
-        const mapGetSpy = jest
-          .spyOn(Map.prototype, "get")
+        const spy = jest
+          .spyOn(MemoryFileEngine.storage, "get")
           .mockReturnValue(Buffer.from("hello"));
         const stream = await engine.retrieve("key", { start, end });
-        expect(mapGetSpy).toHaveBeenCalledTimes(1);
-        expect(mapGetSpy).toHaveBeenCalledWith("key");
+        expect(spy).toHaveBeenCalledTimes(1);
+        expect(spy).toHaveBeenCalledWith("key");
         expect(stream.read().toString()).toBe(expected);
       },
     );
