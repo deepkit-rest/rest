@@ -3,9 +3,9 @@ import { serialize } from "@deepkit/type";
 import { purify } from "src/common/type";
 import { HttpRouteConfig } from "src/http-extension/http-common";
 
-import { RestActionContext } from "../core/rest-action";
 import { RestCreationSchemaFactory } from "../crud-models/rest-creation-schema";
 import { RestUpdateSchemaFactory } from "../crud-models/rest-update-schema";
+import { RestCrudActionContext } from "./rest-crud";
 
 export interface RestSerializationCustomizations<Entity> {
   serializer?: ClassType<RestEntitySerializer<Entity>>;
@@ -24,7 +24,7 @@ export class RestGenericSerializer<Entity>
   implements RestEntitySerializer<Entity>
 {
   constructor(
-    protected context: RestActionContext<Entity>,
+    protected context: RestCrudActionContext<Entity>,
     protected routeConfig: HttpRouteConfig,
     protected creationSchemaFactory: RestCreationSchemaFactory,
     protected updateSchemaFactory: RestUpdateSchemaFactory,
