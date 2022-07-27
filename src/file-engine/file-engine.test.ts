@@ -13,7 +13,7 @@ describe("FileEngine", () => {
     async store(): Promise<string> {
       return "";
     }
-    async retrieve(): Promise<Readable> {
+    async fetch(): Promise<Readable> {
       return Readable.from(["hello"]);
     }
     async remove(): Promise<void> {}

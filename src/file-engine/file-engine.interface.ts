@@ -6,7 +6,7 @@ export abstract class FileEngine<Options extends object = object> implements Eng
   abstract options: Options;
   abstract bootstrap(): Promise<void>;
   abstract store(source: Readable): Promise<string>;
-  abstract retrieve(key: string, options?: FileEngineRetrieveOptions): Promise<Readable>;
+  abstract fetch(key: string, options?: FileEngineRetrieveOptions): Promise<Readable>;
   abstract remove(key: string): Promise<void>;
 }
 

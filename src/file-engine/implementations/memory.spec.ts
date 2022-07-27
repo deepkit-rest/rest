@@ -20,7 +20,7 @@ describe("MemoryFileEngine", () => {
     });
   });
 
-  describe("retrieve", () => {
+  describe("fetch", () => {
     it.each`
       start        | end          | expected
       ${undefined} | ${undefined} | ${"hello"}
@@ -32,7 +32,7 @@ describe("MemoryFileEngine", () => {
         const spy = jest
           .spyOn(MemoryFileEngine.storage, "get")
           .mockReturnValue(Buffer.from("hello"));
-        const stream = await engine.retrieve("key", { start, end });
+        const stream = await engine.fetch("key", { start, end });
         expect(spy).toHaveBeenCalledTimes(1);
         expect(spy).toHaveBeenCalledWith("key");
         expect(stream.read().toString()).toBe(expected);

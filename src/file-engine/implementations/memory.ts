@@ -20,7 +20,7 @@ export class MemoryFileEngine implements FileEngine<object> {
     return key;
   }
 
-  async retrieve(
+  async fetch(
     key: string,
     { start, end }: FileEngineRetrieveOptions = {},
   ): Promise<Readable> {

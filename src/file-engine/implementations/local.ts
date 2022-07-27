@@ -25,7 +25,7 @@ export class LocalFileEngine implements FileEngine<LocalFileEngineOptions> {
     return key;
   }
 
-  async retrieve(
+  async fetch(
     key: string,
     options?: FileEngineRetrieveOptions,
   ): Promise<Readable> {

@@ -38,7 +38,7 @@ describe("LocalFileEngine", () => {
       });
     });
 
-    describe("retrieve", () => {
+    describe("fetch", () => {
       it.each`
         start        | end          | expected
         ${undefined} | ${undefined} | ${"hello"}
@@ -48,13 +48,13 @@ describe("LocalFileEngine", () => {
         "should work when key exists (start: $start, end: $end)",
         async ({ start, end, expected }) => {
           await writeFile(`${root}/key`, "hello");
-          const stream = await engine.retrieve("key", { start, end });
+          const stream = await engine.fetch("key", { start, end });
           expect(stream.read().toString()).toBe(expected);
         },
       );
 
       it("should fail when key not found", async () => {
-        await expect(engine.retrieve("key")).rejects.toThrow();
+        await expect(engine.fetch("key")).rejects.toThrow();
       });
     });
 

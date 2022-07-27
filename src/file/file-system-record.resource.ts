@@ -117,14 +117,14 @@ export class FileSystemRecordResource
     if (!record.isContentDefined()) throw new HttpNotFoundError();
 
     if (!request.headers["range"]) {
-      const stream = await this.engine.retrieve(record.contentKey);
+      const stream = await this.engine.fetch(record.contentKey);
       return stream.pipe(response);
     }
 
     const rangesRaw = request.headers["range"];
     const { contentKey, contentSize } = record;
     const [start, end] = this.rangeParser.parseSingle(rangesRaw, contentSize);
-    const stream = await this.engine.retrieve(contentKey, { start, end });
+    const stream = await this.engine.fetch(contentKey, { start, end });
     response.setHeader("Content-Range", `bytes ${start}-${end}/${contentSize}`);
     response.writeHead(206); // `.status()` would accidentally `.end()` the response, and will be removed in the future, so we call `writeHead()` here.
     return stream.pipe(response);
@@ -138,7 +138,7 @@ export class FileSystemRecordResource
   async verify(): Promise<NoContentResponse> {
     const record = await this.crudContext.getEntity();
     if (!record.isContentDefined()) throw new HttpNotFoundError();
-    const stream = await this.engine.retrieve(record.contentKey);
+    const stream = await this.engine.fetch(record.contentKey);
     const integrity = await FileStreamUtils.hash(stream);
     if (integrity !== record.contentIntegrity) throw new HttpNotFoundError();
     return new NoContentResponse();
