@@ -14,6 +14,7 @@ import { User } from "src/user/user.entity";
 import { Readable } from "stream";
 
 import { FileModule } from "./file.module";
+import { FileChunkUploadManager } from "./file-chunk-upload-manager.service";
 import { FileStreamUtils } from "./file-stream.utils";
 import { FileSystemRecord } from "./file-system-record.entity";
 import { FileSystemTag } from "./file-system-tag.entity";
@@ -289,6 +290,78 @@ describe("File", () => {
         HttpRequest.GET(`/files/${record.id}/content`),
       );
       expect(response.statusCode).toBe(404);
+    });
+  });
+
+  describe("GET /files/:id/content/chunks", () => {
+    test("response", async () => {
+      const record = new FileSystemRecord({ owner: user, name: "test.txt" });
+      await database.persist(record);
+      const manager = facade.app.get(FileChunkUploadManager, FileModule);
+      await manager.store(record.id, Readable.from(Buffer.from("v")), 10);
+      const response = await requester.request(
+        HttpRequest.GET(`/files/${record.id}/content/chunks`),
+      );
+      expect(response.statusCode).toBe(200);
+      expect(response.json).toEqual([10]);
+    });
+  });
+
+  describe("PUT /files/:id/content/chunks/:index", () => {
+    test("response", async () => {
+      const record = new FileSystemRecord({ owner: user, name: "test.txt" });
+      await database.persist(record);
+      const manager = facade.app.get(FileChunkUploadManager, FileModule);
+      const response = await requester.request(
+        HttpRequest.PUT(`/files/${record.id}/content/chunks/10`).body(
+          Buffer.from("v"),
+        ),
+      );
+      expect(response.statusCode).toBe(204);
+      expect(response.bodyString).toBe("");
+      expect(manager.inspect(record.id)).toEqual([10]);
+      const stream = await manager.merge(record.id);
+      expect(stream.read().toString()).toEqual("v");
+      const recordNew = await database.query(FileSystemRecord).findOne();
+      expect(recordNew.isContentDefined()).toBe(false);
+    });
+
+    test("workflow", async () => {
+      const record = new FileSystemRecord({ owner: user, name: "test.txt" });
+      await database.persist(record);
+      await requester.request(
+        HttpRequest.PUT(`/files/${record.id}/content/chunks/1`) //
+          .body(Buffer.from("v1")),
+      );
+      await requester.request(
+        HttpRequest.PUT(`/files/${record.id}/content/chunks/2`) //
+          .body(Buffer.from("v2")),
+      );
+      await requester.request(
+        HttpRequest.PUT(`/files/${record.id}/content/chunks/last`) //
+          .body(Buffer.from("last")),
+      );
+      const recordNew = await database.query(FileSystemRecord).findOne();
+      expect(recordNew.isContentDefined()).toBe(true);
+      const fileEngine = facade.app.get(FileEngine);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const stream = await fileEngine.fetch(recordNew.contentKey!);
+      expect(stream.read().toString()).toEqual("v1v2last");
+    });
+  });
+
+  describe("DELETE /files/:id/content/chunks", () => {
+    test("response", async () => {
+      const record = new FileSystemRecord({ owner: user, name: "test.txt" });
+      await database.persist(record);
+      const manager = facade.app.get(FileChunkUploadManager, FileModule);
+      manager.store(record.id, Readable.from(Buffer.from("v")), 10);
+      const response = await requester.request(
+        HttpRequest.DELETE(`/files/${record.id}/content/chunks`),
+      );
+      expect(response.statusCode).toBe(204);
+      expect(response.bodyString).toBe("");
+      expect(manager.inspect(record.id)).toEqual([]);
     });
   });
 

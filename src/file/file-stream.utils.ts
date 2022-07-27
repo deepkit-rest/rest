@@ -9,4 +9,15 @@ export class FileStreamUtils {
       stream.once("error", (err) => reject(err));
     });
   }
+
+  static async size(source: Readable): Promise<number> {
+    return new Promise((resolve, reject) => {
+      let length = 0;
+      source.on("data", (chunk) => {
+        length += chunk.length;
+      });
+      source.on("end", () => resolve(length));
+      source.on("error", (err) => reject(err));
+    });
+  }
 }

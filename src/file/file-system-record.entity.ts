@@ -36,6 +36,7 @@ export class FileSystemRecord extends AppEntity<FileSystemRecord> {
   isContentDefined(): this is FileRecordContentDefined {
     return !!this.contentKey && !!this.contentIntegrity && !!this.contentSize;
   }
+
 }
 
 export interface FileRecordContentDefined

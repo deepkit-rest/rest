@@ -1,5 +1,6 @@
 import { createModule } from "@deepkit/app";
 
+import { FileChunkUploadManager } from "./file-chunk-upload-manager.service";
 import {
   FileSystemRecordResource,
   FileSystemRecordSerializer,
@@ -15,6 +16,7 @@ export class FileModule extends createModule(
     controllers: [FileSystemRecordResource, FileSystemTagResource],
     providers: [
       FileSystemRecordBrowser,
+      FileChunkUploadManager,
       { provide: FileSystemRecordSerializer, scope: "http" },
       { provide: FileSystemTagSerializer, scope: "http" },
     ],

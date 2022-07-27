@@ -7,6 +7,7 @@ import {
 } from "@deepkit/http";
 import { Inject } from "@deepkit/injector";
 import { Database, Query } from "@deepkit/orm";
+import { integer, Minimum } from "@deepkit/type";
 import { RequestContext } from "src/core/request-context";
 import { AppEntitySerializer, AppResource } from "src/core/rest";
 import { InjectDatabaseSession } from "src/database-extension/database-tokens";
@@ -22,6 +23,7 @@ import {
 import { RestSerializationCustomizations } from "src/rest/crud/rest-serialization";
 import { User } from "src/user/user.entity";
 
+import { FileChunkUploadManager } from "./file-chunk-upload-manager.service";
 import { FileStreamUtils } from "./file-stream.utils";
 import { FileSystemRecord } from "./file-system-record.entity";
 import { FileSystemRecordBrowser } from "./file-system-record-browser.service";
@@ -42,6 +44,7 @@ export class FileSystemRecordResource
     private engine: FileEngine,
     private rangeParser: HttpRangeParser,
     private browser: FileSystemRecordBrowser,
+    private chunkUploadManager: FileChunkUploadManager,
   ) {
     super(database);
   }
@@ -89,6 +92,8 @@ export class FileSystemRecordResource
   @rest.action("DELETE", ":pk")
   @http.serialization({ groupsExclude: ["internal"] }).group("auth-required")
   async delete(): Promise<ResponseReturnType> {
+    const record = await this.crudContext.getEntity();
+    await this.chunkUploadManager.clear(record.id);
     return this.crud.delete();
   }
 
@@ -96,14 +101,12 @@ export class FileSystemRecordResource
   @http.serialization({ groupsExclude: ["internal"] }).group("auth-required")
   async upload(request: HttpRequest): Promise<NoContentResponse> {
     const record = await this.crudContext.getEntity();
-    const size = getContentLength(request);
-    const [key, integrity] = await Promise.all([
+    const contentSize = getContentLength(request);
+    const [contentKey, contentIntegrity] = await Promise.all([
       this.engine.store(request),
       FileStreamUtils.hash(request),
     ]);
-    record.contentKey = key;
-    record.contentIntegrity = integrity;
-    record.contentSize = size;
+    record.assign({ contentKey, contentIntegrity, contentSize });
     return new NoContentResponse();
   }
 
@@ -128,6 +131,39 @@ export class FileSystemRecordResource
     response.setHeader("Content-Range", `bytes ${start}-${end}/${contentSize}`);
     response.writeHead(206); // `.status()` would accidentally `.end()` the response, and will be removed in the future, so we call `writeHead()` here.
     return stream.pipe(response);
+  }
+
+  @rest.action("GET", ":pk/content/chunks")
+  async listChunks(): Promise<number[]> {
+    const record = await this.crudContext.getEntity();
+    return this.chunkUploadManager.inspect(record.id);
+  }
+
+  @rest.action("PUT", ":pk/content/chunks/:index")
+  async uploadChunk(
+    request: HttpRequest,
+    index: (integer & Minimum<1>) | "last",
+  ): Promise<NoContentResponse> {
+    const record = await this.crudContext.getEntity();
+    const order = index === "last" ? undefined : index;
+    await this.chunkUploadManager.store(record.id, request, order);
+    if (index === "last") {
+      const stream = await this.chunkUploadManager.merge(record.id);
+      const [contentKey, contentIntegrity, contentSize] = await Promise.all([
+        this.engine.store(stream),
+        FileStreamUtils.hash(stream),
+        FileStreamUtils.size(stream),
+      ]);
+      record.assign({ contentKey, contentIntegrity, contentSize });
+    }
+    return new NoContentResponse();
+  }
+
+  @rest.action("DELETE", ":pk/content/chunks")
+  async clearChunks(): Promise<NoContentResponse> {
+    const record = await this.crudContext.getEntity();
+    await this.chunkUploadManager.clear(record.id);
+    return new NoContentResponse();
   }
 
   @rest.action("GET", ":pk/integrity")
