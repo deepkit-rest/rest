@@ -19,7 +19,11 @@ export class HttpExtensionListener {
     if (!event.route) return;
     event.injectorContext.set(HttpRouteConfig, event.route);
     if (event.route.action.type !== "controller") return;
-    const controllerMeta = httpClass._fetch(event.route.action.controller);
+    const controllerType = event.route.action.controller;
+    const controllerMeta = httpClass._fetch(controllerType);
+    const controllerIsInternal =
+      controllerType.name === "HttpRequestStaticServingListener"; // don't know what it is
+    if (controllerIsInternal) return;
     if (!controllerMeta) throw new Error("Cannot read controller meta");
     const actionName = event.route.action.methodName;
     const actionMeta = controllerMeta.getAction(actionName);
