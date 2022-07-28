@@ -1,5 +1,6 @@
 import {
   http,
+  HttpBadRequestError,
   HttpNotFoundError,
   HttpQuery,
   HttpRequest,
@@ -101,6 +102,7 @@ export class FileSystemRecordResource
   @http.serialization({ groupsExclude: ["internal"] }).group("auth-required")
   async upload(request: HttpRequest): Promise<NoContentResponse> {
     const record = await this.crudContext.getEntity();
+    if (record.type !== "file") throw new HttpBadRequestError();
     const contentSize = getContentLength(request);
     const [contentKey, contentIntegrity] = await Promise.all([
       this.engine.store(request),
@@ -117,6 +119,7 @@ export class FileSystemRecordResource
     request: HttpRequest,
   ): Promise<HttpResponse> {
     const record = await this.crudContext.getEntity();
+    if (record.type !== "file") throw new HttpBadRequestError();
     if (!record.isContentDefined()) throw new HttpNotFoundError();
 
     if (!request.headers["range"]) {
@@ -136,6 +139,7 @@ export class FileSystemRecordResource
   @rest.action("GET", ":pk/content/chunks")
   async listChunks(): Promise<number[]> {
     const record = await this.crudContext.getEntity();
+    if (record.type !== "file") throw new HttpBadRequestError();
     return this.chunkUploadManager.inspect(record.id);
   }
 
@@ -145,6 +149,7 @@ export class FileSystemRecordResource
     index: (integer & Minimum<1>) | "last",
   ): Promise<NoContentResponse> {
     const record = await this.crudContext.getEntity();
+    if (record.type !== "file") throw new HttpBadRequestError();
     const order = index === "last" ? undefined : index;
     await this.chunkUploadManager.store(record.id, request, order);
     if (index === "last") {
@@ -162,6 +167,7 @@ export class FileSystemRecordResource
   @rest.action("DELETE", ":pk/content/chunks")
   async clearChunks(): Promise<NoContentResponse> {
     const record = await this.crudContext.getEntity();
+    if (record.type !== "file") throw new HttpBadRequestError();
     await this.chunkUploadManager.clear(record.id);
     return new NoContentResponse();
   }
@@ -171,8 +177,10 @@ export class FileSystemRecordResource
   @http
     .response(204, "File integrity verified")
     .response(404, "File broken or not uploaded")
+    .response(400, "Invalid record type")
   async verify(): Promise<NoContentResponse> {
     const record = await this.crudContext.getEntity();
+    if (record.type !== "file") throw new HttpBadRequestError();
     if (!record.isContentDefined()) throw new HttpNotFoundError();
     const stream = await this.engine.fetch(record.contentKey);
     const integrity = await FileStreamUtils.hash(stream);
@@ -184,12 +192,40 @@ export class FileSystemRecordResource
 export class FileSystemRecordSerializer extends AppEntitySerializer<FileSystemRecord> {
   protected database!: InjectDatabaseSession;
   protected requestContext!: Inject<RequestContext>;
+
+  override async deserializeCreation(
+    payload: Record<string, unknown>,
+  ): Promise<FileSystemRecord> {
+    const entity = await super.deserializeCreation(payload);
+    await this.validateParent(entity);
+    return entity;
+  }
+
+  override async deserializeUpdate(
+    entity: FileSystemRecord,
+    payload: Record<string, unknown>,
+  ): Promise<FileSystemRecord> {
+    const parentPrev = entity.parent;
+    entity = await super.deserializeUpdate(entity, payload);
+    if (entity.parent !== parentPrev) await this.validateParent(entity);
+    return entity;
+  }
+
   protected override createEntity(
     data: Partial<FileSystemRecord>,
   ): FileSystemRecord {
     const userId = this.requestContext.user.id;
     data.owner = this.database.getReference(User, userId);
     return super.createEntity(data);
+  }
+
+  private async validateParent(entity: FileSystemRecord) {
+    if (entity.parent) {
+      const query = this.context.getResource().getQuery();
+      const parent = await query.filter(entity.parent).findOneOrUndefined();
+      if (parent?.type !== "directory")
+        throw new HttpBadRequestError("Invalid parent");
+    }
   }
 }
 

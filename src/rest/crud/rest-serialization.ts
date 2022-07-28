@@ -1,5 +1,5 @@
 import { ClassType } from "@deepkit/core";
-import { serialize } from "@deepkit/type";
+import { ReflectionClass, serialize } from "@deepkit/type";
 import { purify } from "src/common/type";
 import { HttpRouteConfig } from "src/http-extension/http-common";
 
@@ -44,7 +44,7 @@ export class RestGenericSerializer<Entity>
 
   async deserializeCreation(payload: Record<string, unknown>): Promise<Entity> {
     const entityType = this.context.getEntitySchema().getClassType();
-    const schema = this.creationSchemaFactory.build(entityType);
+    const schema = this.createCreationSchema(entityType);
     const data = purify<Partial<Entity>>(payload, schema.type);
     return this.createEntity(data);
   }
@@ -54,9 +54,21 @@ export class RestGenericSerializer<Entity>
     payload: Record<string, unknown>,
   ): Promise<Entity> {
     const entityType = this.context.getEntitySchema().getClassType();
-    const schema = this.updateSchemaFactory.build(entityType);
+    const schema = this.createUpdateSchema(entityType);
     const data = purify<Partial<Entity>>(payload, schema.type);
     return this.updateEntity(entity, data);
+  }
+
+  protected createCreationSchema(
+    entityType: ClassType<Entity>,
+  ): ReflectionClass<any> {
+    return this.creationSchemaFactory.build(entityType);
+  }
+
+  protected createUpdateSchema(
+    entityType: ClassType<Entity>,
+  ): ReflectionClass<any> {
+    return this.updateSchemaFactory.build(entityType);
   }
 
   protected createEntity(data: Partial<Entity>): Entity {

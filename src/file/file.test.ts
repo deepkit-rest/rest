@@ -56,13 +56,18 @@ describe("File", () => {
   });
 
   describe("POST /files", () => {
-    it("should work", async () => {
-      const parent = new FileSystemRecord({ owner: user, name: "dir" });
+    test("response", async () => {
+      const parent = new FileSystemRecord({
+        owner: user,
+        name: "dir",
+        type: "directory",
+      });
       await database.persist(parent);
       const response = await requester.request(
         HttpRequest.POST("/files").json({
           name: "test.txt",
           parent: parent.id,
+          type: "file",
         }),
       );
       expect(response.json).toEqual({
@@ -70,11 +75,28 @@ describe("File", () => {
         owner: user.id,
         parent: parent.id,
         name: "test.txt",
+        type: "file",
         contentSize: null,
         contentKey: null,
         contentIntegrity: null,
         createdAt: expect.any(String),
       });
+    });
+
+    test("parent validation", async () => {
+      const parent = new FileSystemRecord({
+        owner: user,
+        name: "invalid",
+        type: "file",
+      });
+      await database.persist(parent);
+      const response = await requester.request(
+        HttpRequest.POST("/files").json({
+          name: "test.txt",
+          parent: parent.id,
+        }),
+      );
+      expect(response.statusCode).toBe(400);
     });
   });
 
@@ -86,8 +108,8 @@ describe("File", () => {
         password: "password",
       });
       await database.persist(
-        new FileSystemRecord({ owner: user, name: "test.txt" }),
-        new FileSystemRecord({ owner: user2, name: "test2.txt" }),
+        new FileSystemRecord({ owner: user, name: "test.txt", type: "file" }),
+        new FileSystemRecord({ owner: user2, name: "test2.txt", type: "file" }),
       );
       const response = await requester.request(HttpRequest.GET("/files"));
       expect(response.json).toEqual({
@@ -98,6 +120,7 @@ describe("File", () => {
             owner: user.id,
             parent: null,
             name: "test.txt",
+            type: "file",
             contentKey: null,
             contentIntegrity: null,
             contentSize: null,
@@ -109,8 +132,8 @@ describe("File", () => {
 
     test("pagination", async () => {
       await database.persist(
-        new FileSystemRecord({ owner: user, name: "test1.txt" }),
-        new FileSystemRecord({ owner: user, name: "test2.txt" }),
+        new FileSystemRecord({ owner: user, name: "test1.txt", type: "file" }),
+        new FileSystemRecord({ owner: user, name: "test2.txt", type: "file" }),
       );
       const response = await requester.request(
         HttpRequest.GET("/files?limit=1"),
@@ -123,7 +146,7 @@ describe("File", () => {
 
     test("filter", async () => {
       await database.persist(
-        new FileSystemRecord({ owner: user, name: "test1.txt" }),
+        new FileSystemRecord({ owner: user, name: "test1.txt", type: "file" }),
       );
       const response = await requester.request(
         HttpRequest.GET("/files?filter[id][$eq]=notfound"),
@@ -133,8 +156,8 @@ describe("File", () => {
 
     test("order", async () => {
       const records = [
-        new FileSystemRecord({ owner: user, name: "test1.txt" }),
-        new FileSystemRecord({ owner: user, name: "test2.txt" }),
+        new FileSystemRecord({ owner: user, name: "test1.txt", type: "file" }),
+        new FileSystemRecord({ owner: user, name: "test2.txt", type: "file" }),
       ];
       await database.persist(...records);
       const response = await requester.request(
@@ -148,8 +171,17 @@ describe("File", () => {
 
     test("?path=<valid>", async () => {
       const owner = user;
-      const dir = new FileSystemRecord({ owner, name: "dir" });
-      const file = new FileSystemRecord({ owner, name: "file", parent: dir });
+      const dir = new FileSystemRecord({
+        owner,
+        name: "dir",
+        type: "directory",
+      });
+      const file = new FileSystemRecord({
+        owner,
+        parent: dir,
+        name: "file",
+        type: "file",
+      });
       await database.persist(dir, file);
       const response = await requester.request(
         HttpRequest.GET(`/files?path=/dir/file`),
@@ -171,7 +203,11 @@ describe("File", () => {
 
   describe("GET /files/:id", () => {
     it("should work", async () => {
-      const record = new FileSystemRecord({ owner: user, name: "test.txt" });
+      const record = new FileSystemRecord({
+        owner: user,
+        name: "test.txt",
+        type: "file",
+      });
       await database.persist(record);
       const response = await requester.request(
         HttpRequest.GET(`/files/${record.id}`),
@@ -181,6 +217,7 @@ describe("File", () => {
         owner: user.id,
         parent: null,
         name: record.name,
+        type: "file",
         contentKey: null,
         contentIntegrity: null,
         contentSize: null,
@@ -190,8 +227,12 @@ describe("File", () => {
   });
 
   describe("PATCH /files/:id", () => {
-    it("should work", async () => {
-      const record = new FileSystemRecord({ owner: user, name: "test.txt" });
+    test("response", async () => {
+      const record = new FileSystemRecord({
+        owner: user,
+        name: "test.txt",
+        type: "file",
+      });
       await database.persist(record);
       const response = await requester.request(
         HttpRequest.PATCH(`/files/${record.id}`).json({ name: "updated" }),
@@ -201,6 +242,7 @@ describe("File", () => {
         owner: user.id,
         parent: null,
         name: "updated",
+        type: "file",
         contentKey: null,
         contentIntegrity: null,
         contentSize: null,
@@ -209,11 +251,33 @@ describe("File", () => {
       const recordNew = await database.query(FileSystemRecord).findOne();
       expect(recordNew).toMatchObject({ name: "updated" });
     });
+
+    test("parent validation", async () => {
+      const record = new FileSystemRecord({
+        owner: user,
+        name: "test.txt",
+        type: "file",
+      });
+      const parent = new FileSystemRecord({
+        owner: user,
+        name: "invalid",
+        type: "file",
+      });
+      await database.persist(record, parent);
+      const response = await requester.request(
+        HttpRequest.PATCH(`/files/${record.id}`).json({ parent: parent.id }),
+      );
+      expect(response.statusCode).toBe(400);
+    });
   });
 
   describe("DELETE /files/:id", () => {
     it("should work", async () => {
-      const record = new FileSystemRecord({ owner: user, name: "test.txt" });
+      const record = new FileSystemRecord({
+        owner: user,
+        name: "test.txt",
+        type: "file",
+      });
       await database.persist(record);
       const response = await requester.request(
         HttpRequest.DELETE(`/files/${record.id}`),
@@ -225,8 +289,12 @@ describe("File", () => {
   });
 
   describe("PUT /files/:id/content", () => {
-    it("should work", async () => {
-      const record = new FileSystemRecord({ owner: user, name: "test.txt" });
+    test("response", async () => {
+      const record = new FileSystemRecord({
+        owner: user,
+        name: "test.txt",
+        type: "file",
+      });
       await database.persist(record);
       const response = await requester.request(
         HttpRequest.PUT(`/files/${record.id}/content`).body(Buffer.from("v")),
@@ -243,6 +311,19 @@ describe("File", () => {
       const stream = MemoryFileEngine.storage.get(recordNew.contentKey!);
       expect(stream?.toString()).toEqual("v");
     });
+
+    it("should return 400 when record type is not file", async () => {
+      const record = new FileSystemRecord({
+        owner: user,
+        name: "dir",
+        type: "directory",
+      });
+      await database.persist(record);
+      const response = await requester.request(
+        HttpRequest.PUT(`/files/${record.id}/content`),
+      );
+      expect(response.statusCode).toBe(400);
+    });
   });
 
   describe("GET /files/:id/content", () => {
@@ -251,7 +332,11 @@ describe("File", () => {
       const contentKey = await fileEngine.store(
         Readable.from(Buffer.from("v")),
       );
-      const record = new FileSystemRecord({ owner: user, name: "test.txt" });
+      const record = new FileSystemRecord({
+        owner: user,
+        name: "test.txt",
+        type: "file",
+      });
       record.contentKey = contentKey;
       record.contentIntegrity = "integrity";
       record.contentSize = 1;
@@ -269,7 +354,11 @@ describe("File", () => {
       const contentKey = await fileEngine.store(
         Readable.from(Buffer.from("vvv")),
       );
-      const record = new FileSystemRecord({ owner: user, name: "test.txt" });
+      const record = new FileSystemRecord({
+        owner: user,
+        name: "test.txt",
+        type: "file",
+      });
       record.contentKey = contentKey;
       record.contentIntegrity = "integrity";
       record.contentSize = 3;
@@ -284,18 +373,39 @@ describe("File", () => {
     });
 
     it("should return 404 when content not uploaded", async () => {
-      const record = new FileSystemRecord({ owner: user, name: "test.txt" });
+      const record = new FileSystemRecord({
+        owner: user,
+        name: "test.txt",
+        type: "file",
+      });
       await database.persist(record);
       const response = await requester.request(
         HttpRequest.GET(`/files/${record.id}/content`),
       );
       expect(response.statusCode).toBe(404);
     });
+
+    it("should return 400 when record type is not file", async () => {
+      const record = new FileSystemRecord({
+        owner: user,
+        name: "dir",
+        type: "directory",
+      });
+      await database.persist(record);
+      const response = await requester.request(
+        HttpRequest.GET(`/files/${record.id}/content`),
+      );
+      expect(response.statusCode).toBe(400);
+    });
   });
 
   describe("GET /files/:id/content/chunks", () => {
     test("response", async () => {
-      const record = new FileSystemRecord({ owner: user, name: "test.txt" });
+      const record = new FileSystemRecord({
+        owner: user,
+        name: "test.txt",
+        type: "file",
+      });
       await database.persist(record);
       const manager = facade.app.get(FileChunkUploadManager, FileModule);
       await manager.store(record.id, Readable.from(Buffer.from("v")), 10);
@@ -305,11 +415,28 @@ describe("File", () => {
       expect(response.statusCode).toBe(200);
       expect(response.json).toEqual([10]);
     });
+
+    test("record type validation", async () => {
+      const record = new FileSystemRecord({
+        owner: user,
+        name: "dir",
+        type: "directory",
+      });
+      await database.persist(record);
+      const response = await requester.request(
+        HttpRequest.GET(`/files/${record.id}/content/chunks`),
+      );
+      expect(response.statusCode).toBe(400);
+    });
   });
 
   describe("PUT /files/:id/content/chunks/:index", () => {
     test("response", async () => {
-      const record = new FileSystemRecord({ owner: user, name: "test.txt" });
+      const record = new FileSystemRecord({
+        owner: user,
+        name: "test.txt",
+        type: "file",
+      });
       await database.persist(record);
       const manager = facade.app.get(FileChunkUploadManager, FileModule);
       const response = await requester.request(
@@ -326,8 +453,27 @@ describe("File", () => {
       expect(recordNew.isContentDefined()).toBe(false);
     });
 
+    test("record type validation", async () => {
+      const record = new FileSystemRecord({
+        owner: user,
+        name: "dir",
+        type: "directory",
+      });
+      await database.persist(record);
+      const response = await requester.request(
+        HttpRequest.PUT(`/files/${record.id}/content/chunks/10`).body(
+          Buffer.from("v"),
+        ),
+      );
+      expect(response.statusCode).toBe(400);
+    });
+
     test("workflow", async () => {
-      const record = new FileSystemRecord({ owner: user, name: "test.txt" });
+      const record = new FileSystemRecord({
+        owner: user,
+        name: "test.txt",
+        type: "file",
+      });
       await database.persist(record);
       await requester.request(
         HttpRequest.PUT(`/files/${record.id}/content/chunks/1`) //
@@ -352,7 +498,11 @@ describe("File", () => {
 
   describe("DELETE /files/:id/content/chunks", () => {
     test("response", async () => {
-      const record = new FileSystemRecord({ owner: user, name: "test.txt" });
+      const record = new FileSystemRecord({
+        owner: user,
+        name: "test.txt",
+        type: "file",
+      });
       await database.persist(record);
       const manager = facade.app.get(FileChunkUploadManager, FileModule);
       manager.store(record.id, Readable.from(Buffer.from("v")), 10);
@@ -363,6 +513,19 @@ describe("File", () => {
       expect(response.bodyString).toBe("");
       expect(manager.inspect(record.id)).toEqual([]);
     });
+
+    test("record type validation", async () => {
+      const record = new FileSystemRecord({
+        owner: user,
+        name: "dir",
+        type: "directory",
+      });
+      await database.persist(record);
+      const response = await requester.request(
+        HttpRequest.DELETE(`/files/${record.id}/content/chunks`),
+      );
+      expect(response.statusCode).toBe(400);
+    });
   });
 
   describe("GET /files/:id/integrity", () => {
@@ -370,7 +533,11 @@ describe("File", () => {
       const fileEngine = facade.app.get(FileEngine);
       const content = Buffer.from("v");
       const contentKey = await fileEngine.store(Readable.from(content));
-      const record = new FileSystemRecord({ owner: user, name: "test.txt" });
+      const record = new FileSystemRecord({
+        owner: user,
+        name: "test.txt",
+        type: "file",
+      });
       record.contentKey = contentKey;
       record.contentIntegrity = await FileStreamUtils.hash(
         Readable.from(content),
@@ -384,7 +551,11 @@ describe("File", () => {
     });
 
     it("should return 404 if content is not uploaded", async () => {
-      const record = new FileSystemRecord({ owner: user, name: "test.txt" });
+      const record = new FileSystemRecord({
+        owner: user,
+        name: "test.txt",
+        type: "file",
+      });
       await database.persist(record);
       const response = await requester.request(
         HttpRequest.GET(`/files/${record.id}/integrity`),
@@ -397,7 +568,11 @@ describe("File", () => {
       const contentKey = await fileEngine.store(
         Readable.from(Buffer.from("v")),
       );
-      const record = new FileSystemRecord({ owner: user, name: "test.txt" });
+      const record = new FileSystemRecord({
+        owner: user,
+        name: "test.txt",
+        type: "file",
+      });
       record.contentKey = contentKey;
       record.contentIntegrity = "not-matching";
       await database.persist(record);
@@ -406,6 +581,19 @@ describe("File", () => {
         HttpRequest.GET(`/files/${record.id}/integrity`),
       );
       expect(response.statusCode).toBe(404);
+    });
+
+    it("should return 400 if record type is not file", async () => {
+      const record = new FileSystemRecord({
+        owner: user,
+        name: "dir",
+        type: "directory",
+      });
+      await database.persist(record);
+      const response = await requester.request(
+        HttpRequest.GET(`/files/${record.id}/integrity`),
+      );
+      expect(response.statusCode).toBe(400);
     });
   });
 
