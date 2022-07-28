@@ -6,6 +6,7 @@ import {
   RestActionParameterResolver,
 } from "./core/rest-action";
 import { restClass } from "./core/rest-decoration";
+import { RestGuardLauncher } from "./core/rest-guard";
 import {
   RestResourceInstaller,
   RestResourceRegistry,
@@ -32,6 +33,7 @@ export class RestModule extends createModule(
     config: RestModuleConfig,
     providers: [
       { provide: RestActionContext, scope: "http" },
+      RestGuardLauncher,
       { provide: RestCrudKernel, scope: "http" },
       { provide: RestCrudActionContext, scope: "http" },
       RestFilterMapFactory,

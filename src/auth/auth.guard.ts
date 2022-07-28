@@ -1,16 +1,18 @@
-import { HttpUnauthorizedError } from "@deepkit/http";
-import { Guard, GuardContext } from "src/common/guard";
+import { HttpRequest, HttpUnauthorizedError } from "@deepkit/http";
 import { RequestContext } from "src/core/request-context";
+import { RestGuard } from "src/rest/core/rest-guard";
 
 import { AuthTokenService } from "./auth-token.service";
 
-export class AuthGuard implements Guard {
-  constructor(private tokenService: AuthTokenService) {}
+export class AuthGuard implements RestGuard {
+  constructor(
+    private request: HttpRequest,
+    private tokenService: AuthTokenService,
+    private requestContext: RequestContext,
+  ) {}
 
-  async guard(context: GuardContext): Promise<void> {
-    if (!context.route.groups.includes("auth-required")) return;
-
-    const authorization = context.request.headers["authorization"];
+  async guard(): Promise<void> {
+    const authorization = this.request.headers["authorization"];
     if (!authorization) throw new HttpUnauthorizedError();
     const match = authorization.match(/^Bearer (?<token>.*)$/u);
     const token = match?.groups?.["token"];
@@ -20,7 +22,6 @@ export class AuthGuard implements Guard {
       .catch(() => null);
     if (payload?.type !== "access") throw new HttpUnauthorizedError();
 
-    const requestContext = context.injector.get(RequestContext);
-    requestContext.user = payload.user;
+    this.requestContext.user = payload.user;
   }
 }

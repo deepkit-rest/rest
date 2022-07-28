@@ -1,16 +1,23 @@
 import { eventDispatcher } from "@deepkit/event";
 import { httpWorkflow } from "@deepkit/http";
-import { useGuard } from "src/common/guard";
+import { RestGuardLauncher } from "src/rest/core/rest-guard";
 
 import { AuthGuard } from "./auth.guard";
 
 export class AuthListener {
-  constructor(private guard: AuthGuard) {}
+  constructor(private guardLauncher: RestGuardLauncher) {}
 
   @eventDispatcher.listen(httpWorkflow.onController)
   async beforeController(
     event: typeof httpWorkflow.onController.event,
   ): Promise<void> {
-    await useGuard(event, this.guard);
+    if (event.route.groups.includes("auth-required")) {
+      const response = await this.guardLauncher.launch(
+        [AuthGuard],
+        event.injectorContext,
+        event.route.action.module,
+      );
+      if (response) event.send(response);
+    }
   }
 }

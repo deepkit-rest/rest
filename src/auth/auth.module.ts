@@ -9,7 +9,12 @@ import { AuthTokenService } from "./auth-token.service";
 export class AuthModule extends createModule(
   {
     controllers: [AuthController],
-    providers: [AuthTokenService, AuthCaptchaService, AuthGuard],
+    providers: [
+      AuthTokenService,
+      AuthCaptchaService,
+      { provide: AuthGuard, scope: "http" },
+    ],
+    exports: [AuthGuard],
     listeners: [AuthListener],
   },
   "auth",

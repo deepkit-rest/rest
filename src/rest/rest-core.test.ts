@@ -6,6 +6,7 @@ import {
   HttpKernel,
   HttpRequest,
   HttpRouter,
+  HttpUnauthorizedError,
   RouteConfig,
 } from "@deepkit/http";
 import { Inject, ProviderWithScope } from "@deepkit/injector";
@@ -15,6 +16,7 @@ import { HttpExtensionModule } from "src/http-extension/http-extension.module";
 
 import { RestActionContext } from "./core/rest-action";
 import { rest } from "./core/rest-decoration";
+import { RestGuard } from "./core/rest-guard";
 import { RestResource } from "./core/rest-resource";
 import { RestModuleConfig } from "./rest.config";
 import { RestModule } from "./rest.module";
@@ -26,7 +28,7 @@ describe("REST Core", () => {
 
   async function setup(
     config: Partial<RestModuleConfig>,
-    controllers: ClassType<RestResource<any>>[],
+    controllers: ClassType[],
     providers: ProviderWithScope[] = [],
   ) {
     facade = createTestingApp({
@@ -122,7 +124,7 @@ describe("REST Core", () => {
         @http.group("test")
         action2() {}
       }
-      await setup({ prefix: "prefix", versioning: false }, [MyResource as any]);
+      await setup({ prefix: "prefix", versioning: false }, [MyResource]);
       const routes = facade.app.get(HttpRouter).getRoutes();
       expect(routes).toHaveLength(2);
       expect(routes).toMatchObject<Partial<RouteConfig>[]>([
@@ -170,10 +172,48 @@ describe("REST Core", () => {
     class Dep {}
     const promise = setup(
       { prefix: "prefix", versioning: false },
-      [MyResource as any],
+      [MyResource],
       [{ provide: Dep, scope: "http" }],
     );
     await expect(promise).resolves.toBeUndefined();
     await requester.request(HttpRequest.GET("/prefix/api"));
+  });
+
+  describe("Guard", () => {
+    class MyGuard implements RestGuard {
+      async guard(): Promise<void> {
+        throw new HttpUnauthorizedError();
+      }
+    }
+
+    test("resource scoped", async () => {
+      @rest.resource(User, "api").guardedBy(MyGuard)
+      class MyResource extends UserRestResource {
+        @rest.action("GET")
+        route() {}
+      }
+      await setup(
+        { prefix: "prefix", versioning: false },
+        [MyResource],
+        [{ provide: MyGuard, scope: "http" }],
+      );
+      const response = await requester.request(HttpRequest.GET("/prefix/api"));
+      expect(response.statusCode).toBe(401);
+    });
+
+    test("action scoped", async () => {
+      @rest.resource(User, "api")
+      class MyResource extends UserRestResource {
+        @rest.action("GET").guardedBy(MyGuard)
+        route() {}
+      }
+      await setup(
+        { prefix: "prefix", versioning: false },
+        [MyResource],
+        [{ provide: MyGuard, scope: "http" }],
+      );
+      const response = await requester.request(HttpRequest.GET("/prefix/api"));
+      expect(response.statusCode).toBe(401);
+    });
   });
 });

@@ -2,12 +2,15 @@ import { App } from "@deepkit/app";
 import { createTestingApp, TestingFacade } from "@deepkit/framework";
 import { HttpKernel, HttpRequest } from "@deepkit/http";
 import { Database } from "@deepkit/orm";
+import { AuthGuard } from "src/auth/auth.guard";
+import { AuthModule } from "src/auth/auth.module";
 import { ExpirableMap } from "src/common/map";
 import { CoreModule } from "src/core/core.module";
 import { RequestContext } from "src/core/request-context";
 import { DatabaseExtensionModule } from "src/database-extension/database-extension.module";
 import { EmailEngine } from "src/email-engine/email-engine.interface";
 import { HttpExtensionModule } from "src/http-extension/http-extension.module";
+import { JwtModule } from "src/jwt/jwt.module";
 import { RestModule } from "src/rest/rest.module";
 
 import { User } from "./user.entity";
@@ -27,6 +30,8 @@ describe("User", () => {
         new HttpExtensionModule(),
         new DatabaseExtensionModule(),
         new RestModule({ prefix: "" }),
+        new AuthModule(),
+        new JwtModule({ secret: "secret" }),
         new UserModule(),
       ],
       providers: [
@@ -48,6 +53,9 @@ describe("User", () => {
     });
     await database.persist(user);
     await facade.startServer();
+    jest
+      .spyOn(AuthGuard.prototype, "guard")
+      .mockReturnValue(Promise.resolve(undefined));
   });
 
   describe("GET /users", () => {

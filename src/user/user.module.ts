@@ -10,7 +10,7 @@ export class UserModule extends createModule(
     controllers: [UserResource],
     providers: [
       UserVerificationCodePool,
-      UserSelfOnlyGuard,
+      { provide: UserSelfOnlyGuard, scope: "http" },
       { provide: UserRetriever, scope: "http" },
       { provide: UserSerializer, scope: "http" },
     ],

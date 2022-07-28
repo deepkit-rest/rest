@@ -9,6 +9,7 @@ import {
 import { Inject } from "@deepkit/injector";
 import { Database, Query } from "@deepkit/orm";
 import { integer, Minimum } from "@deepkit/type";
+import { AuthGuard } from "src/auth/auth.guard";
 import { RequestContext } from "src/core/request-context";
 import { AppEntitySerializer, AppResource } from "src/core/rest";
 import { InjectDatabaseSession } from "src/database-extension/database-tokens";
@@ -29,7 +30,7 @@ import { FileStreamUtils } from "./file-stream.utils";
 import { FileSystemRecord } from "./file-system-record.entity";
 import { FileSystemRecordBrowser } from "./file-system-record-browser.service";
 
-@rest.resource(FileSystemRecord, "files")
+@rest.resource(FileSystemRecord, "files").guardedBy(AuthGuard)
 export class FileSystemRecordResource
   extends AppResource<FileSystemRecord>
   implements RestSerializationCustomizations<FileSystemRecord>
@@ -58,7 +59,7 @@ export class FileSystemRecordResource
   }
 
   @rest.action("GET")
-  @http.serialization({ groupsExclude: ["internal"] }).group("auth-required")
+  @http.serialization({ groupsExclude: ["internal"] })
   async list(path?: HttpQuery<string>): Promise<ResponseReturnType> {
     if (!path) return this.crud.list();
     const record = await this.browser.trackPath(path, this.getQuery());
@@ -73,25 +74,25 @@ export class FileSystemRecordResource
   }
 
   @rest.action("POST")
-  @http.serialization({ groupsExclude: ["internal"] }).group("auth-required")
+  @http.serialization({ groupsExclude: ["internal"] })
   async create(): Promise<ResponseReturnType> {
     return this.crud.create();
   }
 
   @rest.action("GET", ":pk")
-  @http.serialization({ groupsExclude: ["internal"] }).group("auth-required")
+  @http.serialization({ groupsExclude: ["internal"] })
   async retrieve(): Promise<ResponseReturnType> {
     return this.crud.retrieve();
   }
 
   @rest.action("PATCH", ":pk")
-  @http.serialization({ groupsExclude: ["internal"] }).group("auth-required")
+  @http.serialization({ groupsExclude: ["internal"] })
   async update(): Promise<ResponseReturnType> {
     return this.crud.update();
   }
 
   @rest.action("DELETE", ":pk")
-  @http.serialization({ groupsExclude: ["internal"] }).group("auth-required")
+  @http.serialization({ groupsExclude: ["internal"] })
   async delete(): Promise<ResponseReturnType> {
     const record = await this.crudContext.getEntity();
     await this.chunkUploadManager.clear(record.id);
@@ -99,7 +100,7 @@ export class FileSystemRecordResource
   }
 
   @rest.action("PUT", ":pk/content")
-  @http.serialization({ groupsExclude: ["internal"] }).group("auth-required")
+  @http.serialization({ groupsExclude: ["internal"] })
   async upload(request: HttpRequest): Promise<NoContentResponse> {
     const record = await this.crudContext.getEntity();
     if (record.type !== "file") throw new HttpBadRequestError();
@@ -113,7 +114,7 @@ export class FileSystemRecordResource
   }
 
   @rest.action("GET", ":pk/content")
-  @http.serialization({ groupsExclude: ["internal"] }).group("auth-required")
+  @http.serialization({ groupsExclude: ["internal"] })
   async download(
     response: HttpResponse,
     request: HttpRequest,
@@ -173,7 +174,7 @@ export class FileSystemRecordResource
   }
 
   @rest.action("GET", ":pk/integrity")
-  @http.serialization({ groupsExclude: ["internal"] }).group("auth-required")
+  @http.serialization({ groupsExclude: ["internal"] })
   @http
     .response(204, "File integrity verified")
     .response(404, "File broken or not uploaded")

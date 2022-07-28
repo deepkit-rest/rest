@@ -9,6 +9,7 @@ import {
 import { PrettifiedDecoratorApi } from "src/common/decorator";
 import { HttpMethod } from "src/http-extension/http-common";
 
+import { RestGuard } from "./rest-guard";
 import { RestActionMeta, RestResourceMeta } from "./rest-meta";
 import { RestResource } from "./rest-resource";
 
@@ -28,6 +29,10 @@ export class RestClassDecoratorApi extends PrettifiedDecoratorApi<RestResourceMe
 
   version(version: number): void {
     this.meta.version = version;
+  }
+
+  guardedBy(...guards: ClassType<RestGuard>[]): void {
+    this.meta.guards.push(...guards);
   }
 
   useAction(name: string, action: RestActionMeta): void {
@@ -50,6 +55,10 @@ export class RestPropertyDecoratorApi extends PrettifiedDecoratorApi<RestActionM
   action(method: HttpMethod, path?: string): void {
     this.meta.method = method;
     this.meta.path = path;
+  }
+
+  guardedBy(...guards: ClassType<RestGuard>[]): void {
+    this.meta.guards.push(...guards);
   }
 }
 

@@ -2,6 +2,7 @@ import { ClassType } from "@deepkit/core";
 import { PartialRequired } from "src/common/utilities";
 import { HttpMethod } from "src/http-extension/http-common";
 
+import { RestGuard } from "./rest-guard";
 import { RestResource } from "./rest-resource";
 
 abstract class RestMeta<Validated extends RestMeta<Validated>> {
@@ -24,6 +25,7 @@ export class RestResourceMeta<
   entityType?: ClassType<Entity>;
   version?: number;
   actions: Record<string, RestActionMeta> = {};
+  guards: ClassType<RestGuard>[] = [];
 
   protected validateInternal(): void {
     if (!this.classType || !this.path || !this.entityType)
@@ -42,6 +44,7 @@ export class RestActionMeta extends RestMeta<RestActionMetaValidated> {
   name?: string;
   method?: HttpMethod;
   path?: string;
+  guards: ClassType<RestGuard>[] = [];
 
   protected validateInternal(): void {
     if (!this.resource || !this.name || !this.method)

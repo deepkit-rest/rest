@@ -8,6 +8,7 @@ import {
 import { Inject } from "@deepkit/injector";
 import { Database, Query } from "@deepkit/orm";
 import { ReflectionProperty } from "@deepkit/type";
+import { AuthGuard } from "src/auth/auth.guard";
 import { RequestContext } from "src/core/request-context";
 import { AppEntitySerializer, AppResource } from "src/core/rest";
 import { InjectDatabaseSession } from "src/database-extension/database-tokens";
@@ -26,9 +27,10 @@ import {
 import { RestSerializationCustomizations } from "src/rest/crud/rest-serialization";
 
 import { User } from "./user.entity";
+import { UserSelfOnlyGuard } from "./user-self-only.guard";
 import { UserVerificationCodePool } from "./user-verification-code";
 
-@rest.resource(User)
+@rest.resource(User).guardedBy(AuthGuard)
 export class UserResource
   extends AppResource<User>
   implements
@@ -55,27 +57,25 @@ export class UserResource
   }
 
   @rest.action("GET")
-  @http.serialization({ groupsExclude: ["internal"] }).group("auth-required")
+  @http.serialization({ groupsExclude: ["internal"] })
   async list(): Promise<ResponseReturnType> {
     return this.crud.list();
   }
 
   @rest.action("GET", ":pk")
-  @http.serialization({ groupsExclude: ["internal"] }).group("auth-required")
+  @http.serialization({ groupsExclude: ["internal"] })
   async retrieve(): Promise<ResponseReturnType> {
     return this.crud.retrieve();
   }
 
-  @rest.action("PATCH", ":pk")
-  @http.serialization({ groupsExclude: ["internal"] }).group("auth-required")
-  @http.group("self-only")
+  @rest.action("PATCH", ":pk").guardedBy(UserSelfOnlyGuard)
+  @http.serialization({ groupsExclude: ["internal"] })
   async update(): Promise<ResponseReturnType> {
     return this.crud.update();
   }
 
-  @rest.action("PUT", ":pk/verification")
-  @http.serialization({ groupsExclude: ["internal"] }).group("auth-required")
-  @http.group("self-only")
+  @rest.action("PUT", ":pk/verification").guardedBy(UserSelfOnlyGuard)
+  @http.serialization({ groupsExclude: ["internal"] })
   @http
     .response(204, "Verification requested")
     .response(403, "Duplicate verification request")
@@ -97,8 +97,8 @@ export class UserResource
   }
 
   @rest.action("GET", ":pk/verification")
-  @http.serialization({ groupsExclude: ["internal"] }).group("auth-required")
-  @http.group("self-only")
+  @rest.guardedBy(UserSelfOnlyGuard)
+  @http.serialization({ groupsExclude: ["internal"] })
   @http
     .response(204, "Pending verification exists")
     .response(404, "No pending verification")
@@ -109,8 +109,8 @@ export class UserResource
   }
 
   @rest.action("PUT", ":pk/verification/confirmation")
-  @http.serialization({ groupsExclude: ["internal"] }).group("auth-required")
-  @http.group("self-only")
+  @rest.guardedBy(UserSelfOnlyGuard)
+  @http.serialization({ groupsExclude: ["internal"] })
   @http
     .response(204, "Verified")
     .response(400, "Code not match")

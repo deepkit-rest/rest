@@ -1,15 +1,18 @@
 import { HttpAccessDeniedError } from "@deepkit/http";
-import { Guard, GuardContext } from "src/common/guard";
 import { RequestContext } from "src/core/request-context";
 import { HttpRequestParsed } from "src/http-extension/http-request-parsed.service";
+import { RestGuard } from "src/rest/core/rest-guard";
 
-export class UserSelfOnlyGuard implements Guard {
-  async guard(context: GuardContext): Promise<void> {
-    const request = context.injector.get(HttpRequestParsed);
-    const requestContext = context.injector.get(RequestContext);
-    const parameters = request.getPathParams();
+export class UserSelfOnlyGuard implements RestGuard {
+  constructor(
+    private request: HttpRequestParsed,
+    private requestContext: RequestContext,
+  ) {}
+
+  async guard(): Promise<void> {
+    const parameters = this.request.getPathParams();
     if (
-      parameters["pk"] !== requestContext.user.id &&
+      parameters["pk"] !== this.requestContext.user.id &&
       parameters["pk"] !== "me"
     )
       throw new HttpAccessDeniedError("Cannot perform on other users");
