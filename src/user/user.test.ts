@@ -147,6 +147,15 @@ describe("User", () => {
         verifiedAt: null,
       });
     });
+
+    it("should return 403 when target is not self", async () => {
+      const response = await requester.request(
+        HttpRequest.PATCH(`/users/other`).json({
+          name: "new name",
+        }),
+      );
+      expect(response.statusCode).toBe(403);
+    });
   });
 
   describe("PUT /users/me/verification", () => {

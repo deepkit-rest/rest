@@ -68,18 +68,18 @@ export class UserResource
 
   @rest.action("PATCH", ":pk")
   @http.serialization({ groupsExclude: ["internal"] }).group("auth-required")
-  async update(pk: User["id"]): Promise<ResponseReturnType> {
-    if (pk !== "me") throw new HttpAccessDeniedError();
+  @http.group("self-only")
+  async update(): Promise<ResponseReturnType> {
     return this.crud.update();
   }
 
   @rest.action("PUT", ":pk/verification")
   @http.serialization({ groupsExclude: ["internal"] }).group("auth-required")
+  @http.group("self-only")
   @http
     .response(204, "Verification requested")
     .response(403, "Duplicate verification request")
-  async requestVerification(pk: User["id"]): Promise<NoContentResponse> {
-    if (pk !== "me") throw new HttpAccessDeniedError();
+  async requestVerification(): Promise<NoContentResponse> {
     try {
       const userId = this.requestContext.user.id;
       const code = this.verificationCodePool.request(userId);
@@ -98,11 +98,11 @@ export class UserResource
 
   @rest.action("GET", ":pk/verification")
   @http.serialization({ groupsExclude: ["internal"] }).group("auth-required")
+  @http.group("self-only")
   @http
     .response(204, "Pending verification exists")
     .response(404, "No pending verification")
-  async inspectVerification(pk: User["id"]): Promise<NoContentResponse> {
-    if (pk !== "me") throw new HttpAccessDeniedError();
+  async inspectVerification(): Promise<NoContentResponse> {
     const code = this.verificationCodePool.obtain(this.requestContext.user.id);
     if (!code) throw new HttpNotFoundError("No pending verification");
     return new NoContentResponse();
@@ -110,15 +110,14 @@ export class UserResource
 
   @rest.action("PUT", ":pk/verification/confirmation")
   @http.serialization({ groupsExclude: ["internal"] }).group("auth-required")
+  @http.group("self-only")
   @http
     .response(204, "Verified")
     .response(400, "Code not match")
     .response(404, "No pending verification")
   async confirmVerification(
-    pk: User["id"],
     { code }: HttpBody<{ code: string }>, //
   ): Promise<NoContentResponse> {
-    if (pk !== "me") throw new HttpAccessDeniedError();
     const userId = this.requestContext.user.id;
     const codeExpected = this.verificationCodePool.obtain(userId);
     if (!codeExpected) throw new HttpNotFoundError("No pending verification");
