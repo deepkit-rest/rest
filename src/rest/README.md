@@ -2,9 +2,62 @@
 
 **_REST API simplified._**
 
-DeepKit REST opens up a whole new way of developing declarative and extensive RESTful APIs by parsing the request progressively during the responding process instead of defining everything ahead of time, we can create general abstractions for common logic much more easily.
+```
+npm i deepkit-rest // not available now :D
+```
 
-To begin with DeepKit REST, both `RestModule` and `HttpExtensionModule` should be imported in your `App` instance.
+# Overview
+
+DeepKit REST opens up a whole new declarative and extensive approach for developing REST APIs where
+
+- request information is available also via the dependency injection system instead of only available through controller method parameters.
+- request is parsed dynamically and progressively during the responding process by different services instead of parsed at once by the framework based on the schemas defined ahead of time
+- response body is completely serialized and formed by ourselves
+
+By adopting this approach, we can now create elegant general abstractions for common logic much more easily, and thus we can implement our API like this:
+
+```ts
+@rest.resource(Book, "books").guardedBy(AuthGuard)
+export class BookResource
+  implements
+    RestResource<Book>,
+    RestPaginationCustomizations,
+    RestFilteringCustomizations,
+    RestSortingCustomizations,
+    RestSerializationCustomizations<Book>
+{
+  readonly serializer = BookSerializer;
+  readonly paginator = RestOffsetLimitPaginator;
+  readonly filters = [RestGenericFilter];
+  readonly sorters = [RestGenericSorter];
+
+  constructor(
+    private database: Database,
+    private requestContext: RequestContext,
+    private crud: RestCrudKernel<Book>,
+  ) {}
+
+  getDatabase(): Database {
+    return this.database;
+  }
+
+  getQuery(): Query<Book> {
+    const userId = this.requestContext.user.id;
+    const userRef = this.database.getReference(User, userId);
+    return this.database.query(Book).filter({ owner: userRef });
+  }
+
+  @rest.action("GET")
+  @http.serialization({ groupsExclude: ["internal"] })
+  async list(): Promise<Response> {
+    return this.crud.list();
+  }
+}
+```
+
+# Tutorial
+
+To get started, both `RestModule` and `HttpExtensionModule` are required to be imported in your `App` instance:
 
 ```ts
 new App({
@@ -19,28 +72,24 @@ new App({
   .run();
 ```
 
-The provider `HttpRequestParsed` provided in `HttpExtensionModule` offers us the ability to parse the request at any time during a responding process:
-
-```ts
-class MyService {
-  constructor(private request: HttpRequestParsed) {}
-  method() {
-    interface DynamicQuerySchema {}
-    const queries = this.request.getQueries<DynamicQuerySchema>();
-  }
-}
-```
-
-# Core Concepts
-
-DeepKit REST is divided into multiple decoupled parts, which allows you to easily extend its functionalities. The Core part provides a few concepts that fits well with REST API use cases.
+> `HttpExtensionModule` plays an important role in DeepKit REST by making the request information available through the DI system where the most useful provider `HttpRequestParsed` in the module offers us the ability to parse the request at any time during a responding process:
+>
+> ```ts
+> class MyService {
+>   constructor(private request: HttpRequestParsed) {}
+>   method() {
+>     interface DynamicQuerySchema {}
+>     const queries = this.request.getQueries<DynamicQuerySchema>();
+>   }
+> }
+> ```
 
 ## Resource
 
-In DeepKit REST, we define REST Resources(Resource for short) instead of HTTP Controllers:
+In DeepKit REST, we define Resources instead of HTTP Controllers:
 
 ```ts
-@rest.resource(Book)
+@rest.resource(Book, "base/path/for/book/actions")
 class BookResource implements RestResource<Book> {
   constructor(private database: Database) {}
 
@@ -72,29 +121,31 @@ class BookModule extends createModule({
 }) {}
 ```
 
-You can basically regard a Resource as a special Controller, as Resources are in `http` scope and everything that works in regular HTTP Controllers works in REST Resources.
+### Actions
 
-The following code will generate a route at `/api/v1/books/:id`, where `api` is the the default API prefix, `v` is the default versioning prefix:
+Despite of a few internal differences, Resources are just special HTTP Controllers:
 
-```ts
-@rest.resource(Book, "books").version(1)
-class BookResource implements RestResource<Book> {
-  // ...
-  @http.GET(":id")
-  async route(id: string) {}
-}
-```
+- Resources are in `http` scope too
+- `@http` decorators still work in Resources
+- Method parameters are resolved completely the same
+- ...
 
-The API prefix and versioning prefix can be configured when instantiating `RestModule`:
+Therefore, you should be able to use decorators like `@http.GET()` to define Actions, but you should NEVER do, because it will probably make the Action a regular HTTP Action but not a REST Action, and most of our features not available to regular HTTP Actions.
+
+Instead, an Action should be defined using `@rest.action()`:
 
 ```ts
-// custom prefix
-new RestModule({ prefix: "api-prefix", versioning: "versioning-prefix" });
-// remove API prefix and disable versioning
-new RestModule({ prefix: "", versioning: false });
+@rest.action("GET", ":id")
 ```
 
-> The URL will not include `v1` if `@rest.version()` is not applied or versioning is disabled.
+As long as `@rest.action()` is applied, you can use the `@http` decorator for additional metadata:
+
+```ts
+@rest.action("GET", ":id")
+@http.group("my-group").data("key", "value").response(404)
+```
+
+### Inferred Path
 
 For simple resources, we can omit the second parameter of `@rest.resource()` to infer the resource's path from the entity's collection name:
 
@@ -106,38 +157,41 @@ class Book {
 ```
 
 ```ts
-@rest.resource(Book)
+@rest.resource(Book) // inferred path: "books"
 class BookResource implements RestResource<Book> {
   // ...
 }
 ```
 
-> The route generation process of DeepKit REST doesn't define any `baseUrl`, so we can define path parameters in the Resource path to implement nested resources.
->
-> For example:
->
-> ```ts
-> @rest.resource(Book, "users/:userId/books")
-> class UserBookResource {}
-> ```
->
-> You can utilize the DeepKit Http Extension library to parse the path parameters.
+### Path Prefix
 
-## Action
-
-Regular HTTP Actions/Routes are replaced by REST Actions(Action for short).
-
-Actions can be defined using the combination of the new `@rest` decorator and the regular `@http` decorator.
+We can specify the path prefix for all our resources via the module config of `RestModule`
 
 ```ts
-@rest.action("GET", ":id/path")
-@http.group('auth-required')
-action() {}
+{
+  imports: [new RestModule({ prefix: "api" })];
+}
 ```
 
-You MUST NOT define Actions using ONLY the `@http` decorator, which means you should avoid decorations like `@http.GET()` and `@http.POST()` because this would make the Action a regular HTTP Action rather than a REST Action and most features of this library are not available for a regular HTTP Action.
+### Nested Resources
 
-## Action Context
+There is a notable difference in route generation between Resources and HTTP Controllers - routes generated from Resources will never have a `baseUrl`. Therefore, we can declare path parameter in the Resource path, and thus we can have nested Resources:
+
+```ts
+@rest.resource(Book, "users/:userId/books")
+class UserBookResource implements RestResource<Book> {
+  constructor(private request: HttpRequestParsed, private database: Database) {}
+  // ...
+  getQuery() {
+    const { userId } = this.request.getPathParams<{ userId: string }>();
+    const userRef = this.database.getRef(User, userId);
+    return this.database.query(Book).filter({ owner: userRef });
+  }
+  // ...
+}
+```
+
+<!-- ## Action Context
 
 Action Context is provided in `http` scope, offering easy access to a lot of information about the current Resource and Action that might be used during a REST API responding process.
 
@@ -154,50 +208,13 @@ class MyService {
 
 > Most methods in Action Context have caching implemented, so there's nothing to worry if you want to call a method multiple times.
 
-# CRUD
+# Developing REST APIs
 
-The CRUD part provides a highly customizable workflow for CRUD operations built on top of the Core Concepts.
-
-To get start with CRUD, we need to first inject the CRUD Kernel into our Resource.
-
-```ts
-class BookResource implements RestResource<Book> {
-  constructor(private crud: RestCrudKernel) {}
-  // ...
-}
-```
-
-## Entity Serializer
-
-As entities must be serialized into plain objects to form the response, all the CRUD Actions will make use of an Entity Serializer.
-
-```ts
-interface RestEntitySerializer<Entity> {
-  serialize(entity: Entity): Promise<unknown>;
-  // ...
-}
-```
-
-The default Entity Serializer is `RestGenericSerializer` which internally uses DeepKit's serialization feature. When using `RestGenericSerializer`, you can specify the DeepKit serialization options and the DeepKit serializer to use via the `@http` decorator:
-
-```ts
-@http.serializer(serializer).serialization({ groupsExclude: ["hidden"] })
-```
-
-You can extend the `RestGenericSerializer` or implement your own Entity Serializer to customize the behavior:
-
-```ts
-class BookResource
-  implements RestResource<Book>, RestSerializationCustomizations<Book>
-{
-  serializer = BookSerializer;
-  // ...
-}
-```
+The responding process of a REST API is separated into multiple REST components with their own responsibilities, such as REST Paginator and REST Filter, and there are quite a lot implementations of these REST components built in this library covering common CRUD use cases.
 
 ## List Action
 
-Now let's first implement a simplest List Action:
+Let's first implement a simplest List Action:
 
 ```ts
 @rest.action("GET")
@@ -558,7 +575,7 @@ customAction() {
 };
 ```
 
-> Caching system is shared by all derived classes of Action Context, which means invoking a `getXxx()` in both Action Context and CRUD Action Context will not cause any redundant calculations.
+> Caching system is shared by all derived classes of Action Context, which means invoking a `getXxx()` in both Action Context and CRUD Action Context will not cause any redundant calculations. -->
 
 # Special Thanks
 

@@ -12,8 +12,23 @@ export interface RestSerializationCustomizations<Entity> {
 }
 
 export interface RestEntitySerializer<Entity> {
+  /**
+   * Transform the entity into a JSON serializable plain object to form the
+   * response body.
+   * @param entity
+   */
   serialize(entity: Entity): Promise<unknown>;
+  /**
+   * Create a new entity instance based on the payload data which came
+   * from the request body.
+   * @param payload
+   */
   deserializeCreation(payload: Record<string, unknown>): Promise<Entity>;
+  /**
+   * Update an existing entity instance based on the payload data which came
+   * from the request body.
+   * @param payload
+   */
   deserializeUpdate(
     entity: Entity,
     payload: Record<string, unknown>,
