@@ -23,9 +23,9 @@ export abstract class AppResource<Entity extends AppEntity<Entity>>
     RestFilteringCustomizations,
     RestSortingCustomizations
 {
-  paginator = RestOffsetLimitPaginator;
-  filters = [RestGenericFilter];
-  sorters = [RestGenericSorter];
+  readonly paginator = RestOffsetLimitPaginator;
+  readonly filters = [RestGenericFilter];
+  readonly sorters = [RestGenericSorter];
 
   constructor(protected database: Database) {}
 
