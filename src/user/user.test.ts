@@ -2,8 +2,8 @@ import { App } from "@deepkit/app";
 import { createTestingApp, TestingFacade } from "@deepkit/framework";
 import { HttpKernel, HttpRequest } from "@deepkit/http";
 import { Database } from "@deepkit/orm";
-import { AuthGuard } from "src/auth/auth.guard";
 import { AuthModule } from "src/auth/auth.module";
+import { AuthTokenService } from "src/auth/auth-token.service";
 import { ExpirableMap } from "src/common/map";
 import { CoreModule } from "src/core/core.module";
 import { RequestContext } from "src/core/request-context";
@@ -22,6 +22,7 @@ describe("User", () => {
   let requester: HttpKernel;
   let database: Database;
   let user: User;
+  let auth: string;
 
   beforeEach(async () => {
     facade = createTestingApp({
@@ -52,10 +53,10 @@ describe("User", () => {
       password: "password",
     });
     await database.persist(user);
+    auth = `Bearer ${await facade.app
+      .get(AuthTokenService, AuthModule)
+      .signAccess(user)}`;
     await facade.startServer();
-    jest
-      .spyOn(AuthGuard.prototype, "guard")
-      .mockReturnValue(Promise.resolve(undefined));
   });
 
   describe("GET /users", () => {
@@ -71,7 +72,10 @@ describe("User", () => {
     });
 
     test("response", async () => {
-      const response = await requester.request(HttpRequest.GET("/users"));
+      const response = await requester.request(
+        HttpRequest.GET("/users") //
+          .header("authorization", auth),
+      );
       expect(response.json).toEqual({
         total: 2,
         items: [
@@ -89,21 +93,24 @@ describe("User", () => {
 
     test("pagination", async () => {
       const response = await requester.request(
-        HttpRequest.GET("/users?limit=1"),
+        HttpRequest.GET("/users?limit=1") //
+          .header("authorization", auth),
       );
       expect(response.json).toEqual({ total: 2, items: expect.any(Array) });
     });
 
     test("filter", async () => {
       const response = await requester.request(
-        HttpRequest.GET(`/users?filter[id][$eq]=${user.id}`),
+        HttpRequest.GET(`/users?filter[id][$eq]=${user.id}`) //
+          .header("authorization", auth),
       );
       expect(response.json).toEqual({ total: 1, items: expect.any(Array) });
     });
 
     test("order", async () => {
       const response = await requester.request(
-        HttpRequest.GET("/users?order[name]=desc"),
+        HttpRequest.GET("/users?order[name]=desc") //
+          .header("authorization", auth),
       );
       expect(response.json).toMatchObject({
         total: 2,
@@ -115,7 +122,8 @@ describe("User", () => {
   describe("GET /users/:id", () => {
     it("should work", async () => {
       const response = await requester.request(
-        HttpRequest.GET(`/users/${user.id}`),
+        HttpRequest.GET(`/users/${user.id}`) //
+          .header("authorization", auth),
       );
       expect(response.json).toEqual({
         id: user.id,
@@ -129,7 +137,10 @@ describe("User", () => {
 
   describe("GET /users/me", () => {
     it("should work", async () => {
-      const response = await requester.request(HttpRequest.GET(`/users/me`));
+      const response = await requester.request(
+        HttpRequest.GET(`/users/me`) //
+          .header("authorization", auth),
+      );
       expect(response.json).toEqual({
         id: user.id,
         name: user.name,
@@ -143,9 +154,9 @@ describe("User", () => {
   describe("PATCH /users/me", () => {
     it("should work", async () => {
       const response = await requester.request(
-        HttpRequest.PATCH(`/users/me`).json({
-          name: "new name",
-        }),
+        HttpRequest.PATCH(`/users/me`)
+          .json({ name: "new name" })
+          .header("authorization", auth),
       );
       expect(response.json).toEqual({
         id: user.id,
@@ -158,9 +169,9 @@ describe("User", () => {
 
     it("should return 403 when target is not self", async () => {
       const response = await requester.request(
-        HttpRequest.PATCH(`/users/other`).json({
-          name: "new name",
-        }),
+        HttpRequest.PATCH(`/users/other`)
+          .json({ name: "new name" })
+          .header("authorization", auth),
       );
       expect(response.statusCode).toBe(403);
     });
@@ -169,7 +180,8 @@ describe("User", () => {
   describe("PUT /users/me/verification", () => {
     it("should work", async () => {
       const response = await requester.request(
-        HttpRequest.PUT(`/users/me/verification`),
+        HttpRequest.PUT(`/users/me/verification`) //
+          .header("authorization", auth),
       );
       expect(response.statusCode).toBe(204);
     });
@@ -178,7 +190,8 @@ describe("User", () => {
       const pool = facade.app.get(UserVerificationCodePool, UserModule);
       pool.request(user.id);
       const response = await requester.request(
-        HttpRequest.PUT(`/users/me/verification`),
+        HttpRequest.PUT(`/users/me/verification`) //
+          .header("authorization", auth),
       );
       expect(response.statusCode).toBe(403);
     });
@@ -189,14 +202,16 @@ describe("User", () => {
       const pool = facade.app.get(UserVerificationCodePool, UserModule);
       pool.request(user.id);
       const response = await requester.request(
-        HttpRequest.GET(`/users/me/verification`),
+        HttpRequest.GET(`/users/me/verification`) //
+          .header("authorization", auth),
       );
       expect(response.statusCode).toBe(204);
     });
 
     it("should return 404 when verification not found", async () => {
       const response = await requester.request(
-        HttpRequest.GET(`/users/me/verification`),
+        HttpRequest.GET(`/users/me/verification`) //
+          .header("authorization", auth),
       );
       expect(response.statusCode).toBe(404);
     });
@@ -209,8 +224,11 @@ describe("User", () => {
       pool.request(user.id);
       expect(mapSetSpy).toHaveBeenCalledTimes(1);
       const code = mapSetSpy.mock.lastCall[1];
-      const request = HttpRequest.PUT(`/users/me/verification/confirmation`);
-      const response = await requester.request(request.json({ code }));
+      const response = await requester.request(
+        HttpRequest.PUT(`/users/me/verification/confirmation`)
+          .json({ code })
+          .header("authorization", auth),
+      );
       expect(response.statusCode).toBe(204);
       const userNew = await database.query(User).findOne();
       expect(userNew.verifiedAt).toBeInstanceOf(Date);
@@ -220,9 +238,9 @@ describe("User", () => {
       const pool = facade.app.get(UserVerificationCodePool, UserModule);
       pool.request(user.id);
       const response = await requester.request(
-        HttpRequest.PUT(`/users/me/verification/confirmation`).json({
-          code: "not-match",
-        }),
+        HttpRequest.PUT(`/users/me/verification/confirmation`)
+          .json({ code: "not-match" })
+          .header("authorization", auth),
       );
       expect(response.statusCode).toBe(400);
     });

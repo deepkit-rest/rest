@@ -2,10 +2,9 @@ import { App } from "@deepkit/app";
 import { createTestingApp, TestingFacade } from "@deepkit/framework";
 import { HttpKernel, HttpRequest } from "@deepkit/http";
 import { Database } from "@deepkit/orm";
-import { AuthGuard } from "src/auth/auth.guard";
 import { AuthModule } from "src/auth/auth.module";
+import { AuthTokenService } from "src/auth/auth-token.service";
 import { CoreModule } from "src/core/core.module";
-import { RequestContext } from "src/core/request-context";
 import { DatabaseExtensionModule } from "src/database-extension/database-extension.module";
 import { FileEngine } from "src/file-engine/file-engine.interface";
 import { FileEngineModule } from "src/file-engine/file-engine.module";
@@ -27,6 +26,7 @@ describe("File", () => {
   let requester: HttpKernel;
   let database: Database;
   let user: User;
+  let auth: string;
 
   beforeEach(async () => {
     facade = createTestingApp({
@@ -40,13 +40,6 @@ describe("File", () => {
         new AuthModule(),
         new FileModule(),
       ],
-      providers: [
-        {
-          provide: RequestContext,
-          useFactory: () => ({ user: { id: user.id } }),
-          scope: "http",
-        },
-      ],
     });
     requester = facade.app.get(HttpKernel);
     database = facade.app.get(Database);
@@ -57,10 +50,10 @@ describe("File", () => {
       password: "password",
     });
     await database.persist(user);
+    auth = `Bearer ${await facade.app
+      .get(AuthTokenService, AuthModule)
+      .signAccess(user)}`;
     await facade.startServer();
-    jest
-      .spyOn(AuthGuard.prototype, "guard")
-      .mockReturnValue(Promise.resolve(undefined));
   });
 
   describe("POST /files", () => {
@@ -72,11 +65,13 @@ describe("File", () => {
       });
       await database.persist(parent);
       const response = await requester.request(
-        HttpRequest.POST("/files").json({
-          name: "test.txt",
-          parent: parent.id,
-          type: "file",
-        }),
+        HttpRequest.POST("/files")
+          .json({
+            name: "test.txt",
+            parent: parent.id,
+            type: "file",
+          })
+          .header("authorization", auth),
       );
       expect(response.json).toEqual({
         id: expect.any(String),
@@ -99,10 +94,12 @@ describe("File", () => {
       });
       await database.persist(parent);
       const response = await requester.request(
-        HttpRequest.POST("/files").json({
-          name: "test.txt",
-          parent: parent.id,
-        }),
+        HttpRequest.POST("/files")
+          .json({
+            name: "test.txt",
+            parent: parent.id,
+          })
+          .header("authorization", auth),
       );
       expect(response.statusCode).toBe(400);
     });
@@ -119,7 +116,9 @@ describe("File", () => {
         new FileSystemRecord({ owner: user, name: "test.txt", type: "file" }),
         new FileSystemRecord({ owner: user2, name: "test2.txt", type: "file" }),
       );
-      const response = await requester.request(HttpRequest.GET("/files"));
+      const response = await requester.request(
+        HttpRequest.GET("/files").header("authorization", auth),
+      );
       expect(response.json).toEqual({
         total: 1,
         items: [
@@ -144,7 +143,7 @@ describe("File", () => {
         new FileSystemRecord({ owner: user, name: "test2.txt", type: "file" }),
       );
       const response = await requester.request(
-        HttpRequest.GET("/files?limit=1"),
+        HttpRequest.GET("/files?limit=1").header("authorization", auth),
       );
       expect(response.json).toEqual({
         total: 2,
@@ -157,7 +156,8 @@ describe("File", () => {
         new FileSystemRecord({ owner: user, name: "test1.txt", type: "file" }),
       );
       const response = await requester.request(
-        HttpRequest.GET("/files?filter[id][$eq]=notfound"),
+        HttpRequest.GET("/files?filter[id][$eq]=notfound") //
+          .header("authorization", auth),
       );
       expect(response.json).toEqual({ total: 0, items: [] });
     });
@@ -169,7 +169,8 @@ describe("File", () => {
       ];
       await database.persist(...records);
       const response = await requester.request(
-        HttpRequest.GET("/files?order[name]=desc"),
+        HttpRequest.GET("/files?order[name]=desc") //
+          .header("authorization", auth),
       );
       expect(response.json).toMatchObject({
         total: 2,
@@ -192,7 +193,8 @@ describe("File", () => {
       });
       await database.persist(dir, file);
       const response = await requester.request(
-        HttpRequest.GET(`/files?path=/dir/file`),
+        HttpRequest.GET(`/files?path=/dir/file`) //
+          .header("authorization", auth),
       );
       expect(response.json).toMatchObject({
         total: 1,
@@ -202,7 +204,8 @@ describe("File", () => {
 
     test("?path=<invalid>", async () => {
       const response = await requester.request(
-        HttpRequest.GET(`/files?path=should/not/exist`),
+        HttpRequest.GET(`/files?path=should/not/exist`) //
+          .header("authorization", auth),
       );
       expect(response.statusCode).toBe(200);
       expect(response.json).toEqual({ total: 0, items: [] });
@@ -218,7 +221,8 @@ describe("File", () => {
       });
       await database.persist(record);
       const response = await requester.request(
-        HttpRequest.GET(`/files/${record.id}`),
+        HttpRequest.GET(`/files/${record.id}`) //
+          .header("authorization", auth),
       );
       expect(response.json).toEqual({
         id: record.id,
@@ -243,7 +247,9 @@ describe("File", () => {
       });
       await database.persist(record);
       const response = await requester.request(
-        HttpRequest.PATCH(`/files/${record.id}`).json({ name: "updated" }),
+        HttpRequest.PATCH(`/files/${record.id}`)
+          .json({ name: "updated" })
+          .header("authorization", auth),
       );
       expect(response.json).toEqual({
         id: record.id,
@@ -273,7 +279,9 @@ describe("File", () => {
       });
       await database.persist(record, parent);
       const response = await requester.request(
-        HttpRequest.PATCH(`/files/${record.id}`).json({ parent: parent.id }),
+        HttpRequest.PATCH(`/files/${record.id}`)
+          .json({ parent: parent.id })
+          .header("authorization", auth),
       );
       expect(response.statusCode).toBe(400);
     });
@@ -288,7 +296,8 @@ describe("File", () => {
       });
       await database.persist(record);
       const response = await requester.request(
-        HttpRequest.DELETE(`/files/${record.id}`),
+        HttpRequest.DELETE(`/files/${record.id}`) //
+          .header("authorization", auth),
       );
       expect(response.statusCode).toBe(204);
       expect(response.bodyString).toBe("");
@@ -305,7 +314,9 @@ describe("File", () => {
       });
       await database.persist(record);
       const response = await requester.request(
-        HttpRequest.PUT(`/files/${record.id}/content`).body(Buffer.from("v")),
+        HttpRequest.PUT(`/files/${record.id}/content`)
+          .body(Buffer.from("v"))
+          .header("authorization", auth),
       );
       expect(response.statusCode).toBe(204);
       expect(response.bodyString).toBe("");
@@ -328,7 +339,8 @@ describe("File", () => {
       });
       await database.persist(record);
       const response = await requester.request(
-        HttpRequest.PUT(`/files/${record.id}/content`),
+        HttpRequest.PUT(`/files/${record.id}/content`) //
+          .header("authorization", auth),
       );
       expect(response.statusCode).toBe(400);
     });
@@ -350,7 +362,8 @@ describe("File", () => {
       record.contentSize = 1;
       await database.persist(record);
       const response = await requester.request(
-        HttpRequest.GET(`/files/${record.id}/content`),
+        HttpRequest.GET(`/files/${record.id}/content`) //
+          .header("authorization", auth),
       );
       expect(response.statusCode).toBe(200);
       await new Promise((r) => response.once("finish", r));
@@ -371,7 +384,8 @@ describe("File", () => {
       record.contentIntegrity = "integrity";
       record.contentSize = 3;
       await database.persist(record);
-      const request = HttpRequest.GET(`/files/${record.id}/content`);
+      const request = HttpRequest.GET(`/files/${record.id}/content`) //
+        .header("authorization", auth);
       request.header("range", "bytes=0-1");
       const response = await requester.request(request);
       await new Promise((r) => response.once("finish", r));
@@ -388,7 +402,8 @@ describe("File", () => {
       });
       await database.persist(record);
       const response = await requester.request(
-        HttpRequest.GET(`/files/${record.id}/content`),
+        HttpRequest.GET(`/files/${record.id}/content`) //
+          .header("authorization", auth),
       );
       expect(response.statusCode).toBe(404);
     });
@@ -401,7 +416,8 @@ describe("File", () => {
       });
       await database.persist(record);
       const response = await requester.request(
-        HttpRequest.GET(`/files/${record.id}/content`),
+        HttpRequest.GET(`/files/${record.id}/content`) //
+          .header("authorization", auth),
       );
       expect(response.statusCode).toBe(400);
     });
@@ -418,7 +434,8 @@ describe("File", () => {
       const manager = facade.app.get(FileChunkUploadManager, FileModule);
       await manager.store(record.id, Readable.from(Buffer.from("v")), 10);
       const response = await requester.request(
-        HttpRequest.GET(`/files/${record.id}/content/chunks`),
+        HttpRequest.GET(`/files/${record.id}/content/chunks`) //
+          .header("authorization", auth),
       );
       expect(response.statusCode).toBe(200);
       expect(response.json).toEqual([10]);
@@ -432,7 +449,8 @@ describe("File", () => {
       });
       await database.persist(record);
       const response = await requester.request(
-        HttpRequest.GET(`/files/${record.id}/content/chunks`),
+        HttpRequest.GET(`/files/${record.id}/content/chunks`) //
+          .header("authorization", auth),
       );
       expect(response.statusCode).toBe(400);
     });
@@ -448,9 +466,9 @@ describe("File", () => {
       await database.persist(record);
       const manager = facade.app.get(FileChunkUploadManager, FileModule);
       const response = await requester.request(
-        HttpRequest.PUT(`/files/${record.id}/content/chunks/10`).body(
-          Buffer.from("v"),
-        ),
+        HttpRequest.PUT(`/files/${record.id}/content/chunks/10`)
+          .body(Buffer.from("v"))
+          .header("authorization", auth),
       );
       expect(response.statusCode).toBe(204);
       expect(response.bodyString).toBe("");
@@ -469,9 +487,9 @@ describe("File", () => {
       });
       await database.persist(record);
       const response = await requester.request(
-        HttpRequest.PUT(`/files/${record.id}/content/chunks/10`).body(
-          Buffer.from("v"),
-        ),
+        HttpRequest.PUT(`/files/${record.id}/content/chunks/10`)
+          .body(Buffer.from("v"))
+          .header("authorization", auth),
       );
       expect(response.statusCode).toBe(400);
     });
@@ -484,16 +502,19 @@ describe("File", () => {
       });
       await database.persist(record);
       await requester.request(
-        HttpRequest.PUT(`/files/${record.id}/content/chunks/1`) //
-          .body(Buffer.from("v1")),
+        HttpRequest.PUT(`/files/${record.id}/content/chunks/1`)
+          .body(Buffer.from("v1"))
+          .header("authorization", auth),
       );
       await requester.request(
-        HttpRequest.PUT(`/files/${record.id}/content/chunks/2`) //
-          .body(Buffer.from("v2")),
+        HttpRequest.PUT(`/files/${record.id}/content/chunks/2`)
+          .body(Buffer.from("v2"))
+          .header("authorization", auth),
       );
       await requester.request(
-        HttpRequest.PUT(`/files/${record.id}/content/chunks/last`) //
-          .body(Buffer.from("last")),
+        HttpRequest.PUT(`/files/${record.id}/content/chunks/last`)
+          .body(Buffer.from("last"))
+          .header("authorization", auth),
       );
       const recordNew = await database.query(FileSystemRecord).findOne();
       expect(recordNew.isContentDefined()).toBe(true);
@@ -515,7 +536,8 @@ describe("File", () => {
       const manager = facade.app.get(FileChunkUploadManager, FileModule);
       manager.store(record.id, Readable.from(Buffer.from("v")), 10);
       const response = await requester.request(
-        HttpRequest.DELETE(`/files/${record.id}/content/chunks`),
+        HttpRequest.DELETE(`/files/${record.id}/content/chunks`) //
+          .header("authorization", auth),
       );
       expect(response.statusCode).toBe(204);
       expect(response.bodyString).toBe("");
@@ -530,7 +552,8 @@ describe("File", () => {
       });
       await database.persist(record);
       const response = await requester.request(
-        HttpRequest.DELETE(`/files/${record.id}/content/chunks`),
+        HttpRequest.DELETE(`/files/${record.id}/content/chunks`) //
+          .header("authorization", auth),
       );
       expect(response.statusCode).toBe(400);
     });
@@ -553,7 +576,8 @@ describe("File", () => {
       record.contentSize = 1;
       await database.persist(record);
       const response = await requester.request(
-        HttpRequest.GET(`/files/${record.id}/integrity`),
+        HttpRequest.GET(`/files/${record.id}/integrity`) //
+          .header("authorization", auth),
       );
       expect(response.statusCode).toBe(204);
     });
@@ -566,7 +590,8 @@ describe("File", () => {
       });
       await database.persist(record);
       const response = await requester.request(
-        HttpRequest.GET(`/files/${record.id}/integrity`),
+        HttpRequest.GET(`/files/${record.id}/integrity`) //
+          .header("authorization", auth),
       );
       expect(response.statusCode).toBe(404);
     });
@@ -586,7 +611,8 @@ describe("File", () => {
       await database.persist(record);
 
       const response = await requester.request(
-        HttpRequest.GET(`/files/${record.id}/integrity`),
+        HttpRequest.GET(`/files/${record.id}/integrity`) //
+          .header("authorization", auth),
       );
       expect(response.statusCode).toBe(404);
     });
@@ -599,7 +625,8 @@ describe("File", () => {
       });
       await database.persist(record);
       const response = await requester.request(
-        HttpRequest.GET(`/files/${record.id}/integrity`),
+        HttpRequest.GET(`/files/${record.id}/integrity`) //
+          .header("authorization", auth),
       );
       expect(response.statusCode).toBe(400);
     });
@@ -623,7 +650,10 @@ describe("File", () => {
     });
 
     test("response", async () => {
-      const response = await requester.request(HttpRequest.GET("/tags"));
+      const response = await requester.request(
+        HttpRequest.GET("/tags") //
+          .header("authorization", auth),
+      );
       expect(response.json).toEqual({
         total: 3,
         items: [
@@ -641,7 +671,8 @@ describe("File", () => {
 
     test("pagination", async () => {
       const response = await requester.request(
-        HttpRequest.GET("/tags?limit=1&offset=1"),
+        HttpRequest.GET("/tags?limit=1&offset=1") //
+          .header("authorization", auth),
       );
       expect(response.json).toMatchObject({
         total: 3,
@@ -651,7 +682,8 @@ describe("File", () => {
 
     test("filtering", async () => {
       const response = await requester.request(
-        HttpRequest.GET("/tags?filter[name][$eq]=name2"),
+        HttpRequest.GET("/tags?filter[name][$eq]=name2") //
+          .header("authorization", auth),
       );
       expect(response.json).toMatchObject({
         total: 1,
@@ -661,7 +693,8 @@ describe("File", () => {
 
     test("ordering", async () => {
       const response = await requester.request(
-        HttpRequest.GET("/tags?order[name]=desc"),
+        HttpRequest.GET("/tags?order[name]=desc") //
+          .header("authorization", auth),
       );
       expect(response.json).toMatchObject({
         total: 3,
@@ -673,7 +706,9 @@ describe("File", () => {
   describe("POST /tags", () => {
     test("basic", async () => {
       const response = await requester.request(
-        HttpRequest.POST("/tags").json({ name: "name" }),
+        HttpRequest.POST("/tags")
+          .json({ name: "name" })
+          .header("authorization", auth),
       );
       expect(response.json).toEqual({
         id: expect.any(String),
@@ -690,7 +725,8 @@ describe("File", () => {
       const tag = new FileSystemTag({ owner: user, name: "name" });
       await database.persist(tag);
       const response = await requester.request(
-        HttpRequest.GET(`/tags/${tag.id}`),
+        HttpRequest.GET(`/tags/${tag.id}`) //
+          .header("authorization", auth),
       );
       expect(response.json).toEqual({
         id: tag.id,
@@ -706,7 +742,9 @@ describe("File", () => {
       const tag = new FileSystemTag({ owner: user, name: "name" });
       await database.persist(tag);
       const response = await requester.request(
-        HttpRequest.PATCH(`/tags/${tag.id}`).json({ name: "new name" }),
+        HttpRequest.PATCH(`/tags/${tag.id}`)
+          .json({ name: "new name" })
+          .header("authorization", auth),
       );
       expect(response.json).toEqual({
         id: tag.id,
@@ -722,7 +760,8 @@ describe("File", () => {
       const tag = new FileSystemTag({ owner: user, name: "name" });
       await database.persist(tag);
       const response = await requester.request(
-        HttpRequest.DELETE(`/tags/${tag.id}`),
+        HttpRequest.DELETE(`/tags/${tag.id}`) //
+          .header("authorization", auth),
       );
       expect(response.bodyString).toBe("");
       expect(response.statusCode).toBe(204);
