@@ -3,15 +3,20 @@ import { ClassType } from "@deepkit/core";
 import { createTestingApp, TestingFacade } from "@deepkit/framework";
 import { HttpRequest } from "@deepkit/http";
 import { Database } from "@deepkit/orm";
+import { AutoIncrement, PrimaryKey } from "@deepkit/type";
 import { CoreModule } from "src/core/core.module";
+import { RequestContext } from "src/core/request-context";
 import { DatabaseExtensionModule } from "src/database-extension/database-extension.module";
 import { HttpExtensionModule } from "src/http-extension/http-extension.module";
 import { JwtModule } from "src/jwt/jwt.module";
+import { rest } from "src/rest/core/rest-decoration";
 import { RestModule } from "src/rest/rest.module";
 import { User } from "src/user/user.entity";
 
+import { AuthGuard } from "./auth.guard";
 import { AuthModule } from "./auth.module";
 import { AuthCaptchaService } from "./auth-captcha.service";
+import { AuthTokenService } from "./auth-token.service";
 
 describe("Auth", () => {
   let facade: TestingFacade<App<any>>;
@@ -23,7 +28,7 @@ describe("Auth", () => {
         new CoreModule(),
         new HttpExtensionModule(),
         new DatabaseExtensionModule(),
-        new RestModule(),
+        new RestModule({ prefix: "" }),
         new JwtModule({ secret: "secret" }),
         new AuthModule(),
       ],
@@ -33,6 +38,47 @@ describe("Auth", () => {
     await database.migrate();
     await facade.startServer();
   }
+
+  describe("AuthGuard", () => {
+    let user: User;
+    let auth: string;
+    class MyEntity {
+      id: number & PrimaryKey & AutoIncrement = 0;
+    }
+    @rest.resource(MyEntity, "api")
+    class MyResource {
+      constructor(private context: RequestContext) {}
+      @rest.action("GET").guardedBy(AuthGuard)
+      action() {
+        expect(this.context.user).toMatchObject({ id: user.id });
+      }
+    }
+
+    beforeEach(async () => {
+      await setup([MyResource]);
+      user = new User({
+        name: "name",
+        email: "email@email.com",
+        password: "password",
+      });
+      await database.persist(user);
+      auth = `Bearer ${await facade.app
+        .get(AuthTokenService, AuthModule)
+        .signAccess(user)}`;
+    });
+
+    it("should forbid unauthorized requests", async () => {
+      const response = await facade.request(HttpRequest.GET("/api"));
+      expect(response.statusCode).toBe(401);
+    });
+
+    it("should allow authorized requests", async () => {
+      const response = await facade.request(
+        HttpRequest.GET("/api").header("authorization", auth),
+      );
+      expect(response.statusCode).toBe(200);
+    });
+  });
 
   describe("API", () => {
     beforeEach(async () => {
