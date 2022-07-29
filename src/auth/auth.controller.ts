@@ -39,7 +39,7 @@ export class AuthController {
     if (!user || !verified)
       throw new HttpUnauthorizedError("Invalid credentials");
     const refreshToken = await this.tokenService.signRefresh(user);
-    const accessToken = await this.tokenService.signAccess(refreshToken);
+    const accessToken = await this.tokenService.signAccess(user);
     return { user, refreshToken, accessToken };
   }
 
@@ -52,16 +52,20 @@ export class AuthController {
     const user = new User(payload);
     this.databaseSession.add(user);
     const refreshToken = await this.tokenService.signRefresh(user);
-    const accessToken = await this.tokenService.signAccess(refreshToken);
+    const accessToken = await this.tokenService.signAccess(user);
     return { user, refreshToken, accessToken };
   }
 
   @http.POST("refresh")
   @http.serialization({ groupsExclude: ["internal"] })
   async refresh(payload: HttpBody<AuthRefreshPayload>): Promise<string> {
-    return this.tokenService.signAccess(payload.refreshToken).catch(() => {
+    const { refreshToken } = payload;
+    const { user } = await this.tokenService.decodeAndVerify(refreshToken);
+    try {
+      return this.tokenService.signAccess(user);
+    } catch {
       throw new HttpBadRequestError();
-    });
+    }
   }
 }
 
