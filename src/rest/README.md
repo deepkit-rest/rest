@@ -1,10 +1,8 @@
 # Deepkit REST
 
-REST API simplified
+**_REST API simplified._**
 
-# Installation
-
-DeepKit REST allows you to implement RESTful APIs in a declarative but also flexible and extensive way.
+DeepKit REST opens up a whole new way of developing declarative and extensive RESTful APIs by parsing the request progressively during the responding process instead of defining everything ahead of time, we can create general abstractions for common logic much more easily.
 
 To begin with DeepKit REST, both `RestModule` and `HttpExtensionModule` should be imported in your `App` instance.
 
@@ -19,6 +17,18 @@ new App({
 })
   .loadConfigFromEnv()
   .run();
+```
+
+The provider `HttpRequestParsed` provided in `HttpExtensionModule` offers us the ability to parse the request at any time during a responding process:
+
+```ts
+class MyService {
+  constructor(private request: HttpRequestParsed) {}
+  method() {
+    interface DynamicQuerySchema {}
+    const queries = this.request.getQueries<DynamicQuerySchema>();
+  }
+}
 ```
 
 # Core Concepts
