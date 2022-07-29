@@ -72,7 +72,7 @@ describe("REST Core", () => {
         @rest.action("GET", "path")
         route2() {}
       }
-      await setup({ prefix: "prefix", versioning: false }, [TestingResource]);
+      await setup({ prefix: "prefix" }, [TestingResource]);
       const routes = facade.app.get(HttpRouter).getRoutes();
       expect(routes).toMatchObject<Partial<RouteConfig>[]>([
         { baseUrl: "", path: "prefix/api", httpMethods: ["POST"] },
@@ -86,32 +86,10 @@ describe("REST Core", () => {
         @rest.action("GET")
         route1() {}
       }
-      await setup({ prefix: "prefix", versioning: false }, [TestingResource]);
+      await setup({ prefix: "prefix" }, [TestingResource]);
       const routes = facade.app.get(HttpRouter).getRoutes();
       expect(routes).toMatchObject<Partial<RouteConfig>[]>([
         { baseUrl: "", path: "prefix/users", httpMethods: ["GET"] },
-      ]);
-    });
-
-    test("versioning", async () => {
-      @rest.resource(User, "api").version(1)
-      class TestingResourceV1 extends UserRestResource {
-        @rest.action("GET")
-        route1() {}
-      }
-      @rest.resource(User, "api").version(2)
-      class TestingResourceV2 extends UserRestResource {
-        @rest.action("POST")
-        route1() {}
-      }
-      await setup({ prefix: "prefix", versioning: "v" }, [
-        TestingResourceV1,
-        TestingResourceV2,
-      ]);
-      const routes = facade.app.get(HttpRouter).getRoutes();
-      expect(routes).toMatchObject<Partial<RouteConfig>[]>([
-        { baseUrl: "", path: "prefix/v1/api", httpMethods: ["GET"] },
-        { baseUrl: "", path: "prefix/v2/api", httpMethods: ["POST"] },
       ]);
     });
 
@@ -124,7 +102,7 @@ describe("REST Core", () => {
         @http.group("test")
         action2() {}
       }
-      await setup({ prefix: "prefix", versioning: false }, [MyResource]);
+      await setup({ prefix: "prefix" }, [MyResource]);
       const routes = facade.app.get(HttpRouter).getRoutes();
       expect(routes).toHaveLength(2);
       expect(routes).toMatchObject<Partial<RouteConfig>[]>([
@@ -152,7 +130,7 @@ describe("REST Core", () => {
         };
       }
     }
-    await setup({ prefix: "prefix", versioning: false }, [TestingResource]);
+    await setup({ prefix: "prefix" }, [TestingResource]);
     await database.persist(new User());
     const response = await requester.request(HttpRequest.GET("/prefix/api"));
     expect(response.statusCode).toBe(200);
@@ -171,7 +149,7 @@ describe("REST Core", () => {
     }
     class Dep {}
     const promise = setup(
-      { prefix: "prefix", versioning: false },
+      { prefix: "prefix" },
       [MyResource],
       [{ provide: Dep, scope: "http" }],
     );
@@ -193,7 +171,7 @@ describe("REST Core", () => {
         route() {}
       }
       await setup(
-        { prefix: "prefix", versioning: false },
+        { prefix: "prefix" },
         [MyResource],
         [{ provide: MyGuard, scope: "http" }],
       );
@@ -208,7 +186,7 @@ describe("REST Core", () => {
         route() {}
       }
       await setup(
-        { prefix: "prefix", versioning: false },
+        { prefix: "prefix" },
         [MyResource],
         [{ provide: MyGuard, scope: "http" }],
       );

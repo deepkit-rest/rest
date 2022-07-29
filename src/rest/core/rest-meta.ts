@@ -23,7 +23,6 @@ export class RestResourceMeta<
   classType?: ClassType<RestResource<Entity>>;
   path?: string;
   entityType?: ClassType<Entity>;
-  version?: number;
   actions: Record<string, RestActionMeta> = {};
   guards: ClassType<RestGuard>[] = [];
 

@@ -27,10 +27,6 @@ export class RestClassDecoratorApi extends PrettifiedDecoratorApi<RestResourceMe
     this.meta.path = path;
   }
 
-  version(version: number): void {
-    this.meta.version = version;
-  }
-
   guardedBy(...guards: ClassType<RestGuard>[]): void {
     this.meta.guards.push(...guards);
   }

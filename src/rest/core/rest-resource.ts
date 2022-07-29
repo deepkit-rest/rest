@@ -76,8 +76,6 @@ export class RestResourceInstaller {
   private buildResourcePath(resourceMeta: RestResourceMetaValidated): string {
     let path = "";
     if (this.config.prefix) path = join(path, this.config.prefix);
-    if (this.config.versioning && resourceMeta.version)
-      path = join(path, `${this.config.versioning}${resourceMeta.version}`);
     path = join(path, resourceMeta.path);
     return path;
   }
