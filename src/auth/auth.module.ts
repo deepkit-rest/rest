@@ -1,8 +1,7 @@
 import { createModule } from "@deepkit/app";
 
 import { AuthController } from "./auth.controller";
-import { AuthGuard } from "./auth.guard";
-import { AuthListener } from "./auth.listener";
+import { AuthGuard, AuthGuardListener } from "./auth.guard";
 import { AuthCaptchaService } from "./auth-captcha.service";
 import { AuthTokenService } from "./auth-token.service";
 
@@ -15,7 +14,7 @@ export class AuthModule extends createModule(
       { provide: AuthGuard, scope: "http" },
     ],
     exports: [AuthGuard],
-    listeners: [AuthListener],
+    listeners: [AuthGuardListener],
   },
   "auth",
 ) {}

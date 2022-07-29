@@ -1,4 +1,5 @@
 import { App } from "@deepkit/app";
+import { ClassType } from "@deepkit/core";
 import { createTestingApp, TestingFacade } from "@deepkit/framework";
 import { HttpRequest } from "@deepkit/http";
 import { Database } from "@deepkit/orm";
@@ -16,7 +17,7 @@ describe("Auth", () => {
   let facade: TestingFacade<App<any>>;
   let database: Database;
 
-  beforeEach(async () => {
+  async function setup(controllers: ClassType[] = []) {
     facade = createTestingApp({
       imports: [
         new CoreModule(),
@@ -26,48 +27,55 @@ describe("Auth", () => {
         new JwtModule({ secret: "secret" }),
         new AuthModule(),
       ],
+      controllers,
     });
     database = facade.app.get(Database);
     await database.migrate();
     await facade.startServer();
-  });
+  }
 
-  describe("POST /auth/captcha", () => {
-    test("response", async () => {
-      const response = await facade.request(
-        HttpRequest.POST("/api/auth/captcha"),
-      );
-      expect(response.statusCode).toBe(200);
-      expect(response.json).toEqual({
-        key: expect.any(String),
-        svg: expect.stringMatching(/<svg .*><\/svg>/u),
+  describe("API", () => {
+    beforeEach(async () => {
+      await setup();
+    });
+
+    describe("POST /auth/captcha", () => {
+      test("response", async () => {
+        const response = await facade.request(
+          HttpRequest.POST("/api/auth/captcha"),
+        );
+        expect(response.statusCode).toBe(200);
+        expect(response.json).toEqual({
+          key: expect.any(String),
+          svg: expect.stringMatching(/<svg .*><\/svg>/u),
+        });
       });
     });
-  });
 
-  describe("POST /auth/register", () => {
-    test("response", async () => {
-      const spy = jest
-        .spyOn(AuthCaptchaService.prototype, "verify")
-        .mockReturnValue();
-      const response = await facade.request(
-        HttpRequest.POST("/api/auth/register").json({
-          name: "name",
-          email: "email@email.com",
-          password: "password",
-          captchaKey: "key",
-          captchaResult: "result",
-        }),
-      );
-      expect(spy).toHaveBeenCalled();
-      expect(response.statusCode).toBe(200);
-      const user = await database.query(User).findOne();
-      const { id, name, email } = user;
-      const createdAt = user.createdAt.toISOString();
-      expect(response.json).toEqual({
-        user: { id, name, email, createdAt, verifiedAt: null },
-        accessToken: expect.any(String),
-        refreshToken: expect.any(String),
+    describe("POST /auth/register", () => {
+      test("response", async () => {
+        const spy = jest
+          .spyOn(AuthCaptchaService.prototype, "verify")
+          .mockReturnValue();
+        const response = await facade.request(
+          HttpRequest.POST("/api/auth/register").json({
+            name: "name",
+            email: "email@email.com",
+            password: "password",
+            captchaKey: "key",
+            captchaResult: "result",
+          }),
+        );
+        expect(spy).toHaveBeenCalled();
+        expect(response.statusCode).toBe(200);
+        const user = await database.query(User).findOne();
+        const { id, name, email } = user;
+        const createdAt = user.createdAt.toISOString();
+        expect(response.json).toEqual({
+          user: { id, name, email, createdAt, verifiedAt: null },
+          accessToken: expect.any(String),
+          refreshToken: expect.any(String),
+        });
       });
     });
   });
