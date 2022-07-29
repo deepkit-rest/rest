@@ -34,7 +34,7 @@ describe("File", () => {
         new CoreModule(),
         new HttpExtensionModule(),
         new DatabaseExtensionModule(),
-        new RestModule({ prefix: "" }),
+        new RestModule(),
         new FileEngineModule({ name: "memory" }),
         new JwtModule({ secret: "secret" }),
         new AuthModule(),

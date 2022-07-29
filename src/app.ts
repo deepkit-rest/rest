@@ -18,7 +18,7 @@ new App({
     new CoreModule(),
     new HttpExtensionModule(),
     new DatabaseExtensionModule(),
-    new RestModule(),
+    new RestModule({ prefix: "api" }),
     new FileEngineModule(),
     new EmailEngineModule(),
     new JwtModule(),

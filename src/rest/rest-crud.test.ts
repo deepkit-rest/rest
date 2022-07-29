@@ -52,7 +52,7 @@ describe("REST CRUD", () => {
     providers: ProviderWithScope[] = [],
   ) {
     facade = createTestingApp({
-      imports: [new HttpExtensionModule(), new RestModule({ prefix: "" })],
+      imports: [new HttpExtensionModule(), new RestModule()],
       controllers: [resource],
       providers: [
         {

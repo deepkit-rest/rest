@@ -30,7 +30,7 @@ describe("User", () => {
         new CoreModule(),
         new HttpExtensionModule(),
         new DatabaseExtensionModule(),
-        new RestModule({ prefix: "" }),
+        new RestModule(),
         new AuthModule(),
         new JwtModule({ secret: "secret" }),
         new UserModule(),

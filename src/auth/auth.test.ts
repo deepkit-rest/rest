@@ -28,7 +28,7 @@ describe("Auth", () => {
         new CoreModule(),
         new HttpExtensionModule(),
         new DatabaseExtensionModule(),
-        new RestModule({ prefix: "" }),
+        new RestModule(),
         new JwtModule({ secret: "secret" }),
         new AuthModule(),
       ],
