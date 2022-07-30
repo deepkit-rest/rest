@@ -103,7 +103,7 @@ class BookResource implements RestResource<Book> {
 }
 ```
 
-> `getQuery()` is a good place to filter the entities that the user can view. For example you can allow the user to view only his own `Book`:
+> The `Query` object returned from `getQuery()` will be the base `Query` for every CRUD Actions, so it's a good place to filter the entities to restrict what the user can view. For example you can allow the user to view only his own `Book`:
 >
 > ```ts
 > getQuery() {
@@ -220,13 +220,13 @@ class BookResource implements RestResource<Book>, RestPaginationCustomizations {
 }
 ```
 
-| Action   | Available Customizations                      |
-| -------- | --------------------------------------------- |
-| List     | Serialization, Pagination, Filtering, Sorting |
-| Create   | Serialization                                 |
-| Retrieve | Serialization, Retrieving                     |
-| Update   | Serialization, Retrieving                     |
-| Delete   | Retrieving                                    |
+| Action   | Example URL     | Available Customizations             |
+| -------- | --------------- | ------------------------------------ |
+| List     | GET /books      | Serialization, Pagination, Filtering |
+| Create   | POST /books     | Serialization                        |
+| Retrieve | GET /books/1    | Serialization, Retrieving            |
+| Update   | PATCH /books/1  | Serialization, Retrieving            |
+| Delete   | DELETE /books/1 | Retrieving                           |
 
 > You can extend the built-in CRUD Kernel for more functionalities:
 >
@@ -238,11 +238,11 @@ class BookResource implements RestResource<Book>, RestPaginationCustomizations {
 > }
 > ```
 
-## Pagination
+## Entity Pagination
 
 An Entity Paginator plays an important role in List Actions. It's responsible for both applying pagination to the `Query` object and forming the response body.
 
-Customize the paginator to use by implementing `RestPaginationCustomizations`:
+The paginator to use can be specified by implementing `RestPaginationCustomizations`:
 
 ```ts
 class BookResource implements RestResource<Book>, RestPaginationCustomizations {
@@ -302,17 +302,17 @@ class AppPaginator extends RestPageNumberPaginator {
 }
 ```
 
-## Serialization
+## Entity Serialization
 
 As entities must be serialized to form the response, serialization is a necessary part of every CRUD Actions, which is handled by Entity Serializers.
 
-Specify the serializer by implementing `RestSerializationCustomizations`:
+The serializer to use can be specified by implementing `RestSerializationCustomizations`:
 
 ```ts
 class BookResource
   implements RestResource<Book>, RestSerializationCustomizations<Book>
 {
-  serializer = BookSerializer;
+  readonly serializer = BookSerializer;
   // ...
 }
 ```
@@ -442,13 +442,15 @@ class BookSerializer extends RestGenericSerializer<Book> {
 }
 ```
 
-## Filtering
+## Entity Filtering
 
-In List Actions, the `Query` object is processed by Entity Filters before the Entity Paginator. It's the best place to modify the query result dynamically based on the request.
+In List Actions, the `Query` object will be processed by Entity Filters before passing to the Entity Paginator. It's the best place to modify the query result dynamically based on the request.
+
+By default there are no Entity Filters in use. We can specify multiple Entity Filters, and they will be invoked one by one in order:
 
 ```ts
 class BookResource implements RestResource<Book>, RestFilteringCustomizations {
-  filters = [RestGenericFilter];
+  readonly filters = [RestGenericFilter, RestGenericSorter];
   // ...
 }
 ```
@@ -506,6 +508,45 @@ class AppSorter extends RestGenericSorter {
   // ...
 }
 ```
+
+## Retrieving
+
+For every entity-specific Actions(e.g. Retrieve, Update, Delete), it's necessary to retrieve the target entity for further operations, which is mostly handled by an Entity Retriever.
+
+The Entity Retriever to use can be specified by implementing `RestRetrievingCustomizations`:
+
+```ts
+class BookResource implements RestResource<Book>, RestRetrievingCustomizations {
+  readonly retriever = RestSingleFieldRetriever;
+  // ...
+}
+```
+
+### RestSingleFieldRetriever
+
+`RestSingleFieldRetriever` is the default Entity Retriever, which retrieves the entity based on the `:pk` path parameter and the entity's primary key(by default).
+
+Its behavior can be customized by implementing `RestSingleFieldRetrieverCustomizations` and specify the `retrievesOn` property:
+
+The `retrievesOn` property have a simple form and a long form:
+
+```ts
+@rest.resource(Book).lookup("anything")
+class BookResource
+  implements
+    RestResource<Book>,
+    RestRetrievingCustomizations,
+    RestSingleFieldRetrieverCustomizations<Book>
+{
+  readonly retriever = RestSingleFieldRetriever;
+  readonly retrievesOn = "id"; // simple form
+  readonly retrievesOn = "identity->username"; // long form
+  // ...
+}
+```
+
+- In the example of the simple form, the value of the path parameter `:id` will be used to retrieve the entity on its `id` field.
+- In the example of the long form, the value of the path parameter `:identity` will be used to retrieve the entity on its `username` field.
 
 <!-- ## Action Context
 
