@@ -11,6 +11,11 @@ export interface RestPaginationCustomizations {
 }
 
 export interface RestEntityPaginator extends RestQueryProcessor {
+  /**
+   *
+   * @param items - Lazy loaded array of serialized entities after pagination
+   * @param total - Lazy loaded total number of entities before pagination
+   */
   buildBody(
     items: () => Promise<unknown[]>,
     total: () => Promise<number>,

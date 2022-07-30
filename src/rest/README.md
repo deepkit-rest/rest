@@ -191,6 +191,102 @@ class UserBookResource implements RestResource<Book> {
 }
 ```
 
+## CRUD Kernel
+
+In order to respond to a CRUD Action, we'll need to invoke multiple REST components in a fixed order(e.g. for list actions: query -> filter -> paginator -> sorter -> serializer -> response):
+
+For convenience, workflows of most common CRUD Actions have been wrapped and are available for you via the CRUD Kernel. The public methods of CRUD Kernel never take any parameters, all the information are obtained from the DI system. Usually, all we need to do is just to invoke the CRUD Kernel and return the result:
+
+```ts
+constructor(private crud: RestCrudKernel) {}
+@rest.action("GET")
+async list(): Promise<Response> {
+  return this.crud.list();
+}
+```
+
+The responsibility of CRUD Kernel is only to call the REST components in order. Its behavior completely depends on the REST components in use. We can specify which REST component to use by implementing customization interfaces:
+
+```ts
+@rest.resource(Book, "books")
+class BookResource implements RestResource<Book>, RestPaginationCustomizations {
+  readonly paginator = RestPageNumberPaginator;
+  constructor(private crud: RestCrudKernel) {}
+  // ...
+  @rest.action("GET")
+  async list(): Promise<Response> {
+    return this.crud.list();
+  }
+}
+```
+
+| Action   | Available Customizations                      |
+| -------- | --------------------------------------------- |
+| List     | Serialization, Pagination, Filtering, Sorting |
+| Create   | Serialization                                 |
+| Retrieve | Serialization, Retrieving                     |
+| Update   | Serialization, Retrieving                     |
+| Delete   | Retrieving                                    |
+
+> You can extend the built-in CRUD Kernel for more functionalities:
+>
+> ```ts
+> class AppCrudKernel extends RestCrudKernel {
+>   async createMany(): Promise<Response> {
+>     // ...
+>   }
+> }
+> ```
+
+## Pagination
+
+Paginators are responsible for applying pagination to the `Query` object and forming the response body.
+
+### RestNoopPaginator
+
+`RestNoopPaginator` is the default paginator the CRUD Kernel uses, which doesn't do any processing to the `Query` and thus will return as many entities as available, and form the body like:
+
+```
+{
+  total: ...,
+  items: [...],
+}
+```
+
+### RestOffsetLimitPaginator
+
+By default, `RestOffsetLimitPaginator` paginates the List result based on the `limit` and `offset` query params and form the body the same: `{ total: ..., items: [...] }`.
+
+Some configuration properties are available for you to customize its behavior by overriding the value:
+
+```ts
+class AppPaginator extends RestOffsetLimitPaginator {
+  // these are the default values
+  override limitDefault = 30;
+  override limitMax = 50;
+  override limitParam = "limit";
+  override offsetMax = 1000;
+  override offsetParam = "offset";
+}
+```
+
+### RestPageNumberPaginator
+
+`RestPageNumberPaginator` performs pagination based on the `page` and `size` query params by default and also form a `{ total: ..., items: [...] }` object as the response body.
+
+Customizations are also available by overriding configuration properties:
+
+```ts
+class AppPaginator extends RestPageNumberPaginator {
+  // these are the default values
+  override pageNumberMax = 20;
+  override pageNumberParam = "page";
+  override pageSizeDefault = 30;
+  override pageSizeMax = 50;
+  override pageSizeParam = "size";
+}
+```
+
 <!-- ## Action Context
 
 Action Context is provided in `http` scope, offering easy access to a lot of information about the current Resource and Action that might be used during a REST API responding process.
