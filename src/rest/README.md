@@ -240,7 +240,16 @@ class BookResource implements RestResource<Book>, RestPaginationCustomizations {
 
 ## Pagination
 
-Entity Paginators are responsible for applying pagination to the `Query` object and forming the response body.
+An Entity Paginator plays an important role in List Actions. It's responsible for both applying pagination to the `Query` object and forming the response body.
+
+Customize the paginator to use by implementing `RestPaginationCustomizations`:
+
+```ts
+class BookResource implements RestResource<Book>, RestPaginationCustomizations {
+  readonly paginator = RestPageNumberPaginator;
+  // ...
+}
+```
 
 ```ts
 interface RestPaginationCustomizations {
@@ -295,11 +304,16 @@ class AppPaginator extends RestPageNumberPaginator {
 
 ## Serialization
 
-As entities must be serialized to form the response, serialization is a necessary part of any CRUD Actions, which is handled by Entity Serializers.
+As entities must be serialized to form the response, serialization is a necessary part of every CRUD Actions, which is handled by Entity Serializers.
+
+Specify the serializer by implementing `RestSerializationCustomizations`:
 
 ```ts
-interface RestSerializationCustomizations<Entity> {
-  serializer?: ClassType<RestEntitySerializer<Entity>>;
+class BookResource
+  implements RestResource<Book>, RestSerializationCustomizations<Book>
+{
+  serializer = BookSerializer;
+  // ...
 }
 ```
 
@@ -425,6 +439,71 @@ class BookSerializer extends RestGenericSerializer<Book> {
     data.updatedAt = new Date();
     return super.updateEntity(entity, data);
   }
+}
+```
+
+## Filtering
+
+In List Actions, the `Query` object is processed by Entity Filters before the Entity Paginator. It's the best place to modify the query result dynamically based on the request.
+
+```ts
+class BookResource implements RestResource<Book>, RestFilteringCustomizations {
+  filters = [RestGenericFilter];
+  // ...
+}
+```
+
+### RestGenericFilter
+
+`RestGenericFilter` allows the client to filter entities through the `filter` query param (by default) for specified fields:
+
+```
+?filter[owner][$eq]=1&filter[name][$in][]=name1&filter[name][$in][]=name2
+```
+
+> Supported filter operators are: `["$eq", "$ne", "$gt", "$gte", "$lt", "$lte", "$in", "$nin"]`.
+
+Decorate a field with `Filterable` to enable filtering:
+
+```ts
+class Book {
+  id: ... & Filterable;
+}
+```
+
+> `BackReference` fields are not yet supported.
+
+The query parameter name can be specified via the `param` configuration property:
+
+```ts
+class AppFilter extends RestGenericFilter {
+  override param = "filter"; // default value
+  // ...
+}
+```
+
+### RestGenericSorter
+
+`RestGenericSorter` is a special Entity Filter which enables client-controlled sorting against specified fields through the `order` query param (by default):
+
+```
+?order[id]=asc&order[name]=desc
+```
+
+Decorate a field with `Orderable` to enable sorting:
+
+```ts
+class Book {
+  id: ... & Orderable;
+}
+```
+
+Configuration properties are similar to `RestGenericFilter`:
+
+```ts
+class AppSorter extends RestGenericSorter {
+  override param = "order"; // default value
+  // ...
 }
 ```
 
