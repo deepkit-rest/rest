@@ -524,7 +524,14 @@ class BookResource implements RestResource<Book>, RestRetrievingCustomizations {
 
 ### RestSingleFieldRetriever
 
-`RestSingleFieldRetriever` is the default Entity Retriever, which retrieves the entity based on the `:pk` path parameter and the entity's primary key(by default).
+`RestSingleFieldRetriever` is the default Entity Retriever, which retrieves the entity based on the `:pk` path parameter and the entity's primary key(by default):
+
+```ts
+@rest.action("GET", ":pk")
+async retrieve(): Promise<Response> {
+  return this.crud.retrieve();
+}
+```
 
 Its behavior can be customized by implementing `RestSingleFieldRetrieverCustomizations` and specify the `retrievesOn` property:
 
@@ -548,347 +555,24 @@ class BookResource
 - In the example of the simple form, the value of the path parameter `:id` will be used to retrieve the entity on its `id` field.
 - In the example of the long form, the value of the path parameter `:identity` will be used to retrieve the entity on its `username` field.
 
-<!-- ## Action Context
+## CRUD Action Context
 
-Action Context is provided in `http` scope, offering easy access to a lot of information about the current Resource and Action that might be used during a REST API responding process.
-
-```ts
-class MyService {
-  constructor(private context: RestActionContext) {}
-  method() {
-    const resource = this.context.getResource();
-    const entitySchema = this.context.getEntitySchema();
-    // ...
-  }
-}
-```
-
-> Most methods in Action Context have caching implemented, so there's nothing to worry if you want to call a method multiple times.
-
-# Developing REST APIs
-
-The responding process of a REST API is separated into multiple REST components with their own responsibilities, such as REST Paginator and REST Filter, and there are quite a lot implementations of these REST components built in this library covering common CRUD use cases.
-
-## List Action
-
-Let's first implement a simplest List Action:
+When not using the CRUD Kernel, DeepKit REST can still bring you huge convenience via CRUD Action Context, which is a provider in `http` scope allowing us to easily access a lot of contextual information:
 
 ```ts
-@rest.action("GET")
-list(): Promise<Response> {
-  return this.crud.list();
-}
+constructor(private crudContext: RestCrudActionContext) {}
+@rest.action("PUT", ":pk/")
+customAction() {
+  const entity = await this.crudContext.getEntity(); // uses the Entity Retriever
+  const resource = this.crudContext.getResource();
+};
 ```
 
-This simplest List Action has no pagination, no filtering, no sorting support. It simply return a
+You can call the `getXxx()` methods of CRUD Action Context as many times as you want without worrying the performance, because there is a caching system implemented for CRUD Action Context to cache and reuse results.
 
-```json
-{
-  "total": ...,
-  "items": [...]
-}
-```
+CRUD Action Context will be available once `httpWorkflow.onRoute` event is finished. Thus you can also use it in Event Listeners.
 
-where `items` is all the entities that can be queried using the `Query` object returned from the `getQuery()` method implemented in the Resource.
-
-### Pagination
-
-The default Entity Paginator `RestNoopPaginator` won't do any processing to the `Query` object, but there are two other Entity Paginators implemented for you: `RestOffsetLimitPaginator` and `RestPageNumberPaginator`. To enable advanced pagination, we need to specify the Entity Paginator we want to use:
-
-```ts
-class BookResource implements RestResource<Book>, RestPaginationCustomizations {
-  paginator = RestOffsetLimitPaginator;
-  // ...
-}
-```
-
-#### RestOffsetLimitPaginator
-
-By default, `RestOffsetLimitPaginator` paginates the List result based on the `limit` and `offset` query params and returns a `{ total: ..., items: [...] }` object as the response body.
-
-You can customize its behavior by overriding its configuration properties or directly overriding methods:
-
-```ts
-class AppPaginator extends RestOffsetLimitPaginator {
-  override limitDefault = 30;
-  override limitMax = 50;
-  override limitParam = "limit";
-  override offsetMax = 1000;
-  override offsetParam = "offset";
-
-  override processQuery<Entity>(query: Query<Entity>): Query<Entity> {
-    return super.processQuery(query);
-  }
-
-  override buildBody(
-    items: () => Promise<unknown[]>,
-    total: () => Promise<number>,
-  ): Promise<unknown> {
-    return super.buildBody(items, total);
-  }
-}
-```
-
-#### RestPageNumberPaginator
-
-`RestPageNumberPaginator` performs pagination based on the `page` and `size` query params by default and also returns a `{ total: ..., items: [...] }` object as the response body.
-
-Customizations are also available by overriding class members:
-
-```ts
-class AppPaginator extends RestPageNumberPaginator {
-  override pageNumberMax = 20;
-  override pageNumberParam = "page";
-  override pageSizeDefault = 30;
-  override pageSizeMax = 50;
-  override pageSizeParam = "size";
-  // ...
-}
-```
-
-### Filtering
-
-By default no user-controlled filtering is available. We can only filter entities in the `getQuery()` method of the Resource. User-controlled filtering can be enabled by specifying the Entity Filters we'd like to use:
-
-```ts
-class BookResource implements RestResource<Book>, RestFilteringCustomizations {
-  filters = [RestGenericFilter];
-  // ...
-}
-```
-
-#### RestGenericFilter
-
-The built-in `RestGenericFilter` allows the user to filter the entities by specifying the `filter` query param:
-
-```
-?filter[owner][$eq]=1&filter[name][$in][]=name1&filter[name][$in][]=name2
-```
-
-> Supported filter operators are: `["$eq", "$ne", "$gt", "$gte", "$lt", "$lte", "$in", "$nin"]`.
-
-By default `RestGenericFilter` doesn't allow user-controlled filtering on any fields. To enable filtering on a specific field, we need to add a `Filterable` Type Decorator to the field:
-
-```ts
-class Book {
-  id: ... & Filterable;
-}
-```
-
-> `OneToMany` and `ManyToMany` relational fields are not yet supported. Basically relational fields with an `Array` type are not supported.
-
-We can customize its behavior by extending and overriding its class members:
-
-```ts
-class AppFilter extends RestGenericFilter {
-  override param = "filter";
-  // ...
-}
-```
-
-### Sorting
-
-User-controlled sorting can be enabled by specifying the Entity Sorters:
-
-```ts
-class BookResource implements RestResource<Book>, RestSortingCustomizations {
-  sorters = [RestGenericSorter];
-  // ...
-}
-```
-
-#### RestGenericSorter
-
-`RestGenericSorter` allows user-controlled sorting based on the query param `order` by default:
-
-```
-?order[id]=asc&order[name]=desc
-```
-
-Sorting is enabled for only the fields decorated with `Orderable`:
-
-```ts
-class Book {
-  id: ... & Orderable;
-}
-```
-
-Behavior can be customized by extending the class:
-
-```ts
-class AppSorter extends RestGenericSorter {
-  override param = "order";
-  // ...
-}
-```
-
-## Retrieve Action
-
-A Retrieve Action can be implemented like this:
-
-```ts
-@rest.action("GET", ":pk")
-retrieve(): Promise<Response> {
-  return this.crud.retrieve();
-}
-```
-
-The behavior of Retrieve Action completely depends on the Entity Retriever in use:
-
-```ts
-class BookResource implements RestResource<Book>, RestRetrievingCustomizations {
-  retriever = RestSingleFieldRetriever;
-  // ...
-}
-```
-
-### RestSingleFieldRetriever
-
-`RestSingleFieldRetriever` is the default Entity Retriever, which retrieves the entity based on the `:pk` path parameter and the entity's primary key by default.
-
-Its behavior can be customized by implementing the `retrievesOn` property of the `RestSingleFieldRetrieverCustomizations` interface:
-
-The `retrievesOn` property have a simple form and a long form:
-
-```ts
-@rest.resource(Book).lookup("anything")
-class BookResource
-  implements
-    RestResource<Book>,
-    RestRetrievingCustomizations,
-    RestSingleFieldRetrieverCustomizations<Book>
-{
-  retriever = RestSingleFieldRetriever;
-  retrievesOn = "id"; // simple form
-  retrievesOn = "identity->username"; // long form
-  // ...
-}
-```
-
-- In the example of the simple form, the value of the path parameter `:id` will be used to retrieve the entity on its `id` field.
-- In the example of the long form, the value of the path parameter `:identity` will be used to retrieve the entity on its `username` field.
-
-## Delete Action
-
-Delete Action basically remove the entity retrieved by the Entity Retriever, so its behavior is also decided by the Entity Retriever used.
-
-```ts
-@rest.action("DELETE").detailed()
-delete(): Promise<Response> {
-  return this.crud.delete();
-}
-```
-
-## Create Action
-
-A Create Action's implementation is similar too:
-
-```ts
-@rest.action("POST")
-create(): Promise<Response> {
-  return this.crud.create();
-}
-```
-
-Most customizations can be implemented by customizing the Entity Serializer in use:
-
-```ts
-interface RestEntitySerializer<Entity> {
-  deserializeCreation(payload: Record<string, unknown>): Promise<unknown>;
-  // ...
-}
-```
-
-### RestGenericSerializer
-
-In a Create Action, `RestGenericSerializer` will purify(deserialize and validate) the request payload against a schema generated from the entity based on fields decorated with `InCreation`, and then assign the payload values to a new entity instance.
-
-> During the deserialization, DeepKit will automatically transform primary keys into entity references for fields decorated with `Reference`.
-
-Let's say `Book` is defined like this:
-
-```ts
-class Book {
-  id: UUID & PrimaryKey = uuid();
-  name: string & MaxLength<50> & InCreation;
-}
-```
-
-Then the request payload for the Create Action will be purified against a schema like this:
-
-```ts
-interface GeneratedSchema {
-  name: string & MaxLength<50>;
-}
-```
-
-By default `RestGenericSerializer` requires the entity constructor to take no parameters because it's impossible to know what argument to pass. An error will be thrown if `entityClass.length !== 0`. But you can customize how new entities are instantiated by overriding its `createEntity()` method where the purified payload will be passed as a parameter:
-
-```ts
-class BookSerializer extends RestGenericSerializer<Book> {
-  protected override createEntity(data: Partial<Book>) {
-    return new Book(data.title, data.author);
-  }
-}
-```
-
-You can also modify the `data` to assign values to fields like `owner` when overriding `createEntity()`:
-
-```ts
-protected override createEntity(data: Partial<Book>) {
-  const userId = this.requestContext.userId;
-  const user = this.database.getRef(User, userId);
-  data.owner = user;
-  return super.createEntity(data);
-}
-```
-
-## Update Action
-
-The implementation is as simple as ever:
-
-```ts
-@rest.action("PATCH").detailed()
-update(): Promise<Response> {
-  return this.crud.update();
-}
-```
-
-Update Actions' behavior depends on both the Entity Serializer and the Entity Retriever. It basically uses the Entity Serializer to deserialize the request payload to update the entity retrieved by the Entity Retriever:
-
-```ts
-interface RestEntitySerializer<Entity> {
-  deserializeUpdate(
-    entity: Entity,
-    payload: Record<string, unknown>,
-  ): Promise<Entity>;
-  // ...
-}
-```
-
-### RestGenericSerializer
-
-Just like how it behaves in a Create Action, `RestGenericSerializer` purify the request payload against a generated schema, but now the schema is generated based on fields decorated with `InUpdate`:
-
-```ts
-class Book {
-  name: ... & InUpdate;
-  // ...
-}
-```
-
-To customize how entities are updated, you can override the `updateEntity()` method, which is a good place to assign values to fields like `updatedAt`:
-
-```ts
-class BookSerializer extends RestGenericSerializer<Book> {
-  protected override updateEntity(entity: Book, data: Partial<Book>) {
-    data.updatedAt = new Date();
-    return super.updateEntity(entity, data);
-  }
-}
-```
-
-## Keeping DRY via Inheritance
+## Resource Inheritance
 
 As the application grows, you'll find that there are a lot of repeated patterns like the paginator declaration and completely same `getDatabase()` code. To keep DRY, you can create an abstract `AppResource` as the base Resource:
 
@@ -897,12 +581,10 @@ export abstract class AppResource<Entity>
   implements
     RestResource<Entity>,
     RestPaginationCustomizations,
-    RestFilteringCustomizations,
-    RestSortingCustomizations
+    RestFilteringCustomizations
 {
   paginator = RestOffsetLimitPaginator;
-  filters = [RestGenericFilter];
-  sorters = [RestGenericSorter];
+  filters = [RestGenericFilter, RestGenericSorter];
 
   protected database: Inject<Database>;
 
@@ -913,26 +595,6 @@ export abstract class AppResource<Entity>
   abstract getQuery(): Query<Entity>;
 }
 ```
-
-## Leveraging CRUD Features in Custom Actions
-
-In Actions other than the ones supported by the CRUD Kernel, we can still make use of these CRUD Features via CRUD Action Context.
-
-CRUD Action Context is derived from [Action Context](#action-context), where additional contextual information is available for you:
-
-```ts
-constructor(private crudContext: RestCrudActionContext) {}
-@rest.action("PUT").detailed().path("custom-action")
-customAction() {
-  // retrieve the entity using the Entity Retriever
-  // (available for only detailed actions)
-  const entity = await this.crudContext.getEntity();
-  // the return type is overridden to include all customization interfaces
-  const resource = this.crudContext.getResource();
-};
-```
-
-> Caching system is shared by all derived classes of Action Context, which means invoking a `getXxx()` in both Action Context and CRUD Action Context will not cause any redundant calculations. -->
 
 # Special Thanks
 
