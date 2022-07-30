@@ -240,7 +240,13 @@ class BookResource implements RestResource<Book>, RestPaginationCustomizations {
 
 ## Pagination
 
-Paginators are responsible for applying pagination to the `Query` object and forming the response body.
+Entity Paginators are responsible for applying pagination to the `Query` object and forming the response body.
+
+```ts
+interface RestPaginationCustomizations {
+  paginator?: ClassType<RestEntityPaginator>;
+}
+```
 
 ### RestNoopPaginator
 
@@ -284,6 +290,141 @@ class AppPaginator extends RestPageNumberPaginator {
   override pageSizeDefault = 30;
   override pageSizeMax = 50;
   override pageSizeParam = "size";
+}
+```
+
+## Serialization
+
+As entities must be serialized to form the response, serialization is a necessary part of any CRUD Actions, which is handled by Entity Serializers.
+
+```ts
+interface RestSerializationCustomizations<Entity> {
+  serializer?: ClassType<RestEntitySerializer<Entity>>;
+}
+```
+
+While the "serialization" and the "deserialization" for Entity Serializers are a little different from the ones in other scenarios:
+
+```ts
+export interface RestEntitySerializer<Entity> {
+  /**
+   * Transform the entity into a JSON serializable plain object to form the
+   * response body.
+   * @param entity
+   */
+  serialize(entity: Entity): Promise<unknown>;
+  /**
+   * Create a new entity instance based on the payload data which came
+   * from the request body.
+   * @param payload
+   */
+  deserializeCreation(payload: Record<string, unknown>): Promise<Entity>;
+  /**
+   * Update an existing entity instance based on the payload data which came
+   * from the request body.
+   * @param payload
+   */
+  deserializeUpdate(
+    entity: Entity,
+    payload: Record<string, unknown>,
+  ): Promise<Entity>;
+}
+```
+
+## RestGenericSerializer
+
+`RestGenericSerializer` is the default Entity Serializer, with the ability to handle the serialization and deserialization of any entities.
+
+### Serialization
+
+In serialization, `RestGenericSerializer` directly leverages DeepKit's built-in serialization feature. It is also compatible with the `@http.serialization()` and `@http.serializer()` decorators, which means you can customize the serialization behavior just as how you do in regular HTTP Controllers:
+
+```ts
+@rest.action("GET")
+@http.serialization({ groupsExclude: ["hidden"] })
+action() {}
+```
+
+### Deserialization for Creation
+
+In deserialization for creations, `RestGenericSerializer` will first purify(deserialize and validate) the payload against a schema generated from the entity schema based on the fields decorated with `InCreation` using DeepKit's deserialization feature:
+
+> For `Reference` fields, DeepKit deserialization will automatically transform primary keys into entity references. But `BackReference` fields are not supported.
+
+Let's say entity `Book` is defined like this:
+
+```ts
+class Book {
+  id: UUID & PrimaryKey = uuid();
+  name: string & MaxLength<50> & InCreation;
+}
+```
+
+The payload will be purified against a schema like this:
+
+```ts
+interface GeneratedSchema {
+  name: string & MaxLength<50>;
+}
+```
+
+> Generated schemas will be cached and reused.
+
+Then, `RestGenericSerializer` will instantiate a new entity instance, and assign the data from the purified payload to the entity instance:
+
+```ts
+const book = await serializer.deserializeCreation({ name: "name" });
+book instanceof Book; // true
+book.name === "name"; // true
+```
+
+By default `RestGenericSerializer` requires the entity constructor to take no parameters, because it's impossible to know what argument to pass. An error will be thrown if `entityClass.length !== 0`. But you can customize how new entities are instantiated by overriding its `createEntity()` method where the purified payload will be passed as a parameter:
+
+```ts
+class BookSerializer extends RestGenericSerializer<Book> {
+  protected override createEntity(data: Partial<Book>) {
+    return new Book(data.title, data.author);
+  }
+}
+```
+
+You can also modify the `data` object to assign values to fields like `owner` when overriding `createEntity()`:
+
+```ts
+protected override createEntity(data: Partial<Book>) {
+  const userId = this.requestContext.userId;
+  const user = this.database.getRef(User, userId);
+  data.owner = user;
+  return super.createEntity(data);
+}
+```
+
+### Deserialization for Update
+
+Just like how it behaves in deserialization for creations, `RestGenericSerializer` will purify the request payload against a generated schema, but now the schema is generated based on fields decorated with `InUpdate`:
+
+```ts
+class Book {
+  name: ... & InUpdate;
+  // ...
+}
+```
+
+And then the data will be assigned to an existing entity instead of a new one:
+
+```ts
+book = await serializer.deserializeUpdate(book, { name: "updated" });
+book.name === "updated"; // true
+```
+
+To customize how entities are updated, you can override the `updateEntity()` method, which is a good place to assign values to fields like `updatedAt`:
+
+```ts
+class BookSerializer extends RestGenericSerializer<Book> {
+  protected override updateEntity(entity: Book, data: Partial<Book>) {
+    data.updatedAt = new Date();
+    return super.updateEntity(entity, data);
+  }
 }
 ```
 
