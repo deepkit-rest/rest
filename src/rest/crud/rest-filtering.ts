@@ -5,6 +5,7 @@ import { HttpRequestParsed } from "src/http-extension/http-request-parsed.servic
 
 import { RestActionContext } from "../core/rest-action";
 import { RestFilterMapFactory } from "../crud-models/rest-filter-map";
+import { RestOrderMapFactory } from "../crud-models/rest-order-map";
 import { RestQueryProcessor } from "./rest-crud";
 
 export interface RestFilteringCustomizations {
@@ -50,6 +51,34 @@ export class RestGenericFilter implements RestEntityFilter {
           });
         }
         query = query.filterField(field as FieldName<Entity>, condition);
+      });
+
+    return query;
+  }
+}
+
+export class RestGenericSorter implements RestEntityFilter {
+  param = "order";
+
+  constructor(
+    protected request: HttpRequestParsed,
+    protected context: RestActionContext,
+    protected orderMapFactory: RestOrderMapFactory,
+  ) {}
+
+  processQuery<Entity>(query: Query<Entity>): Query<Entity> {
+    const entityType = this.context.getEntitySchema().getClassType();
+    const orderMapSchema = this.orderMapFactory.build(entityType);
+    const orderMapParam = this.param;
+    const queries = this.request.getQueries();
+    const orderMap = purify<object>(
+      queries[orderMapParam] ?? {},
+      orderMapSchema.type,
+    );
+
+    if (orderMap)
+      Object.entries(orderMap).forEach(([field, order]) => {
+        query = query.orderBy(field as FieldName<Entity>, order as any);
       });
 
     return query;

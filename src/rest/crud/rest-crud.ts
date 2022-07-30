@@ -24,7 +24,6 @@ import {
   RestGenericSerializer,
   RestSerializationCustomizations,
 } from "./rest-serialization";
-import { RestEntitySorter, RestSortingCustomizations } from "./rest-sorting";
 
 export class RestCrudKernel<Entity> {
   constructor(
@@ -36,7 +35,6 @@ export class RestCrudKernel<Entity> {
   async list(): Promise<Response> {
     const resource = this.context.getResource();
     const filters = this.context.getFilters();
-    const sorters = this.context.getSorters();
     const paginator = this.context.getPaginator();
     const serializer = this.context.getSerializer();
 
@@ -44,7 +42,6 @@ export class RestCrudKernel<Entity> {
     query = filters.reduce((q, p) => p.processQuery(q), query);
     const totalQuery = query;
     const total = async () => totalQuery.count();
-    query = sorters.reduce((q, p) => p.processQuery(q), query);
     query = paginator.processQuery(query);
     const itemsQuery = query;
     const items = async () =>
@@ -128,7 +125,6 @@ export class RestCrudActionContext<Entity> extends RestActionContext {
     RestRetrievingCustomizations &
     RestPaginationCustomizations &
     RestFilteringCustomizations &
-    RestSortingCustomizations &
     RestSerializationCustomizations<Entity> &
     Customizations {
     return super.getResource() as any;
@@ -147,11 +143,6 @@ export class RestCrudActionContext<Entity> extends RestActionContext {
   getFilters(): RestEntityFilter[] {
     const resource = this.getResource();
     return resource.filters?.map((type) => this.resolveDep(type)) ?? [];
-  }
-
-  getSorters(): RestEntitySorter[] {
-    const resource = this.getResource();
-    return resource.sorters?.map((type) => this.resolveDep(type)) ?? [];
   }
 
   getSerializer(): RestEntitySerializer<Entity> {

@@ -21,6 +21,7 @@ import { RestCrudKernel, RestQueryProcessor } from "./crud/rest-crud";
 import {
   RestFilteringCustomizations,
   RestGenericFilter,
+  RestGenericSorter,
 } from "./crud/rest-filtering";
 import {
   RestOffsetLimitPaginator,
@@ -32,10 +33,6 @@ import {
   RestSingleFieldRetriever,
   RestSingleFieldRetrieverCustomizations,
 } from "./crud/rest-retrieving";
-import {
-  RestGenericSorter,
-  RestSortingCustomizations,
-} from "./crud/rest-sorting";
 import { InCreation } from "./crud-models/rest-creation-schema";
 import { Filterable } from "./crud-models/rest-filter-map";
 import { Orderable } from "./crud-models/rest-order-map";
@@ -278,16 +275,14 @@ describe("REST CRUD", () => {
           expect(response.statusCode).toBe(400);
         });
       });
-    });
 
-    describe("Sorting", () => {
       describe("RestGenericSorter", () => {
         class TestingEntity {
           id: number & AutoIncrement & PrimaryKey & Orderable = 0;
         }
         @rest.resource(TestingEntity, "api")
-        class TestingResource implements RestSortingCustomizations {
-          readonly sorters = [RestGenericSorter];
+        class TestingResource implements RestFilteringCustomizations {
+          readonly filters = [RestGenericSorter];
           constructor(
             private database: Database,
             private crud: RestCrudKernel<TestingEntity>,

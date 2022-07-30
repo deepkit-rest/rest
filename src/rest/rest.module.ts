@@ -12,7 +12,7 @@ import {
   RestResourceRegistry,
 } from "./core/rest-resource";
 import { RestCrudActionContext, RestCrudKernel } from "./crud/rest-crud";
-import { RestGenericFilter } from "./crud/rest-filtering";
+import { RestGenericFilter, RestGenericSorter } from "./crud/rest-filtering";
 import {
   RestNoopPaginator,
   RestOffsetLimitPaginator,
@@ -20,7 +20,6 @@ import {
 } from "./crud/rest-pagination";
 import { RestSingleFieldRetriever } from "./crud/rest-retrieving";
 import { RestGenericSerializer } from "./crud/rest-serialization";
-import { RestGenericSorter } from "./crud/rest-sorting";
 import { RestCreationSchemaFactory } from "./crud-models/rest-creation-schema";
 import { RestFilterMapFactory } from "./crud-models/rest-filter-map";
 import { RestOrderMapFactory } from "./crud-models/rest-order-map";
