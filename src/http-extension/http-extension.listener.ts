@@ -2,6 +2,7 @@ import { eventDispatcher } from "@deepkit/event";
 import { httpClass, httpWorkflow } from "@deepkit/http";
 
 import {
+  HttpAccessDeniedResponse,
   HttpActionMeta,
   HttpControllerMeta,
   HttpInjectorContext,
@@ -29,5 +30,11 @@ export class HttpExtensionListener {
     const actionMeta = controllerMeta.getAction(actionName);
     event.injectorContext.set(HttpControllerMeta, controllerMeta);
     event.injectorContext.set(HttpActionMeta, actionMeta);
+  }
+
+  @eventDispatcher.listen(httpWorkflow.onAccessDenied)
+  onAccessDenied(event: typeof httpWorkflow.onAccessDenied.event): void {
+    const response = event.injectorContext.get(HttpAccessDeniedResponse);
+    if (response) event.send(response);
   }
 }

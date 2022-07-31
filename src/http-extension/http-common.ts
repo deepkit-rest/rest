@@ -1,4 +1,5 @@
 import {
+  BaseResponse,
   createHttpError,
   HtmlResponse,
   HttpAction,
@@ -27,12 +28,14 @@ export type HttpMethod =
   | "HEAD"
   | "OPTIONS";
 
+// Dependency Injection Tokens
+
+type HttpControllerMetaType = NonNullable<ReturnType<typeof httpClass._fetch>>;
+interface HttpControllerMetadata extends HttpControllerMetaType {}
+class HttpControllerMetadata {}
+
 export class HttpInjectorContext extends InjectorContext {}
-
 export class HttpRouteConfig extends RouteConfig {}
-
-export class HttpControllerMeta {}
-export interface HttpControllerMeta extends HttpControllerMetadata {}
-type HttpControllerMetadata = NonNullable<ReturnType<typeof httpClass._fetch>>;
-
+export class HttpControllerMeta extends HttpControllerMetadata {}
 export class HttpActionMeta extends HttpAction {}
+export class HttpAccessDeniedResponse extends BaseResponse {}

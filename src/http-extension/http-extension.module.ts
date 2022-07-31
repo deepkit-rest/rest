@@ -1,6 +1,7 @@
 import { createModule } from "@deepkit/app";
 
 import {
+  HttpAccessDeniedResponse,
   HttpActionMeta,
   HttpControllerMeta,
   HttpInjectorContext,
@@ -19,6 +20,7 @@ export class HttpExtensionModule extends createModule(
       { provide: HttpRouteConfig, useValue: null, scope: "http" },
       { provide: HttpControllerMeta, useValue: null, scope: "http" },
       { provide: HttpActionMeta, useValue: null, scope: "http" },
+      { provide: HttpAccessDeniedResponse, scope: "http" },
       HttpRequestParser,
       { provide: HttpRequestParsed, scope: "http" },
       { provide: HttpScopedCache, scope: "http" },

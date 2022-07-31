@@ -1,7 +1,15 @@
+import { eventDispatcher } from "@deepkit/event";
 import { createTestingApp } from "@deepkit/framework";
-import { http, HttpRequest, RouteConfig } from "@deepkit/http";
+import {
+  HtmlResponse,
+  http,
+  HttpRequest,
+  httpWorkflow,
+  RouteConfig,
+} from "@deepkit/http";
 
 import {
+  HttpAccessDeniedResponse,
   HttpActionMeta,
   HttpControllerMeta,
   HttpInjectorContext,
@@ -38,5 +46,31 @@ describe("Http Extension", () => {
     const response = await facade.request(HttpRequest.GET("/"));
     expect(response.statusCode).toBe(200);
     assertion();
+  });
+
+  test("custom access denied response", async () => {
+    @http.controller()
+    class MyController {
+      @http.GET()
+      action() {}
+    }
+    class MyListener {
+      @eventDispatcher.listen(httpWorkflow.onController)
+      onController(event: typeof httpWorkflow.onController.event) {
+        event.injectorContext.set(
+          HttpAccessDeniedResponse,
+          new HtmlResponse("", 401),
+        );
+        event.accessDenied();
+      }
+    }
+    const facade = createTestingApp({
+      imports: [new HttpExtensionModule()],
+      controllers: [MyController],
+      listeners: [MyListener],
+    });
+    await facade.startServer();
+    const response = await facade.request(HttpRequest.GET("/"));
+    expect(response.statusCode).toBe(401);
   });
 });
