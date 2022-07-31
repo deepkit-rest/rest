@@ -48,7 +48,8 @@ describe("Http Extension", () => {
     assertion();
   });
 
-  test("custom access denied response", async () => {
+  test("custom response for access denied", async () => {
+    let code: number | undefined;
     @http.controller()
     class MyController {
       @http.GET()
@@ -57,10 +58,11 @@ describe("Http Extension", () => {
     class MyListener {
       @eventDispatcher.listen(httpWorkflow.onController)
       onController(event: typeof httpWorkflow.onController.event) {
-        event.injectorContext.set(
-          HttpAccessDeniedResponse,
-          new HtmlResponse("", 401),
-        );
+        if (code)
+          event.injectorContext.set(
+            HttpAccessDeniedResponse,
+            new HtmlResponse("", code),
+          );
         event.accessDenied();
       }
     }
@@ -70,7 +72,15 @@ describe("Http Extension", () => {
       listeners: [MyListener],
     });
     await facade.startServer();
-    const response = await facade.request(HttpRequest.GET("/"));
-    expect(response.statusCode).toBe(401);
+    {
+      code = undefined;
+      const response = await facade.request(HttpRequest.GET("/"));
+      expect(response.statusCode).toBe(403);
+    }
+    {
+      code = 401;
+      const response = await facade.request(HttpRequest.GET("/"));
+      expect(response.statusCode).toBe(code);
+    }
   });
 });
