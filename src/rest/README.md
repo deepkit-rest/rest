@@ -23,13 +23,11 @@ export class BookResource
     RestResource<Book>,
     RestPaginationCustomizations,
     RestFilteringCustomizations,
-    RestSortingCustomizations,
     RestSerializationCustomizations<Book>
 {
   readonly serializer = BookSerializer;
   readonly paginator = RestOffsetLimitPaginator;
-  readonly filters = [RestGenericFilter];
-  readonly sorters = [RestGenericSorter];
+  readonly filters = [RestGenericFilter, RestGenericSorter];
 
   constructor(
     private database: Database,
@@ -51,6 +49,12 @@ export class BookResource
   @http.serialization({ groupsExclude: ["internal"] })
   async list(): Promise<Response> {
     return this.crud.list();
+  }
+
+  @rest.action("GET", ":pk")
+  @http.serialization({ groupsExclude: ["internal"] })
+  async retrieve(): Promise<Response> {
+    return this.crud.retrieve();
   }
 }
 ```
