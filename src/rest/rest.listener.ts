@@ -1,6 +1,7 @@
 import { eventDispatcher } from "@deepkit/event";
 import { onServerMainBootstrap } from "@deepkit/framework";
 import { HttpRouter, httpWorkflow } from "@deepkit/http";
+import { HttpAccessDeniedResponse } from "src/http-extension/http-common";
 
 import { RestActionContext } from "./core/rest-action";
 import { RestGuardLauncher } from "./core/rest-guard";
@@ -27,10 +28,8 @@ export class RestListener {
     });
   }
 
-  @eventDispatcher.listen(httpWorkflow.onController)
-  async beforeController(
-    event: typeof httpWorkflow.onController.event,
-  ): Promise<void> {
+  @eventDispatcher.listen(httpWorkflow.onAuth, 200)
+  async afterAuth(event: typeof httpWorkflow.onAuth.event): Promise<void> {
     const context = event.injectorContext.get(RestActionContext);
 
     try {
@@ -48,6 +47,9 @@ export class RestListener {
       event.injectorContext,
       context.getModule(),
     );
-    if (response) event.send(response);
+    if (response) {
+      event.injectorContext.set(HttpAccessDeniedResponse, response);
+      event.accessDenied();
+    }
   }
 }
