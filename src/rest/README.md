@@ -513,7 +513,7 @@ class AppSorter extends RestGenericSorter {
 }
 ```
 
-## Retrieving
+## Entity Retrieving
 
 For every entity-specific Actions(e.g. Retrieve, Update, Delete), it's necessary to retrieve the target entity for further operations, which is mostly handled by an Entity Retriever.
 
@@ -567,14 +567,64 @@ When not using the CRUD Kernel, DeepKit REST can still bring you huge convenienc
 constructor(private crudContext: RestCrudActionContext) {}
 @rest.action("PUT", ":pk/")
 customAction() {
-  const entity = await this.crudContext.getEntity(); // uses the Entity Retriever
+  const entity = await this.crudContext.getEntity();
   const resource = this.crudContext.getResource();
 };
 ```
 
+You can get the target entity in entity-specific Actions using `getEntity()`, which internally invokes the current Entity Retriever and throws an `HttpNotFoundError` when entity not found.
+
 You can call the `getXxx()` methods of CRUD Action Context as many times as you want without worrying the performance, because there is a caching system implemented for CRUD Action Context to cache and reuse results.
 
 CRUD Action Context will be available once `httpWorkflow.onRoute` event is finished. Thus you can also use it in Event Listeners.
+
+## Guard
+
+Guard is a new concept introduced in DeepKit REST.
+
+```ts
+interface RestGuard {
+  guard(): Promise<void>;
+}
+```
+
+- Guards are invoked before Resources (specifically after `httpWorkflow.onAuth` event)
+- HTTP Errors thrown in Guards will be handled just as in Resources
+- Context information is available via Dependency Injection (e.g. `RestCrudActionContext`, `HttpRequestParsed`)
+
+Let's implement a Guard to forbid access to unpublished `Book` entities:
+
+```ts
+class BookPublishedGuard implements RestGuard {
+  constructor(private context: RestCrudActionContext) {}
+
+  async guard(): Promise<void> {
+    const book = await this.getEntity();
+    if (!book.published) throw new HttpAccessDeniedError();
+  }
+}
+```
+
+Remember to provide the Guard in the module, and export it if its shared between modules:
+
+```ts
+{
+  providers: [BookPublishedGuard],
+}
+```
+
+A Guard can be applied to either a Resource or a specific Action via `@rest.guardedBy()` decorator. Resource scoped Guards are invoked earlier than Action scoped ones.
+
+```ts
+@rest.resource(Book, "books").guardedBy(AuthGuard)
+class BookResource implements RestResource<Book> {
+  // ...
+  @rest.action("GET", ":pk").guardedBy(BookPublishedGuard)
+  async retrieve(): Promise<Response> {
+    // ...
+  }
+}
+```
 
 ## Resource Inheritance
 
