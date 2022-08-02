@@ -11,7 +11,7 @@ import {
 import { Inject, ProviderWithScope } from "@deepkit/injector";
 import { Database, MemoryDatabaseAdapter, Query } from "@deepkit/orm";
 import { AutoIncrement, entity, PrimaryKey } from "@deepkit/type";
-import { HttpExtensionModule } from "src/http-extension/http-extension.module";
+import { HttpExtensionModule } from "@deepkit-rest/http-extension";
 
 import { RestActionContext } from "./rest-action";
 import { RestCoreModule } from "./rest-core";

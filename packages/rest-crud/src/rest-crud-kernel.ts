@@ -1,9 +1,10 @@
 import { HttpNotFoundError, Response } from "@deepkit/http";
 import { Query } from "@deepkit/orm";
-import { HttpInjectorContext } from "src/http-extension/http-common";
-import { HttpRequestParsed } from "src/http-extension/http-request-parsed.service";
-import { RestActionContext } from "src/rest-core/rest-action";
-import { RestResource } from "src/rest-core/rest-resource";
+import {
+  HttpInjectorContext,
+  HttpRequestParsed,
+} from "@deepkit-rest/http-extension";
+import { RestActionContext, RestResource } from "@deepkit-rest/rest-core";
 
 import {
   RestEntityFilter,

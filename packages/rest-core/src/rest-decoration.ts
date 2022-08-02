@@ -6,8 +6,8 @@ import {
   Merge as MergedDecorator,
   mergeDecorator,
 } from "@deepkit/type";
-import { PrettifiedDecoratorApi } from "src/common/decorator";
-import { HttpMethod } from "src/http-extension/http-common";
+import { PrettifiedDecoratorApi } from "@deepkit-rest/common";
+import { HttpMethod } from "@deepkit-rest/http-extension";
 
 import { RestGuard } from "./rest-guard";
 import { RestActionMeta, RestResourceMeta } from "./rest-meta";

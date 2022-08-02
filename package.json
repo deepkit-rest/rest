@@ -7,7 +7,7 @@
   "scripts": {
     "prepare": "husky install",
     "build": "tsc -b tsconfig.build.json",
-    "lint": "eslint \"src/**/*.ts\" --cache --fix & prettier --write \"{src/**/*,*}.{html,css,less,scss,sass,js,json,md}\"",
+    "lint": "eslint \"packages/*/src/*.ts\" --cache --fix && prettier --write \"{packages/*/src/*,*}.{html,css,less,scss,sass,js,json,md}\"",
     "test": "npm run test:unit && npm run test:integration",
     "test:unit": "jest --config jest.config.unit.js",
     "test:integration": "jest --config jest.config.integration.js"

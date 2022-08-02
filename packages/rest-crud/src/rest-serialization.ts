@@ -1,7 +1,7 @@
 import { ClassType } from "@deepkit/core";
 import { ReflectionClass, serialize } from "@deepkit/type";
-import { purify } from "src/common/type";
-import { HttpRouteConfig } from "src/http-extension/http-common";
+import { purify } from "@deepkit-rest/common";
+import { HttpRouteConfig } from "@deepkit-rest/http-extension";
 
 import { RestCreationSchemaFactory } from "./models/rest-creation-schema";
 import { RestUpdateSchemaFactory } from "./models/rest-update-schema";

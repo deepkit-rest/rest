@@ -1,6 +1,6 @@
 import { ClassType } from "@deepkit/core";
 import { ReflectionClass, ReflectionProperty } from "@deepkit/type";
-import { ReflectionClassAddPropertyOptions } from "src/common/type";
+import { ReflectionClassAddPropertyOptions } from "@deepkit-rest/common";
 
 export abstract class RestEntityModelFactory {
   protected products = new Map<ClassType<any>, ReflectionClass<any>>();

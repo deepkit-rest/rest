@@ -3,7 +3,7 @@ import {
   ReflectionKind,
   ReflectionProperty,
 } from "@deepkit/type";
-import { ReflectionClassAddPropertyOptions } from "src/common/type";
+import { ReflectionClassAddPropertyOptions } from "@deepkit-rest/common";
 
 import { RestEntityModelFactory } from "./rest-entity-model";
 

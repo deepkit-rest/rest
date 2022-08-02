@@ -1,7 +1,7 @@
 import { eventDispatcher } from "@deepkit/event";
 import { onServerMainBootstrap } from "@deepkit/framework";
 import { HttpRouter, httpWorkflow } from "@deepkit/http";
-import { HttpAccessDeniedResponse } from "src/http-extension/http-common";
+import { HttpAccessDeniedResponse } from "@deepkit-rest/http-extension";
 
 import { RestActionContext } from "./rest-action";
 import { RestGuardLauncher } from "./rest-guard";

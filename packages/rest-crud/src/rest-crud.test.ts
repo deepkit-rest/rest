@@ -12,10 +12,8 @@ import {
   PrimaryKey,
   Reference,
 } from "@deepkit/type";
-import { HttpExtensionModule } from "src/http-extension/http-extension.module";
-import { RestCoreModule } from "src/rest-core/rest-core";
-import { rest } from "src/rest-core/rest-decoration";
-import { RestResource } from "src/rest-core/rest-resource";
+import { HttpExtensionModule } from "@deepkit-rest/http-extension";
+import { rest, RestCoreModule, RestResource } from "@deepkit-rest/rest-core";
 
 import { InCreation } from "./models/rest-creation-schema";
 import { Filterable } from "./models/rest-filter-map";

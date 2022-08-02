@@ -1,6 +1,6 @@
 import { HttpRequest } from "@deepkit/http";
 import { ReceiveType } from "@deepkit/type";
-import { purify } from "src/common/type";
+import { purify } from "@deepkit-rest/common";
 
 import { HttpRouteConfig } from "./http-common";
 import { HttpRequestParser } from "./http-request-parser.service";

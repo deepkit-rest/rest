@@ -9,8 +9,8 @@ import { ReflectionClass } from "@deepkit/type";
 import {
   HttpInjectorContext,
   HttpRouteConfig,
-} from "src/http-extension/http-common";
-import { HttpScopedCache } from "src/http-extension/http-scoped-cache.service";
+  HttpScopedCache,
+} from "@deepkit-rest/http-extension";
 
 import { restClass } from "./rest-decoration";
 import {

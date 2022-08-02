@@ -1,8 +1,8 @@
 import { ClassType } from "@deepkit/core";
 import { Query } from "@deepkit/orm";
 import { Maximum, Positive, PositiveNoZero } from "@deepkit/type";
-import { purify } from "src/common/type";
-import { HttpRequestParsed } from "src/http-extension/http-request-parsed.service";
+import { purify } from "@deepkit-rest/common";
+import { HttpRequestParsed } from "@deepkit-rest/http-extension";
 
 import { RestQueryProcessor } from "./rest-crud-kernel";
 

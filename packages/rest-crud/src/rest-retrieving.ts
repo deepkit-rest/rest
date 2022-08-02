@@ -1,8 +1,8 @@
 import { ClassType } from "@deepkit/core";
 import { FieldName, Query } from "@deepkit/orm";
 import { ReflectionProperty } from "@deepkit/type";
-import { purify } from "src/common/type";
-import { HttpRequestParsed } from "src/http-extension/http-request-parsed.service";
+import { purify } from "@deepkit-rest/common";
+import { HttpRequestParsed } from "@deepkit-rest/http-extension";
 
 import { RestCrudActionContext, RestQueryProcessor } from "./rest-crud-kernel";
 

@@ -1,6 +1,6 @@
 import { ClassType } from "@deepkit/core";
-import { PartialRequired } from "src/common/utilities";
-import { HttpMethod } from "src/http-extension/http-common";
+import { PartialRequired } from "@deepkit-rest/common";
+import { HttpMethod } from "@deepkit-rest/http-extension";
 
 import { RestGuard } from "./rest-guard";
 import { RestResource } from "./rest-resource";

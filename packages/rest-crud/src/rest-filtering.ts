@@ -1,8 +1,8 @@
 import { ClassType } from "@deepkit/core";
 import { FieldName, Query } from "@deepkit/orm";
-import { purify } from "src/common/type";
-import { HttpRequestParsed } from "src/http-extension/http-request-parsed.service";
-import { RestActionContext } from "src/rest-core/rest-action";
+import { purify } from "@deepkit-rest/common";
+import { HttpRequestParsed } from "@deepkit-rest/http-extension";
+import { RestActionContext } from "@deepkit-rest/rest-core";
 
 import { RestFilterMapFactory } from "./models/rest-filter-map";
 import { RestOrderMapFactory } from "./models/rest-order-map";
