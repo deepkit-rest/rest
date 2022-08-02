@@ -20,7 +20,7 @@
   "devDependencies": {
     "@deepkit-rest/common": "file:../common",
     "@deepkit-rest/http-extension": "file:../http-extension",
-    "@deepkit-rest/rest-core": "file:../http-extension"
+    "@deepkit-rest/rest-core": "file:../rest-core"
   },
   "peerDependencies": {
     "@deepkit/app": "*",
