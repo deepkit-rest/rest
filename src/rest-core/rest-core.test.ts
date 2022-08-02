@@ -3,7 +3,6 @@ import { ClassType } from "@deepkit/core";
 import { createTestingApp, TestingFacade } from "@deepkit/framework";
 import {
   http,
-  HttpKernel,
   HttpRequest,
   HttpRouter,
   HttpUnauthorizedError,
@@ -14,25 +13,24 @@ import { Database, MemoryDatabaseAdapter, Query } from "@deepkit/orm";
 import { AutoIncrement, entity, PrimaryKey } from "@deepkit/type";
 import { HttpExtensionModule } from "src/http-extension/http-extension.module";
 
-import { RestActionContext } from "./core/rest-action";
-import { rest } from "./core/rest-decoration";
-import { RestGuard } from "./core/rest-guard";
-import { RestResource } from "./core/rest-resource";
-import { RestModuleConfig } from "./rest.config";
-import { RestModule } from "./rest.module";
+import { RestActionContext } from "./rest-action";
+import { RestCoreModule } from "./rest-core";
+import { RestCoreModuleConfig } from "./rest-core-config";
+import { rest } from "./rest-decoration";
+import { RestGuard } from "./rest-guard";
+import { RestResource } from "./rest-resource";
 
 describe("REST Core", () => {
   let facade: TestingFacade<App<any>>;
-  let requester: HttpKernel;
   let database: Database;
 
   async function setup(
-    config: Partial<RestModuleConfig>,
+    config: Partial<RestCoreModuleConfig>,
     controllers: ClassType[],
     providers: ProviderWithScope[] = [],
   ) {
     facade = createTestingApp({
-      imports: [new HttpExtensionModule(), new RestModule(config)],
+      imports: [new HttpExtensionModule(), new RestCoreModule(config)],
       controllers,
       providers: [
         {
@@ -42,7 +40,6 @@ describe("REST Core", () => {
         ...providers,
       ],
     });
-    requester = facade.app.get(HttpKernel);
     database = facade.app.get(Database);
     await database.migrate();
     await facade.startServer();
@@ -132,7 +129,7 @@ describe("REST Core", () => {
     }
     await setup({ prefix: "prefix" }, [TestingResource]);
     await database.persist(new User());
-    const response = await requester.request(HttpRequest.GET("/prefix/api"));
+    const response = await facade.request(HttpRequest.GET("/prefix/api"));
     expect(response.statusCode).toBe(200);
     assertion();
   });
@@ -154,7 +151,7 @@ describe("REST Core", () => {
       [{ provide: Dep, scope: "http" }],
     );
     await expect(promise).resolves.toBeUndefined();
-    await requester.request(HttpRequest.GET("/prefix/api"));
+    await facade.request(HttpRequest.GET("/prefix/api"));
   });
 
   describe("Guard", () => {
@@ -175,7 +172,7 @@ describe("REST Core", () => {
         [MyResource],
         [{ provide: MyGuard, scope: "http" }],
       );
-      const response = await requester.request(HttpRequest.GET("/prefix/api"));
+      const response = await facade.request(HttpRequest.GET("/prefix/api"));
       expect(response.statusCode).toBe(401);
     });
 
@@ -190,7 +187,7 @@ describe("REST Core", () => {
         [MyResource],
         [{ provide: MyGuard, scope: "http" }],
       );
-      const response = await requester.request(HttpRequest.GET("/prefix/api"));
+      const response = await facade.request(HttpRequest.GET("/prefix/api"));
       expect(response.statusCode).toBe(401);
     });
   });

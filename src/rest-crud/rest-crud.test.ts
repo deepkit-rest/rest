@@ -1,7 +1,7 @@
 import { App } from "@deepkit/app";
 import { ClassType } from "@deepkit/core";
 import { createTestingApp, TestingFacade } from "@deepkit/framework";
-import { HttpKernel, HttpRequest } from "@deepkit/http";
+import { HttpRequest } from "@deepkit/http";
 import { Inject, ProviderWithScope } from "@deepkit/injector";
 import { Database, Query } from "@deepkit/orm";
 import { SQLiteDatabaseAdapter } from "@deepkit/sqlite";
@@ -13,34 +13,34 @@ import {
   Reference,
 } from "@deepkit/type";
 import { HttpExtensionModule } from "src/http-extension/http-extension.module";
-import { RestModule } from "src/rest/rest.module";
+import { RestCoreModule } from "src/rest-core/rest-core";
+import { rest } from "src/rest-core/rest-decoration";
+import { RestResource } from "src/rest-core/rest-resource";
 
-import { rest } from "./core/rest-decoration";
-import { RestResource } from "./core/rest-resource";
-import { RestCrudKernel, RestQueryProcessor } from "./crud/rest-crud";
+import { InCreation } from "./models/rest-creation-schema";
+import { Filterable } from "./models/rest-filter-map";
+import { Orderable } from "./models/rest-order-map";
+import { InUpdate } from "./models/rest-update-schema";
+import { RestCrudModule } from "./rest-crud";
+import { RestCrudKernel, RestQueryProcessor } from "./rest-crud-kernel";
 import {
   RestFilteringCustomizations,
   RestGenericFilter,
   RestGenericSorter,
-} from "./crud/rest-filtering";
+} from "./rest-filtering";
 import {
   RestOffsetLimitPaginator,
   RestPageNumberPaginator,
   RestPaginationCustomizations,
-} from "./crud/rest-pagination";
+} from "./rest-pagination";
 import {
   RestRetrievingCustomizations,
   RestSingleFieldRetriever,
   RestSingleFieldRetrieverCustomizations,
-} from "./crud/rest-retrieving";
-import { InCreation } from "./crud-models/rest-creation-schema";
-import { Filterable } from "./crud-models/rest-filter-map";
-import { Orderable } from "./crud-models/rest-order-map";
-import { InUpdate } from "./crud-models/rest-update-schema";
+} from "./rest-retrieving";
 
 describe("REST CRUD", () => {
   let facade: TestingFacade<App<any>>;
-  let requester: HttpKernel;
   let database: Database;
 
   async function prepare<Entity>(
@@ -49,7 +49,11 @@ describe("REST CRUD", () => {
     providers: ProviderWithScope[] = [],
   ) {
     facade = createTestingApp({
-      imports: [new HttpExtensionModule(), new RestModule()],
+      imports: [
+        new HttpExtensionModule(),
+        new RestCoreModule(),
+        new RestCrudModule(),
+      ],
       controllers: [resource],
       providers: [
         {
@@ -59,7 +63,6 @@ describe("REST CRUD", () => {
         ...providers,
       ],
     });
-    requester = facade.app.get(HttpKernel);
     database = facade.app.get(Database);
     await database.migrate();
     await facade.startServer();
@@ -96,7 +99,7 @@ describe("REST CRUD", () => {
       it("should work", async () => {
         await prepare(TestingResource, [MyEntity]);
         await database.persist(new MyEntity());
-        const response = await requester.request(HttpRequest.GET("/api"));
+        const response = await facade.request(HttpRequest.GET("/api"));
         expect(response.statusCode).toBe(200);
         expect(response.json).toEqual({
           total: 1,
@@ -138,7 +141,7 @@ describe("REST CRUD", () => {
           );
           const request = HttpRequest.GET("/api");
           if (query) request.query(query);
-          const response = await requester.request(request);
+          const response = await facade.request(request);
           expect(response.json).toEqual({ total: 3, items });
         });
 
@@ -153,7 +156,7 @@ describe("REST CRUD", () => {
         `(
           "should fail when limit is $limit and offset is $offset",
           async ({ limit, offset }) => {
-            const response = await requester.request(
+            const response = await facade.request(
               HttpRequest.GET("/api").query({ limit, offset }),
             );
             expect(response.statusCode).toBe(400);
@@ -193,7 +196,7 @@ describe("REST CRUD", () => {
             );
             const request = HttpRequest.GET("/api");
             if (query) request.query(query);
-            const response = await requester.request(request);
+            const response = await facade.request(request);
             expect(response.json).toEqual({ total: 3, items });
           },
         );
@@ -207,7 +210,7 @@ describe("REST CRUD", () => {
         `(
           "should fail when page is $page and size is $size",
           async ({ page, size }) => {
-            const response = await requester.request(
+            const response = await facade.request(
               HttpRequest.GET("/api").query({ page, size }),
             );
             expect(response.statusCode).toBe(400);
@@ -264,14 +267,14 @@ describe("REST CRUD", () => {
           await database.persist(...entities);
           const request = HttpRequest.GET("/api");
           if (query) request["queryPath"] = query;
-          const response = await requester.request(request);
+          const response = await facade.request(request);
           expect(response.json).toEqual({ total, items });
         });
 
         it("should fail with invalid query", async () => {
           const request = HttpRequest.GET("/api");
           request["queryPath"] = "filter[id][$eq]=99999";
-          const response = await requester.request(request);
+          const response = await facade.request(request);
           expect(response.statusCode).toBe(400);
         });
       });
@@ -312,14 +315,14 @@ describe("REST CRUD", () => {
           await database.persist(new TestingEntity(), new TestingEntity());
           const request = HttpRequest.GET("/api");
           if (query) request["queryPath"] = query;
-          const response = await requester.request(request);
+          const response = await facade.request(request);
           expect(response.json).toEqual({ total: 2, items });
         });
 
         it("should fail with invalid query", async () => {
           const request = HttpRequest.GET("/api");
           request["queryPath"] = "order[id]=asdfasdf";
-          const response = await requester.request(request);
+          const response = await facade.request(request);
           expect(response.statusCode).toBe(400);
         });
       });
@@ -358,7 +361,7 @@ describe("REST CRUD", () => {
         const payload = {
           name: "test",
         };
-        const response = await requester.request(
+        const response = await facade.request(
           HttpRequest.POST("/api").json(payload),
         );
         expect(response.statusCode).toBe(201);
@@ -367,7 +370,7 @@ describe("REST CRUD", () => {
       });
 
       test("validation", async () => {
-        const response = await requester.request(
+        const response = await facade.request(
           HttpRequest.POST("/api").json({}),
         );
         expect(response.statusCode).toBe(400);
@@ -387,7 +390,7 @@ describe("REST CRUD", () => {
       it("should work", async () => {
         await prepare(TestingResource, [MyEntity]);
         await database.persist(new MyEntity());
-        const response = await requester.request(HttpRequest.GET("/api/1"));
+        const response = await facade.request(HttpRequest.GET("/api/1"));
         expect(response.statusCode).toBe(200);
       });
     });
@@ -407,7 +410,7 @@ describe("REST CRUD", () => {
         }
         await prepare(TestingResource, [MyEntity]);
         await database.persist(new MyEntity());
-        const response = await requester.request(HttpRequest.GET("/api/1"));
+        const response = await facade.request(HttpRequest.GET("/api/1"));
         expect(response.json).toMatchObject({ id: 1 });
       });
 
@@ -428,7 +431,7 @@ describe("REST CRUD", () => {
         }
         await prepare(TestingResource, [MyEntity]);
         await database.persist(new MyEntity());
-        const response = await requester.request(HttpRequest.GET("/api/1"));
+        const response = await facade.request(HttpRequest.GET("/api/1"));
         expect(response.json).toMatchObject({ id: 1 });
       });
 
@@ -449,7 +452,7 @@ describe("REST CRUD", () => {
         }
         await prepare(TestingResource, [MyEntity]);
         await database.persist(new MyEntity("name"));
-        const response = await requester.request(HttpRequest.GET("/api/name"));
+        const response = await facade.request(HttpRequest.GET("/api/name"));
         expect(response.json).toMatchObject({ id: 1 });
       });
 
@@ -467,7 +470,7 @@ describe("REST CRUD", () => {
         }
         await prepare(TestingResource, [MyEntity]);
         await database.persist(new MyEntity());
-        const response = await requester.request(HttpRequest.GET("/api/1"));
+        const response = await facade.request(HttpRequest.GET("/api/1"));
         expect(response.statusCode).toBe(500);
       });
     });
@@ -497,7 +500,7 @@ describe("REST CRUD", () => {
           [{ provide: TestingRetriever, scope: "http" }],
         );
         await database.persist(new MyEntity());
-        const response = await requester.request(HttpRequest.GET("/api/any"));
+        const response = await facade.request(HttpRequest.GET("/api/any"));
         expect(response.statusCode).toBe(200);
         expect(response.json["id"]).toBe(1);
       });
@@ -537,7 +540,7 @@ describe("REST CRUD", () => {
 
       test("basic", async () => {
         const payload = { name: "updated" };
-        const response = await requester.request(
+        const response = await facade.request(
           HttpRequest.PATCH("/api/1").json(payload),
         );
         expect(response.statusCode).toBe(200);
@@ -548,7 +551,7 @@ describe("REST CRUD", () => {
       });
 
       test("property optional", async () => {
-        const response = await requester.request(
+        const response = await facade.request(
           HttpRequest.PATCH("/api/1").json({}),
         );
         expect(response.statusCode).toBe(200);
@@ -559,7 +562,7 @@ describe("REST CRUD", () => {
       });
 
       test("validation", async () => {
-        const response = await requester.request(
+        const response = await facade.request(
           HttpRequest.PATCH("/api/1").json({ name: "alsdfhlasdhfladhflaskfj" }),
         );
         expect(response.statusCode).toBe(400);
@@ -578,7 +581,7 @@ describe("REST CRUD", () => {
       }
       await prepare(TestingResource, [MyEntity]);
       await database.persist(new MyEntity());
-      const response = await requester.request(HttpRequest.DELETE("/api/1"));
+      const response = await facade.request(HttpRequest.DELETE("/api/1"));
       expect(response.statusCode).toBe(204);
       expect(response.bodyString).toBe("");
       expect(await database.query(MyEntity).count()).toBe(0);

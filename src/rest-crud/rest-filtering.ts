@@ -2,11 +2,11 @@ import { ClassType } from "@deepkit/core";
 import { FieldName, Query } from "@deepkit/orm";
 import { purify } from "src/common/type";
 import { HttpRequestParsed } from "src/http-extension/http-request-parsed.service";
+import { RestActionContext } from "src/rest-core/rest-action";
 
-import { RestActionContext } from "../core/rest-action";
-import { RestFilterMapFactory } from "../crud-models/rest-filter-map";
-import { RestOrderMapFactory } from "../crud-models/rest-order-map";
-import { RestQueryProcessor } from "./rest-crud";
+import { RestFilterMapFactory } from "./models/rest-filter-map";
+import { RestOrderMapFactory } from "./models/rest-order-map";
+import { RestQueryProcessor } from "./rest-crud-kernel";
 
 export interface RestFilteringCustomizations {
   filters?: ClassType<RestEntityFilter>[];

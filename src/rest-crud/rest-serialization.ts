@@ -3,9 +3,9 @@ import { ReflectionClass, serialize } from "@deepkit/type";
 import { purify } from "src/common/type";
 import { HttpRouteConfig } from "src/http-extension/http-common";
 
-import { RestCreationSchemaFactory } from "../crud-models/rest-creation-schema";
-import { RestUpdateSchemaFactory } from "../crud-models/rest-update-schema";
-import { RestCrudActionContext } from "./rest-crud";
+import { RestCreationSchemaFactory } from "./models/rest-creation-schema";
+import { RestUpdateSchemaFactory } from "./models/rest-update-schema";
+import { RestCrudActionContext } from "./rest-crud-kernel";
 
 export interface RestSerializationCustomizations<Entity> {
   serializer?: ClassType<RestEntitySerializer<Entity>>;

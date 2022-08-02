@@ -3,9 +3,9 @@ import { onServerMainBootstrap } from "@deepkit/framework";
 import { HttpRouter, httpWorkflow } from "@deepkit/http";
 import { HttpAccessDeniedResponse } from "src/http-extension/http-common";
 
-import { RestActionContext } from "./core/rest-action";
-import { RestGuardLauncher } from "./core/rest-guard";
-import { RestResourceRegistry } from "./core/rest-resource";
+import { RestActionContext } from "./rest-action";
+import { RestGuardLauncher } from "./rest-guard";
+import { RestResourceRegistry } from "./rest-resource";
 
 export class RestListener {
   constructor(
@@ -21,8 +21,8 @@ export class RestListener {
       // the http controller registry of `HttpModule`
       // prettier-ignore
       const isRegistered = this.router
-        .getRoutes()
-        .some(({ action }) => action.module === module && action.type   === 'controller' && action.controller === type);
+          .getRoutes()
+          .some(({ action }) => action.module === module && action.type   === 'controller' && action.controller === type);
       if (isRegistered) return;
       this.router.addRouteForController(type, module);
     });

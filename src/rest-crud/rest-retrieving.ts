@@ -4,7 +4,7 @@ import { ReflectionProperty } from "@deepkit/type";
 import { purify } from "src/common/type";
 import { HttpRequestParsed } from "src/http-extension/http-request-parsed.service";
 
-import { RestCrudActionContext, RestQueryProcessor } from "./rest-crud";
+import { RestCrudActionContext, RestQueryProcessor } from "./rest-crud-kernel";
 
 export interface RestRetrievingCustomizations {
   retriever?: ClassType<RestEntityRetriever>;

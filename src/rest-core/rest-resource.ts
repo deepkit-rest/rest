@@ -4,8 +4,8 @@ import { http, httpClass } from "@deepkit/http";
 import { Database, Query } from "@deepkit/orm";
 import { join } from "path";
 
-import { RestModuleConfig } from "../rest.config";
 import { RestActionContext, RestActionParameterResolver } from "./rest-action";
+import { RestCoreModuleConfig } from "./rest-core-config";
 import { restClass } from "./rest-decoration";
 import {
   RestActionMetaValidated,
@@ -26,7 +26,7 @@ export interface RestResourceRegistryItem {
 }
 
 export class RestResourceInstaller {
-  constructor(private config: RestModuleConfig) {}
+  constructor(private config: RestCoreModuleConfig) {}
 
   setup(type: ResourceClassType): void {
     http.controller()(type);
