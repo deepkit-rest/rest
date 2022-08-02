@@ -22,5 +22,12 @@
   "devDependencies": {
     "@types/formidable": "^2.0.5",
     "@types/qs": "^6.9.7"
+  },
+  "peerDependencies": {
+    "@deepkit/app": "^1.0.0",
+    "@deepkit/event": "^1.0.0",
+    "@deepkit/http": "^1.0.0",
+    "@deepkit/injector": "^1.0.0",
+    "@deepkit/type": "^1.0.0"
   }
 }

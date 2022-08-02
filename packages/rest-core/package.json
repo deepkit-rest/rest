@@ -16,5 +16,15 @@
   "homepage": "https://github.com/deepkit-rest/rest#readme",
   "dependencies": {
     "tslib": "^2.4.0"
+  },
+  "peerDependencies": {
+    "@deepkit/app": "^1.0.0",
+    "@deepkit/core": "^1.0.0",
+    "@deepkit/event": "^1.0.0",
+    "@deepkit/framework": "^1.0.0",
+    "@deepkit/http": "^1.0.0",
+    "@deepkit/injector": "^1.0.0",
+    "@deepkit/type": "^1.0.0",
+    "@deepkit/orm": "^1.0.0"
   }
 }
