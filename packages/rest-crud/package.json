@@ -3,7 +3,6 @@
   "version": "0.0.0",
   "description": "",
   "main": "lib/index.js",
-  "devDependencies": {},
   "scripts": {},
   "repository": {
     "type": "git",
@@ -14,5 +13,8 @@
   "bugs": {
     "url": "https://github.com/deepkit-rest/rest/issues"
   },
-  "homepage": "https://github.com/deepkit-rest/rest#readme"
+  "homepage": "https://github.com/deepkit-rest/rest#readme",
+  "dependencies": {
+    "tslib": "^2.4.0"
+  }
 }
