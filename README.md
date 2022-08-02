@@ -630,6 +630,24 @@ class BookResource implements RestResource<Book> {
 }
 ```
 
+Besides, Guards can be invoked for regular HTTP Controllers too:
+
+```ts
+@eventDispatcher.listen(httpWorkflow.onController)
+async beforeController(
+  event: typeof httpWorkflow.onController.event,
+): Promise<void> {
+  if (event.route.groups.includes("auth-required")) {
+    const response = await this.guardLauncher.launch(
+      [AuthGuard],
+      event.injectorContext,
+      event.route.action.module,
+    );
+    if (response) event.send(response);
+  }
+}
+```
+
 ## Resource Inheritance
 
 As the application grows, you'll find that there are a lot of repeated patterns like the paginator declaration and completely same `getDatabase()` code. To keep DRY, you can create an abstract `AppResource` as the base Resource:
