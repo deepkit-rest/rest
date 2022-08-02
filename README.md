@@ -3,7 +3,10 @@
 **_REST API simplified._**
 
 ```
-npm i deepkit-rest // not available now :D
+npm i \
+  @deepkit-rest/http-extension \
+  @deepkit-rest/rest-core \
+  @deepkit-rest/rest-crud
 ```
 
 # Overview
@@ -61,14 +64,15 @@ export class BookResource
 
 # Tutorial
 
-To get started, both `RestModule` and `HttpExtensionModule` are required to be imported in your `App` instance:
+To get started, we'll need to import `HttpExtensionModule`, `RestCoreModule` and `RestCrudModule`:
 
 ```ts
 new App({
   imports: [
     new FrameworkModule(),
     new HttpExtensionModule(),
-    new RestModule(),
+    new RestCoreModule(),
+    new RestCrudModule(),
     // ...
   ],
 })
@@ -169,11 +173,11 @@ class BookResource implements RestResource<Book> {
 
 ### Path Prefix
 
-We can specify the path prefix for all our resources via the module config of `RestModule`
+We can specify the path prefix for all our resources via the module config of `RestCoreModule`
 
 ```ts
 {
-  imports: [new RestModule({ prefix: "api" })];
+  imports: [new RestCoreModule({ prefix: "api" })];
 }
 ```
 
