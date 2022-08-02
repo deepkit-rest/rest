@@ -18,7 +18,7 @@
     "tslib": "^2.4.0"
   },
   "peerDependencies": {
-    "@deepkit/core": "^1.0.0",
-    "@deepkit/type": "^1.0.0"
+    "@deepkit/core": "*",
+    "@deepkit/type": "*"
   }
 }

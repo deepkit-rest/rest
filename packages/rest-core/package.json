@@ -22,15 +22,15 @@
     "@deepkit-rest/http-extension": "file:../http-extension"
   },
   "peerDependencies": {
-    "@deepkit/app": "^1.0.0",
-    "@deepkit/core": "^1.0.0",
-    "@deepkit/event": "^1.0.0",
-    "@deepkit/framework": "^1.0.0",
-    "@deepkit/http": "^1.0.0",
-    "@deepkit/injector": "^1.0.0",
-    "@deepkit/type": "^1.0.0",
-    "@deepkit/orm": "^1.0.0",
-    "@deepkit-rest/common": "^0.1.0",
-    "@deepkit-rest/http-extension": "^0.1.0"
+    "@deepkit/app": "*",
+    "@deepkit/core": "*",
+    "@deepkit/event": "*",
+    "@deepkit/framework": "*",
+    "@deepkit/http": "*",
+    "@deepkit/injector": "*",
+    "@deepkit/type": "*",
+    "@deepkit/orm": "*",
+    "@deepkit-rest/common": "*",
+    "@deepkit-rest/http-extension": "*"
   }
 }

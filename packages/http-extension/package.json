@@ -25,11 +25,11 @@
     "@deepkit-rest/common": "file:../common"
   },
   "peerDependencies": {
-    "@deepkit/app": "^1.0.0",
-    "@deepkit/event": "^1.0.0",
-    "@deepkit/http": "^1.0.0",
-    "@deepkit/injector": "^1.0.0",
-    "@deepkit/type": "^1.0.0",
-    "@deepkit-rest/common": "^0.1.0"
+    "@deepkit/app": "*",
+    "@deepkit/event": "*",
+    "@deepkit/http": "*",
+    "@deepkit/injector": "*",
+    "@deepkit/type": "*",
+    "@deepkit-rest/common": "*"
   }
 }
