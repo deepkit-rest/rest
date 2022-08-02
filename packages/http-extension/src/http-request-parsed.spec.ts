@@ -24,7 +24,7 @@ describe("HttpRequestParsed", () => {
     });
 
     test("basic", async () => {
-      expect(context.getBody()).resolves.toEqual({ a: 1 });
+      expect(await context.getBody()).toEqual({ a: 1 });
     });
 
     test("cache", async () => {
@@ -35,8 +35,11 @@ describe("HttpRequestParsed", () => {
     });
 
     test("type", async () => {
-      expect(context.getBody<{ a: string }>()).resolves.toEqual({ a: "1" });
-      expect(context.getBody<{ b: number }>()).rejects.toThrow(ValidationError);
+      let promise: Promise<any>;
+      promise = context.getBody<{ a: string }>();
+      await expect(promise).resolves.toEqual({ a: "1" });
+      promise = context.getBody<{ b: number }>();
+      await expect(promise).rejects.toThrow(ValidationError);
     });
   });
 

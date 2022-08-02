@@ -39,12 +39,11 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node }}
-      - name: Installation
-        uses: bahmutov/npm-install@v1
+      - uses: bahmutov/npm-install@v1
         with:
           install-command: npm install
-      - name: Test
-        run: npm run build && npm test
+      - run: npm run build
+      - run: npm test
 
   analyze:
     name: Analyze

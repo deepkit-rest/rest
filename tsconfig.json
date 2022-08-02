@@ -17,7 +17,5 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "composite": true
-  },
-  "ts-node": { "files": true },
-  "reflection": true // @deepkit/type
+  }
 }
