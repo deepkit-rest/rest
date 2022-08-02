@@ -1,6 +1,5 @@
 import {
   BaseResponse,
-  createHttpError,
   HtmlResponse,
   HttpAction,
   httpClass,
@@ -13,11 +12,6 @@ export class NoContentResponse extends HtmlResponse {
     super("", 204);
   }
 }
-
-export class HttpRangeNotSatisfiableError extends createHttpError(
-  416,
-  "Range Not Satisfiable",
-) {}
 
 export type HttpMethod =
   | "GET"
