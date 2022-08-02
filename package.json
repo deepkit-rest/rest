@@ -15,7 +15,7 @@
   "dependencies": {
     "@deepkit/app": "^1.0.1-alpha.71",
     "@deepkit/core": "^1.0.1-alpha.65",
-    "@deepkit/event": "^1.0.1-alpha.71",
+    "@deepkit/event": "^1.0.1-alpha.75",
     "@deepkit/framework": "^1.0.1-alpha.71",
     "@deepkit/http": "^1.0.1-alpha.71",
     "@deepkit/injector": "^1.0.1-alpha.71",
