@@ -1,0 +1,9 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./packages/common" },
+    { "path": "./packages/http-extension" },
+    { "path": "./packages/rest-core" },
+    { "path": "./packages/rest-crud" }
+  ]
+}

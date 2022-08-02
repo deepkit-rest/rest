@@ -1,0 +1,18 @@
+{
+  "name": "@deepkit-rest/rest-core",
+  "version": "0.0.0",
+  "description": "",
+  "main": "lib/index.js",
+  "devDependencies": {},
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deepkit-rest/rest.git"
+  },
+  "author": "Char2s <Char2s@outlook.com>",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/deepkit-rest/rest/issues"
+  },
+  "homepage": "https://github.com/deepkit-rest/rest#readme"
+}

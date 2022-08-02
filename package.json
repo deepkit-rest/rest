@@ -6,10 +6,7 @@
   "license": "Apache-2.0",
   "scripts": {
     "prepare": "husky install",
-    "release": "standard-version --no-verify",
-    "app": "ts-node -r tsconfig-paths/register src/app.ts",
-    "dev": "ts-node-dev -r tsconfig-paths/register --respawn src/app.ts server:start",
-    "build": "tsc && tsc-alias",
+    "build": "tsc -b tsconfig.build.json",
     "lint": "eslint \"src/**/*.ts\" --cache --fix & prettier --write \"{src/**/*,*}.{html,css,less,scss,sass,js,json,md}\"",
     "test": "npm run test:unit && npm run test:integration",
     "test:unit": "jest --config jest.config.unit.js",
@@ -64,8 +61,10 @@
     "ts-loader": "^9.2.3",
     "ts-node": "^10.9.1",
     "ts-node-dev": "^2.0.0",
-    "tsc-alias": "^1.6.7",
     "tsconfig-paths": "^4.0.0",
     "typescript": "~4.7.4"
-  }
+  },
+  "workspaces": [
+    "packages/*"
+  ]
 }

@@ -1,8 +1,6 @@
 {
   "compilerOptions": {
     "module": "CommonJS",
-    "baseUrl": "./",
-    "outDir": "./dist",
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "noImplicitOverride": true,
@@ -18,9 +16,8 @@
     "lib": ["ES2020"],
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "paths": { "src": ["src"] } // tsc-alias require explicit paths for path replacing
+    "composite": true
   },
-  "include": ["src/**/*.ts"],
   "ts-node": { "files": true },
-  "reflection": true // enable runtime type reflection by @deepkit/type
+  "reflection": true // @deepkit/type
 }
