@@ -44,7 +44,7 @@ jobs:
         with:
           install-command: npm install
       - name: Test
-        run: npm test
+        run: npm run build && npm test
 
   analyze:
     name: Analyze
