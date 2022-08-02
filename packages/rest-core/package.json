@@ -17,6 +17,10 @@
   "dependencies": {
     "tslib": "^2.4.0"
   },
+  "devDependencies": {
+    "@deepkit-rest/common": "file:../common",
+    "@deepkit-rest/http-extension": "file:../http-extension"
+  },
   "peerDependencies": {
     "@deepkit/app": "^1.0.0",
     "@deepkit/core": "^1.0.0",

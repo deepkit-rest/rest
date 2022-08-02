@@ -21,7 +21,8 @@
   },
   "devDependencies": {
     "@types/formidable": "^2.0.5",
-    "@types/qs": "^6.9.7"
+    "@types/qs": "^6.9.7",
+    "@deepkit-rest/common": "file:../common"
   },
   "peerDependencies": {
     "@deepkit/app": "^1.0.0",
