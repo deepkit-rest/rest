@@ -16,6 +16,7 @@
   },
   "homepage": "https://github.com/deepkit-rest/rest#readme",
   "dependencies": {
+    "deepmerge": "^4.2.2",
     "tslib": "^2.4.0"
   },
   "devDependencies": {
@@ -24,13 +25,13 @@
     "@deepkit-rest/rest-core": "file:../rest-core"
   },
   "peerDependencies": {
+    "@deepkit-rest/common": "*",
+    "@deepkit-rest/http-extension": "*",
+    "@deepkit-rest/rest-core": "*",
     "@deepkit/app": "*",
     "@deepkit/core": "*",
     "@deepkit/http": "*",
-    "@deepkit/type": "*",
     "@deepkit/orm": "*",
-    "@deepkit-rest/common": "*",
-    "@deepkit-rest/http-extension": "*",
-    "@deepkit-rest/rest-core": "*"
+    "@deepkit/type": "*"
   }
 }

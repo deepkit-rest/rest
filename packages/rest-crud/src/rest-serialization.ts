@@ -1,7 +1,15 @@
 import { ClassType } from "@deepkit/core";
-import { ReflectionClass, serialize } from "@deepkit/type";
+import {
+  NamingStrategy,
+  ReflectionClass,
+  SerializationOptions,
+  serialize,
+  Serializer,
+  serializer,
+} from "@deepkit/type";
 import { purify } from "@deepkit-rest/common";
 import { HttpRouteConfig } from "@deepkit-rest/http-extension";
+import deepmerge from "deepmerge";
 
 import { RestCreationSchemaFactory } from "./models/rest-creation-schema";
 import { RestUpdateSchemaFactory } from "./models/rest-update-schema";
@@ -38,6 +46,10 @@ export interface RestEntitySerializer<Entity> {
 export class RestGenericSerializer<Entity>
   implements RestEntitySerializer<Entity>
 {
+  serializer: Serializer = serializer;
+  serializationOptions: SerializationOptions = {};
+  serializationNaming?: NamingStrategy;
+
   constructor(
     protected context: RestCrudActionContext<Entity>,
     protected routeConfig: HttpRouteConfig,
@@ -47,12 +59,12 @@ export class RestGenericSerializer<Entity>
 
   async serialize(entity: Entity): Promise<unknown> {
     const entitySchema = this.context.getEntitySchema();
-    const { serializer, serializationOptions } = this.routeConfig;
+    const { serializer, options, naming } = this.getSerializationConfig();
     return serialize<Entity>(
       entity,
-      serializationOptions,
+      options,
       serializer,
-      undefined,
+      naming,
       entitySchema.type,
     );
   }
@@ -102,4 +114,22 @@ export class RestGenericSerializer<Entity>
     Object.assign(entity, data);
     return entity;
   }
+
+  protected getSerializationConfig(): RestGenericSerializerSerializationConfig {
+    return {
+      serializer: this.serializer,
+      naming: this.serializationNaming,
+      ...this.routeConfig,
+      options: deepmerge(
+        this.serializationOptions,
+        this.routeConfig.serializationOptions ?? {},
+      ),
+    };
+  }
+}
+
+export interface RestGenericSerializerSerializationConfig {
+  serializer: Serializer;
+  options: SerializationOptions;
+  naming?: NamingStrategy;
 }
