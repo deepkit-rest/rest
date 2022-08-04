@@ -598,7 +598,7 @@ interface RestGuard {
 }
 ```
 
-Let's implement a simple Guard to forbid any access to unpublished `Book` entities:
+Let's take a look at a simple example of a Guard responsible to forbid access to unpublished `Book` entities:
 
 ```ts
 @rest.guard("published-only")
@@ -612,17 +612,7 @@ class BookPublishedOnlyGuard implements RestGuard {
 }
 ```
 
-Remember to provide our Guard in the `http` scope:
-
-```ts
-{
-  providers: [{ provide: BookPublishedOnlyGuard, scope: "http" }];
-}
-```
-
-> Once provided, the guard will be available through the whole application. There's no need to put it in `exports`.
-
-Guards must be bound to a group name using the `@rest.guard()` decorator. In our case, all Actions with group name `published-only` will be protected by our `BookPublishedOnlyGuard`:
+We must decorate a Guard with the `@rest.guard()` decorator to bind a group name for the Guard, which will be used to bind the Guard to specific Actions. In this case, the bound group name is `"publish-only"`, which means all Actions in this module with group name `"published-only"` will be protected by the `BookPublishedOnlyGuard`:
 
 ```ts
 @rest.resource(Book, "books")
@@ -636,26 +626,59 @@ class BookResource implements RestResource<Book> {
 }
 ```
 
-The order of Guards is determined by the order of groups. Usually the Guard responsible for authentication should be invoked first:
-
-```ts
-@http.group('auth-required', "published-only")
-async retrieve(): Promise<Response> {
-  // ...
-}
-```
-
-If all the Actions in a Resource should be protected by a Guard, we can prepend the group to all the Actions by applying the `@http.group()` decorator directly at the Resource:
+We can apply the `@http.group()` decorator to the Resource to prepend some group to all its Actions, which can be quite useful when we want all the Actions in the Resource to be protected by the Guard:
 
 ```ts
 @rest.resource(Book, "books")
-@http.group("auth-required")
+@http.group("published-only")
 class BookResource implements RestResource<Book> {
   // ...
+  @rest.action("GET", ":pk")
+  async retrieve(): Promise<Response> {
+    // ...
+  }
 }
 ```
 
-> Guards are invoked on `httpWorkflow.onAuth` event with order `200`, and when an HTTP Error is thrown the state of the http workflow will jump to `httpWorkflow.onAccessDenied`.
+Usually all Guards should be provided in the `http` scope, because we have to inject some `http` scoped providers to get the contextual information, e.g. `HttpRequest`, `RestCrudActionContext` and `HttpRequestParsed`. In this case, the Guard is making use of `RestCrudActionContext`, so it must be provided in the `http` scope:
+
+```ts
+{
+  provides: [{ provide: BookPublishedOnlyGuard, scope: "http" }];
+}
+```
+
+If a Guard is not exported, only Actions in modules where the Guard can be injected are able be protected by this Guard. We'll need to put it in `exports` to share it among other modules:
+
+```ts
+{
+  provides: [{ provide: BookPublishedOnlyGuard, scope: "http" }];
+  exports: [BookPublishedOnlyGuard],
+}
+```
+
+The order of Guards is determined by the order of groups. If we want the requests to go through an authorization Guard first, we'll need to position the corresponding group before any other Guard-bound groups.
+
+```ts
+@http.group('auth-required', "owned-only")
+action() {}
+```
+
+Applying `@http.group()` to a Resource will **prepend** groups to Actions, so Guards bound to Actions using `@http.group()` at the Resource level will be invoked earlier than the ones at the Action level. Therefore we can avoid repeating the group if we want all the Actions in a Resource to be handled by the authentication Guard first:
+
+```ts
+@http.group("auth-required")
+class MyResource implements RestResource<MyEntity> {
+  // ...
+  @http.group("owned-only")
+  action() {}
+}
+```
+
+### Details in HTTP Workflow
+
+- Guards are invoked at the `onAuth` state with `200` order
+- The state of the HTTP Workflow will jump from `onAuth` to `onAccessDenied` when an HTTP Error is thrown from Guards
 
 ## Resource Inheritance
 
