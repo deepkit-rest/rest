@@ -1,4 +1,5 @@
 import { AppModule } from "@deepkit/app";
+import { ClassType } from "@deepkit/core";
 import { HtmlResponse, HttpError, RouteConfig } from "@deepkit/http";
 import { InjectorContext } from "@deepkit/injector";
 import { ReflectionFunction } from "@deepkit/type";
@@ -25,7 +26,7 @@ export class RestGuardRegistry extends Set<RestGuardRegistryItem> {
 }
 
 export interface RestGuardRegistryItem {
-  token: unknown;
+  type: ClassType<RestGuard>;
   module: AppModule;
   meta: RestGuardMetaValidated;
 }
@@ -54,18 +55,32 @@ export class RestGuardLauncher {
     routeConfig: RouteConfig,
     injectorContext: InjectorContext,
   ): Promise<HtmlResponse | null> {
-    const guardRegistryItems = this.getGuardRegistryItemsForRoute(routeConfig);
-    const guards = guardRegistryItems.map(
-      (item) => injectorContext.get(item.token, item.module) as RestGuard,
+    const guardRegistryItems = this.getGuardRegistryItemsForRoute(
+      routeConfig,
+      injectorContext,
+    );
+    const guards = guardRegistryItems.map((item) =>
+      injectorContext.resolve(routeConfig.action.module, item.type)(),
     );
     return this.launch(...guards);
   }
 
-  private getGuardRegistryItemsForRoute(routeConfig: RouteConfig) {
+  private getGuardRegistryItemsForRoute(
+    routeConfig: RouteConfig,
+    injectorContext: InjectorContext,
+  ) {
     const methodSchema = routeConfig.getReflectionFunction();
     let items = this.routeGuardMap.get(methodSchema);
     if (!items) {
       items = this.registry.searchByGroups(routeConfig.groups);
+      items = items.filter((item) => {
+        try {
+          injectorContext.resolve(routeConfig.action.module, item.type);
+          return true;
+        } catch {
+          return false;
+        }
+      });
       this.routeGuardMap.set(methodSchema, items);
     }
     return items;

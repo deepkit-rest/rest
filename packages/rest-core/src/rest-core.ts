@@ -4,7 +4,7 @@ import { ClassType } from "@deepkit/core";
 import { RestActionContext, RestActionParameterResolver } from "./rest-action";
 import { RestCoreModuleConfig } from "./rest-core-config";
 import { restGuard, restResource } from "./rest-decoration";
-import { RestGuardLauncher, RestGuardRegistry } from "./rest-guard";
+import { RestGuard, RestGuardLauncher, RestGuardRegistry } from "./rest-guard";
 import { RestListener } from "./rest-listener";
 import { RestResourceInstaller, RestResourceRegistry } from "./rest-resource";
 
@@ -35,7 +35,8 @@ export class RestCoreModule extends createModule(
   override processProvider(module: AppModule<any, any>, token: unknown): void {
     const meta = restGuard._fetch(token as any)?.validate();
     if (!meta) return;
-    this.guardRegistry.add({ token, module, meta });
+    const type = token as ClassType<RestGuard>;
+    this.guardRegistry.add({ type, module, meta });
   }
 
   override processController(

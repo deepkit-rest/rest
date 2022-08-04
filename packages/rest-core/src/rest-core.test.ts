@@ -1,4 +1,4 @@
-import { App } from "@deepkit/app";
+import { App, AppModule, createModule } from "@deepkit/app";
 import { ClassType } from "@deepkit/core";
 import { createTestingApp, TestingFacade } from "@deepkit/framework";
 import {
@@ -28,9 +28,14 @@ describe("REST Core", () => {
     config: Partial<RestCoreModuleConfig>,
     controllers: ClassType[],
     providers: ProviderWithScope[] = [],
+    modules: AppModule[] = [],
   ) {
     facade = createTestingApp({
-      imports: [new HttpExtensionModule(), new RestCoreModule(config)],
+      imports: [
+        new HttpExtensionModule(),
+        new RestCoreModule(config),
+        ...modules,
+      ],
       controllers,
       providers: [
         {
@@ -168,26 +173,29 @@ describe("REST Core", () => {
       async guard(): Promise<void> {}
     }
 
-    test("group matching", async () => {
-      @http.controller().group("my-group")
-      class MyController {
-        @http.GET().group("my-group2")
-        route() {}
-      }
-      await setup(
-        {},
-        [MyController],
-        [
+    test("matching", async () => {
+      class MyModule extends createModule({
+        providers: [
           { provide: MyGuard, scope: "http" },
           { provide: MyGuard2, scope: "http" },
+          { provide: MyGuard3, scope: "http" },
         ],
-      );
+        exports: [MyGuard, MyGuard2],
+      }) {}
+      @http.controller().group("my-group")
+      class MyController {
+        @http.GET().group("my-group2", "my-group3")
+        route() {}
+      }
+      await setup({}, [MyController], [], [new MyModule()]);
       jest.spyOn(MyGuard.prototype, "guard");
       jest.spyOn(MyGuard2.prototype, "guard");
+      jest.spyOn(MyGuard3.prototype, "guard");
       const response = await facade.request(HttpRequest.GET("/"));
       expect(response.statusCode).toBe(200);
       expect(MyGuard.prototype.guard).toHaveBeenCalledTimes(1);
       expect(MyGuard2.prototype.guard).toHaveBeenCalledTimes(1);
+      expect(MyGuard3.prototype.guard).toHaveBeenCalledTimes(0);
     });
 
     test("http error handling", async () => {
