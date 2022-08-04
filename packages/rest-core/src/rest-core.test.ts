@@ -155,40 +155,83 @@ describe("REST Core", () => {
   });
 
   describe("Guard", () => {
+    @rest.guard("my-group")
     class MyGuard implements RestGuard {
-      async guard(): Promise<void> {
-        throw new HttpUnauthorizedError();
-      }
+      async guard(): Promise<void> {}
+    }
+    @rest.guard("my-group2")
+    class MyGuard2 implements RestGuard {
+      async guard(): Promise<void> {}
+    }
+    @rest.guard("my-group3")
+    class MyGuard3 implements RestGuard {
+      async guard(): Promise<void> {}
     }
 
-    test("resource scoped", async () => {
-      @rest.resource(User, "api").guardedBy(MyGuard)
-      class MyResource extends UserRestResource {
-        @rest.action("GET")
+    test("group matching", async () => {
+      @http.controller().group("my-group")
+      class MyController {
+        @http.GET().group("my-group2")
         route() {}
       }
       await setup(
-        { prefix: "prefix" },
-        [MyResource],
-        [{ provide: MyGuard, scope: "http" }],
+        {},
+        [MyController],
+        [
+          { provide: MyGuard, scope: "http" },
+          { provide: MyGuard2, scope: "http" },
+        ],
       );
-      const response = await facade.request(HttpRequest.GET("/prefix/api"));
+      jest.spyOn(MyGuard.prototype, "guard");
+      jest.spyOn(MyGuard2.prototype, "guard");
+      const response = await facade.request(HttpRequest.GET("/"));
+      expect(response.statusCode).toBe(200);
+      expect(MyGuard.prototype.guard).toHaveBeenCalledTimes(1);
+      expect(MyGuard2.prototype.guard).toHaveBeenCalledTimes(1);
+    });
+
+    test("http error handling", async () => {
+      @http.controller().group("my-group")
+      class MyController {
+        @http.GET()
+        route() {}
+      }
+      await setup({}, [MyController], [{ provide: MyGuard, scope: "http" }]);
+      jest.spyOn(MyGuard.prototype, "guard").mockImplementation(() => {
+        throw new HttpUnauthorizedError();
+      });
+      const response = await facade.request(HttpRequest.GET("/"));
       expect(response.statusCode).toBe(401);
     });
 
-    test("action scoped", async () => {
-      @rest.resource(User, "api")
-      class MyResource extends UserRestResource {
-        @rest.action("GET").guardedBy(MyGuard)
+    test("order", async () => {
+      @http.controller().group("my-group3")
+      class MyController {
+        @http.GET().group("my-group", "my-group2")
         route() {}
       }
       await setup(
         { prefix: "prefix" },
-        [MyResource],
-        [{ provide: MyGuard, scope: "http" }],
+        [MyController],
+        [
+          { provide: MyGuard, scope: "http" },
+          { provide: MyGuard2, scope: "http" },
+          { provide: MyGuard3, scope: "http" },
+        ],
       );
-      const response = await facade.request(HttpRequest.GET("/prefix/api"));
-      expect(response.statusCode).toBe(401);
+      const order: number[] = [];
+      jest.spyOn(MyGuard.prototype, "guard").mockImplementation(async () => {
+        order.push(1);
+      });
+      jest.spyOn(MyGuard2.prototype, "guard").mockImplementation(async () => {
+        order.push(2);
+      });
+      jest.spyOn(MyGuard3.prototype, "guard").mockImplementation(async () => {
+        order.push(3);
+      });
+      const response = await facade.request(HttpRequest.GET("/"));
+      expect(response.statusCode).toBe(200);
+      expect(order).toEqual([3, 1, 2]);
     });
   });
 });

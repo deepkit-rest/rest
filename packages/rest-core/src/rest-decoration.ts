@@ -10,10 +10,10 @@ import { PrettifiedDecoratorApi } from "@deepkit-rest/common";
 import { HttpMethod } from "@deepkit-rest/http-extension";
 
 import { RestGuard } from "./rest-guard";
-import { RestActionMeta, RestResourceMeta } from "./rest-meta";
+import { RestActionMeta, RestGuardMeta, RestResourceMeta } from "./rest-meta";
 import { RestResource } from "./rest-resource";
 
-export class RestClassDecoratorApi extends PrettifiedDecoratorApi<RestResourceMeta> {
+export class RestResourceDecoratorApi extends PrettifiedDecoratorApi<RestResourceMeta> {
   meta = new RestResourceMeta();
 
   onDecorate(type: ClassType<RestResource<unknown>>): void {
@@ -27,24 +27,20 @@ export class RestClassDecoratorApi extends PrettifiedDecoratorApi<RestResourceMe
     this.meta.path = path;
   }
 
-  guardedBy(...guards: ClassType<RestGuard>[]): void {
-    this.meta.guards.push(...guards);
-  }
-
   useAction(name: string, action: RestActionMeta): void {
     action.resource = this.meta;
     this.meta.actions[name] = action;
   }
 }
 
-export const restClass = createClassDecorator(RestClassDecoratorApi);
+export const restResource = createClassDecorator(RestResourceDecoratorApi);
 
-export class RestPropertyDecoratorApi extends PrettifiedDecoratorApi<RestActionMeta> {
+export class RestActionDecoratorApi extends PrettifiedDecoratorApi<RestActionMeta> {
   meta = new RestActionMeta();
 
   onDecorate(type: ClassType<unknown>, property?: string): void {
     if (!property) throw Error("Not decorated on property");
-    restClass.useAction(property, this.meta)(type, property);
+    restResource.useAction(property, this.meta)(type, property);
     this.meta.name = property;
   }
 
@@ -52,18 +48,32 @@ export class RestPropertyDecoratorApi extends PrettifiedDecoratorApi<RestActionM
     this.meta.method = method;
     this.meta.path = path;
   }
+}
 
-  guardedBy(...guards: ClassType<RestGuard>[]): void {
-    this.meta.guards.push(...guards);
+export const restAction = createPropertyDecorator(RestActionDecoratorApi);
+
+export class RestGuardDecoratorApi extends PrettifiedDecoratorApi<RestGuardMeta> {
+  meta = new RestGuardMeta();
+
+  onDecorate(type: ClassType<RestGuard>): void {
+    this.meta.classType = type;
+  }
+
+  guard(groupName: string): void {
+    this.meta.groupName = groupName;
   }
 }
 
-export const restProperty = createPropertyDecorator(RestPropertyDecoratorApi);
+export const restGuard = createClassDecorator(RestGuardDecoratorApi);
 
-export const rest: RestDecorator = mergeDecorator(restClass, restProperty);
+export const rest: RestDecorator = mergeDecorator(
+  restResource,
+  restAction,
+  restGuard,
+);
 export type RestDecorator = MergedDecorator<
   Omit<
-    typeof restClass & typeof restProperty,
+    typeof restResource & typeof restAction & typeof restGuard,
     "_fetch" | "t" | "meta" | "onDecorator" | "onDecorate"
   >
 >;

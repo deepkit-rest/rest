@@ -12,7 +12,7 @@ import {
   HttpScopedCache,
 } from "@deepkit-rest/http-extension";
 
-import { restClass } from "./rest-decoration";
+import { restResource } from "./rest-decoration";
 import {
   RestActionMetaValidated,
   RestResourceMetaValidated,
@@ -59,7 +59,7 @@ export class RestActionContext<Entity = any> {
   getResourceMeta(): RestResourceMetaValidated<Entity> {
     return this.cache.getOrCreate(this.getResourceMeta, () => {
       const resourceType = this.getActionInfo().controller;
-      const resourceMeta = restClass._fetch(resourceType)?.validate() as
+      const resourceMeta = restResource._fetch(resourceType)?.validate() as
         | RestResourceMetaValidated<Entity>
         | undefined;
       if (!resourceMeta) throw new Error(`Cannot read resource meta`);

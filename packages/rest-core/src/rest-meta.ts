@@ -24,7 +24,6 @@ export class RestResourceMeta<
   path?: string;
   entityType?: ClassType<Entity>;
   actions: Record<string, RestActionMeta> = {};
-  guards: ClassType<RestGuard>[] = [];
 
   protected validateInternal(): void {
     if (!this.classType || !this.path || !this.entityType)
@@ -43,7 +42,6 @@ export class RestActionMeta extends RestMeta<RestActionMetaValidated> {
   name?: string;
   method?: HttpMethod;
   path?: string;
-  guards: ClassType<RestGuard>[] = [];
 
   protected validateInternal(): void {
     if (!this.resource || !this.name || !this.method)
@@ -53,3 +51,17 @@ export class RestActionMeta extends RestMeta<RestActionMetaValidated> {
 
 export interface RestActionMetaValidated
   extends PartialRequired<RestActionMeta, "resource" | "name" | "method"> {}
+
+export class RestGuardMeta extends RestMeta<RestGuardMetaValidated> {
+  classType?: ClassType<RestGuard>;
+  groupName?: string;
+  priority = 100;
+
+  protected validateInternal(): void {
+    if (!this.classType || !this.groupName)
+      throw new Error("Guard not properly decorated");
+  }
+}
+
+export interface RestGuardMetaValidated
+  extends PartialRequired<RestGuardMeta, "classType" | "groupName"> {}

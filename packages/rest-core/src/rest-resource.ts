@@ -6,7 +6,7 @@ import { join } from "path";
 
 import { RestActionContext, RestActionParameterResolver } from "./rest-action";
 import { RestCoreModuleConfig } from "./rest-core-config";
-import { restClass } from "./rest-decoration";
+import { restResource } from "./rest-decoration";
 import {
   RestActionMetaValidated,
   RestResourceMeta,
@@ -68,7 +68,7 @@ export class RestResourceInstaller {
   }
 
   private getMetaOrThrow(type: ResourceClassType): RestResourceMeta {
-    const meta = restClass._fetch(type)?.validate();
+    const meta = restResource._fetch(type)?.validate();
     if (!meta) throw new Error("Resource not decorated");
     return meta;
   }

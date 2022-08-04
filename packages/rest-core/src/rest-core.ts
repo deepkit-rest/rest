@@ -3,8 +3,8 @@ import { ClassType } from "@deepkit/core";
 
 import { RestActionContext, RestActionParameterResolver } from "./rest-action";
 import { RestCoreModuleConfig } from "./rest-core-config";
-import { restClass } from "./rest-decoration";
-import { RestGuardLauncher } from "./rest-guard";
+import { restGuard, restResource } from "./rest-decoration";
+import { RestGuardLauncher, RestGuardRegistry } from "./rest-guard";
 import { RestListener } from "./rest-listener";
 import { RestResourceInstaller, RestResourceRegistry } from "./rest-resource";
 
@@ -20,21 +20,29 @@ export class RestCoreModule extends createModule(
   },
   "restCore",
 ) {
-  readonly registry = new RestResourceRegistry();
-  readonly installer = new RestResourceInstaller(this.config);
+  readonly resourceRegistry = new RestResourceRegistry();
+  readonly resourceInstaller = new RestResourceInstaller(this.config);
+  readonly guardRegistry = new RestGuardRegistry();
 
   override process(): void {
     this.addProvider(
-      { provide: RestResourceRegistry, useValue: this.registry },
-      { provide: RestResourceInstaller, useValue: this.installer },
+      { provide: RestResourceRegistry, useValue: this.resourceRegistry },
+      { provide: RestResourceInstaller, useValue: this.resourceInstaller },
+      { provide: RestGuardRegistry, useValue: this.guardRegistry },
     );
+  }
+
+  override processProvider(module: AppModule<any, any>, token: unknown): void {
+    const meta = restGuard._fetch(token as any)?.validate();
+    if (!meta) return;
+    this.guardRegistry.add({ token, module, meta });
   }
 
   override processController(
     module: AppModule<any, any>,
     controllerType: ClassType<any>,
   ): void {
-    const isResource = !!restClass._fetch(controllerType);
+    const isResource = !!restResource._fetch(controllerType);
     if (!isResource) return;
 
     if (!module.isProvided(controllerType))
@@ -48,7 +56,7 @@ export class RestCoreModule extends createModule(
         scope: "http",
       });
 
-    this.registry.add({ module, type: controllerType });
-    this.installer.setup(controllerType);
+    this.resourceRegistry.add({ module, type: controllerType });
+    this.resourceInstaller.setup(controllerType);
   }
 }

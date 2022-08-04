@@ -1,9 +1,13 @@
 import { eventDispatcher } from "@deepkit/event";
 import { onServerMainBootstrap } from "@deepkit/framework";
-import { HttpRouter, httpWorkflow } from "@deepkit/http";
-import { HttpAccessDeniedResponse } from "@deepkit-rest/http-extension";
+import { HttpRouter, httpWorkflow, RouteConfig } from "@deepkit/http";
+import { InjectorContext } from "@deepkit/injector";
+import {
+  HttpAccessDeniedResponse,
+  HttpActionMeta,
+  HttpControllerMeta,
+} from "@deepkit-rest/http-extension";
 
-import { RestActionContext } from "./rest-action";
 import { RestGuardLauncher } from "./rest-guard";
 import { RestResourceRegistry } from "./rest-resource";
 
@@ -19,10 +23,14 @@ export class RestListener {
     this.registry.forEach(({ type, module }) => {
       // resources that are decorated with `@http` has already been added to
       // the http controller registry of `HttpModule`
-      // prettier-ignore
       const isRegistered = this.router
-          .getRoutes()
-          .some(({ action }) => action.module === module && action.type   === 'controller' && action.controller === type);
+        .getRoutes()
+        .some(
+          ({ action }) =>
+            action.module === module &&
+            action.type === "controller" &&
+            action.controller === type,
+        );
       if (isRegistered) return;
       this.router.addRouteForController(type, module);
     });
@@ -30,26 +38,27 @@ export class RestListener {
 
   @eventDispatcher.listen(httpWorkflow.onAuth, 200)
   async afterAuth(event: typeof httpWorkflow.onAuth.event): Promise<void> {
-    const context = event.injectorContext.get(RestActionContext);
-
-    try {
-      context.getActionMeta();
-    } catch {
-      return;
-    }
-
-    const guardTypes = [
-      ...context.getResourceMeta().guards,
-      ...context.getActionMeta().guards,
-    ];
-    const response = await this.guardLauncher.launch(
-      guardTypes,
+    adjustRouteConfigGroupOrder(event.route, event.injectorContext);
+    const response = await this.guardLauncher.launchForRoute(
+      event.route,
       event.injectorContext,
-      context.getModule(),
     );
     if (response) {
       event.injectorContext.set(HttpAccessDeniedResponse, response);
       event.accessDenied();
     }
   }
+}
+
+function adjustRouteConfigGroupOrder(
+  routeConfig: RouteConfig,
+  injectorContext: InjectorContext,
+) {
+  if (routeConfig.action.type === "function") return;
+  const controllerMeta = injectorContext.get(HttpControllerMeta);
+  const actionMeta = injectorContext.get(HttpActionMeta);
+  routeConfig.groups = [
+    ...controllerMeta.groups,
+    ...actionMeta.groups.filter((g) => !controllerMeta.groups.includes(g)),
+  ];
 }
