@@ -111,7 +111,7 @@ class BookResource implements RestResource<Book> {
 }
 ```
 
-> The `Query` object returned from `getQuery()` will be the base `Query` for every CRUD Actions, so it's a good place to filter the entities to restrict what the user can view. For example you can allow the user to view only his own `Book`:
+> The `Query` object returned from `getQuery()` will be the base `Query` for every CRUD Actions, so it's a good place to filter the entities to restrict what the user can view. For example we can allow the user to view only his own `Book`:
 >
 > ```ts
 > getQuery() {
@@ -146,7 +146,7 @@ Instead, an Action should be defined using `@rest.action()`:
 @rest.action("GET", ":id")
 ```
 
-As long as `@rest.action()` is applied, you can use the `@http` decorator for additional metadata:
+As long as `@rest.action()` is applied, we can use the `@http` decorator for additional metadata:
 
 ```ts
 @rest.action("GET", ":id")
@@ -236,7 +236,7 @@ class BookResource implements RestResource<Book>, RestPaginationCustomizations {
 | Update   | PATCH /books/1  | Serialization, Retrieving            |
 | Delete   | DELETE /books/1 | Retrieving                           |
 
-> You can extend the built-in CRUD Kernel for more functionalities:
+> We can extend the built-in CRUD Kernel for more functionalities:
 >
 > ```ts
 > class AppCrudKernel extends RestCrudKernel {
@@ -280,7 +280,7 @@ interface RestPaginationCustomizations {
 
 By default, `RestOffsetLimitPaginator` paginates the List result based on the `limit` and `offset` query params and form the body the same: `{ total: ..., items: [...] }`.
 
-Some configuration properties are available for you to customize its behavior by overriding the value:
+Some configuration properties are available for us to customize its behavior by overriding the value:
 
 ```ts
 class AppPaginator extends RestOffsetLimitPaginator {
@@ -359,7 +359,7 @@ export interface RestEntitySerializer<Entity> {
 
 ### Serialization
 
-In serialization, `RestGenericSerializer` directly leverages DeepKit's built-in serialization feature. It is also compatible with the `@http.serialization()` and `@http.serializer()` decorators, which means you can customize the serialization behavior just as how you do in regular HTTP Controllers:
+In serialization, `RestGenericSerializer` directly leverages DeepKit's built-in serialization feature. It is also compatible with the `@http.serialization()` and `@http.serializer()` decorators, which means we can customize the serialization behavior just as how we do in regular HTTP Controllers:
 
 ```ts
 @rest.action("GET")
@@ -400,7 +400,7 @@ book instanceof Book; // true
 book.name === "name"; // true
 ```
 
-By default `RestGenericSerializer` requires the entity constructor to take no parameters, because it's impossible to know what argument to pass. An error will be thrown if `entityClass.length !== 0`. But you can customize how new entities are instantiated by overriding its `createEntity()` method where the purified payload will be passed as a parameter:
+By default `RestGenericSerializer` requires the entity constructor to take no parameters, because it's impossible to know what argument to pass. An error will be thrown if `entityClass.length !== 0`. But we can customize how new entities are instantiated by overriding its `createEntity()` method where the purified payload will be passed as a parameter:
 
 ```ts
 class BookSerializer extends RestGenericSerializer<Book> {
@@ -410,7 +410,7 @@ class BookSerializer extends RestGenericSerializer<Book> {
 }
 ```
 
-You can also modify the `data` object to assign values to fields like `owner` when overriding `createEntity()`:
+We can also modify the `data` object to assign values to fields like `owner` when overriding `createEntity()`:
 
 ```ts
 protected override createEntity(data: Partial<Book>) {
@@ -439,7 +439,7 @@ book = await serializer.deserializeUpdate(book, { name: "updated" });
 book.name === "updated"; // true
 ```
 
-To customize how entities are updated, you can override the `updateEntity()` method, which is a good place to assign values to fields like `updatedAt`:
+To customize how entities are updated, we can override the `updateEntity()` method, which is a good place to assign values to fields like `updatedAt`:
 
 ```ts
 class BookSerializer extends RestGenericSerializer<Book> {
@@ -576,15 +576,17 @@ customAction() {
 };
 ```
 
-You can get the target entity in entity-specific Actions using `getEntity()`, which internally invokes the current Entity Retriever and throws an `HttpNotFoundError` when entity not found.
+We can get the target entity in entity-specific Actions using `getEntity()`, which internally invokes the current Entity Retriever and throws an `HttpNotFoundError` when entity not found.
 
-You can call the `getXxx()` methods of CRUD Action Context as many times as you want without worrying the performance, because there is a caching system implemented for CRUD Action Context to cache and reuse results.
+We can call the `getXxx()` methods of CRUD Action Context as many times as we want without worrying the performance, because there is a caching system implemented for CRUD Action Context to cache and reuse results.
 
-CRUD Action Context will be available once `httpWorkflow.onRoute` event is finished. Thus you can also use it in Event Listeners.
+CRUD Action Context will be available once `httpWorkflow.onRoute` event is finished. Thus we can also use it in Event Listeners.
 
 ## Guard
 
-Guard is a new concept introduced in DeepKit REST.
+Guards are responsible for determining whether a request should be passed to further handlers such as a Resource or an HTTP Controller. We can throw an HTTP Error in a Guard to directly respond the request and prevent further handling:
+
+> Unlike other concepts, Guards are available for both Resources and regular HTTP Controllers.
 
 ```ts
 interface RestGuard {
@@ -592,65 +594,66 @@ interface RestGuard {
 }
 ```
 
-- Guards are invoked before Resources (specifically after `httpWorkflow.onAuth` event)
-- HTTP Errors thrown in Guards will be handled just as in Resources
-- Context information is available via Dependency Injection (e.g. `RestCrudActionContext`, `HttpRequestParsed`)
-
 Let's implement a Guard to forbid access to unpublished `Book` entities:
 
 ```ts
-class BookPublishedGuard implements RestGuard {
+@rest.guard("published-only")
+class BookPublishedOnlyGuard implements RestGuard {
   constructor(private context: RestCrudActionContext) {}
 
   async guard(): Promise<void> {
-    const book = await this.getEntity();
+    const book = await this.context.getEntity();
     if (!book.published) throw new HttpAccessDeniedError();
   }
 }
 ```
 
-Remember to provide the Guard in the module, and export it if its shared between modules:
+Remember to provide our Guard in the `http` scope:
 
 ```ts
 {
-  providers: [BookPublishedGuard],
+  providers: [{ provide: BookPublishedGuard, scope: "http" }];
 }
 ```
 
-A Guard can be applied to either a Resource or a specific Action via `@rest.guardedBy()` decorator. Resource scoped Guards are invoked earlier than Action scoped ones.
+> Once provided, the guard is available through the whole application. There's no need to put it in `exports`.
+
+Guards must be bound to a group name using the `@rest.guard()` decorator. In our case, all Actions with group name `published-only` will be protected by our `BookPublishedOnlyGuard`:
 
 ```ts
-@rest.resource(Book, "books").guardedBy(AuthGuard)
+@rest.resource(Book, "books")
 class BookResource implements RestResource<Book> {
   // ...
-  @rest.action("GET", ":pk").guardedBy(BookPublishedGuard)
+  @rest.action("GET", ":pk")
+  @http.group("published-only")
   async retrieve(): Promise<Response> {
     // ...
   }
 }
 ```
 
-Besides, Guards can be invoked for regular HTTP Controllers too:
+The order of Guards is determined by the order of groups. Usually the Guard responsible for authentication should be invoked first:
 
 ```ts
-@eventDispatcher.listen(httpWorkflow.onController)
-async beforeController(
-  event: typeof httpWorkflow.onController.event,
-): Promise<void> {
-  if (event.route.groups.includes("auth-required")) {
-    const response = await this.guardLauncher.launch(
-      [AuthGuard],
-      event.injectorContext,
-      event.route.action.module,
-    );
-    if (response) event.send(response);
-  }
+@http.group('auth-required', "published-only")
+async retrieve(): Promise<Response> {
+  // ...
+}
+```
+
+If all the Actions in a Resource should be protected by a Guard, we can prepend the group to all the Actions by apply the `@http.group()` decorator directly to the Resource:
+
+```ts
+@rest.resource(Book, "books")
+@http.group("auth-required")
+class BookResource implements RestResource<Book> {
+  // ...
 }
 ```
 
 ## Resource Inheritance
 
-As the application grows, you'll find that there are a lot of repeated patterns like the paginator declaration and completely same `getDatabase()` code. To keep DRY, you can create an abstract `AppResource` as the base Resource:
+As the application grows, we may find that there are a lot of repeated patterns like the paginator declaration and completely same `getDatabase()` code. To keep DRY, we can create an abstract `AppResource` as the base Resource:
 
 ```ts
 export abstract class AppResource<Entity>
@@ -675,4 +678,4 @@ export abstract class AppResource<Entity>
 # Special Thanks
 
 - [Django REST Framework](https://www.django-rest-framework.org/) for inspiration
-- [Marc J. Schmidt](https://github.com/marcj) for developing DeepKit and helping me understanding DeepKit
+- [Marc J. Schmidt](https://github.com/marcj) for creating DeepKit and his great help
