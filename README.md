@@ -62,6 +62,8 @@ export class BookResource
 }
 ```
 
+> As an inevitable result, some of DeepKit's JIT features will be unavailable when using DeepKit REST. We've implemented a lot of caching to reduce the influence of the lack of these JIT features.
+
 # Tutorial
 
 To get started, we'll need to import `HttpExtensionModule`, `RestCoreModule` and `RestCrudModule`:
@@ -91,6 +93,8 @@ new App({
 >   }
 > }
 > ```
+>
+> See the [README](./packages/http-extension/README.md) of `@deepkit-rest/http-extension` for more information.
 
 ## Resource
 
@@ -584,7 +588,7 @@ CRUD Action Context will be available once `httpWorkflow.onRoute` event is finis
 
 ## Guard
 
-Guards are responsible for determining whether a request should be passed to further handlers such as a Resource or an HTTP Controller. We can throw an HTTP Error in a Guard to directly respond the request and prevent further handling:
+Guards are responsible for determining whether a request should be passed to further handlers such as a Resource or an HTTP Controller. We can throw an HTTP Error in a Guard to directly respond to the request and thus prevent further handling:
 
 > Unlike other concepts, Guards are available for both Resources and regular HTTP Controllers.
 
@@ -594,7 +598,7 @@ interface RestGuard {
 }
 ```
 
-Let's implement a Guard to forbid access to unpublished `Book` entities:
+Let's implement a simple Guard to forbid any access to unpublished `Book` entities:
 
 ```ts
 @rest.guard("published-only")
@@ -612,11 +616,11 @@ Remember to provide our Guard in the `http` scope:
 
 ```ts
 {
-  providers: [{ provide: BookPublishedGuard, scope: "http" }];
+  providers: [{ provide: BookPublishedOnlyGuard, scope: "http" }];
 }
 ```
 
-> Once provided, the guard is available through the whole application. There's no need to put it in `exports`.
+> Once provided, the guard will be available through the whole application. There's no need to put it in `exports`.
 
 Guards must be bound to a group name using the `@rest.guard()` decorator. In our case, all Actions with group name `published-only` will be protected by our `BookPublishedOnlyGuard`:
 
@@ -641,7 +645,7 @@ async retrieve(): Promise<Response> {
 }
 ```
 
-If all the Actions in a Resource should be protected by a Guard, we can prepend the group to all the Actions by apply the `@http.group()` decorator directly to the Resource:
+If all the Actions in a Resource should be protected by a Guard, we can prepend the group to all the Actions by applying the `@http.group()` decorator directly at the Resource:
 
 ```ts
 @rest.resource(Book, "books")
@@ -650,6 +654,8 @@ class BookResource implements RestResource<Book> {
   // ...
 }
 ```
+
+> Guards are invoked on `httpWorkflow.onAuth` event with order `200`, and when an HTTP Error is thrown the state of the http workflow will jump to `httpWorkflow.onAccessDenied`.
 
 ## Resource Inheritance
 
