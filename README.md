@@ -1,6 +1,12 @@
 # Deepkit REST
 
-**_REST API simplified._**
+<p align="center">
+    <img src="./docs/_res/logo.svg" />
+</p>
+
+<p align="center">
+    <b><i>REST API simplified</i></b>
+</p>
 
 ```
 npm i \
