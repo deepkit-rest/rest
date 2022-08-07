@@ -2,7 +2,7 @@ import {
   BaseResponse,
   HtmlResponse,
   HttpAction,
-  httpClass,
+  HttpController,
   RouteConfig,
 } from "@deepkit/http";
 import { InjectorContext } from "@deepkit/injector";
@@ -24,12 +24,8 @@ export type HttpMethod =
 
 // Dependency Injection Tokens
 
-type HttpControllerMetaType = NonNullable<ReturnType<typeof httpClass._fetch>>;
-interface HttpControllerMetadata extends HttpControllerMetaType {}
-class HttpControllerMetadata {}
-
 export class HttpInjectorContext extends InjectorContext {}
 export class HttpRouteConfig extends RouteConfig {}
-export class HttpControllerMeta extends HttpControllerMetadata {}
+export class HttpControllerMeta extends HttpController {}
 export class HttpActionMeta extends HttpAction {}
 export class HttpAccessDeniedResponse extends BaseResponse {}
