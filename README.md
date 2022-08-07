@@ -369,13 +369,27 @@ export interface RestEntitySerializer<Entity> {
 
 ### Serialization
 
-In serialization, `RestGenericSerializer` directly leverages DeepKit's built-in serialization feature. It is also compatible with the `@http.serialization()` and `@http.serializer()` decorators, which means we can customize the serialization behavior just as how we do in regular HTTP Controllers:
+In serialization, `RestGenericSerializer` directly leverages DeepKit's built-in serialization feature.
+
+We can extend the class and override some properties to customize the base serialization config:
+
+```ts
+class AppSerializer<Entity> extends RestGenericSerializer<Entity> {
+  override serializer = serializer;
+  override serializationOptions = { groupsExclude: ["hidden"] };
+  override serializationNaming = myNamingStrategy;
+}
+```
+
+`RestGenericSerializer` is also compatible with the `@http.serialization()` and `@http.serializer()` decorators, which means we can customize the serialization behavior just as how we do in regular HTTP Controllers:
 
 ```ts
 @rest.action("GET")
 @http.serialization({ groupsExclude: ["hidden"] })
 action() {}
 ```
+
+> Serialization config specified using the decorator will be merged into the base serialization config specified via the class properties.
 
 ### Deserialization for Creation
 
