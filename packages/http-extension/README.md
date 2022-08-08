@@ -82,7 +82,7 @@ class MyService {
 }
 ```
 
-| Method      | Usage                                             |
+| Method      | Description                                       |
 | ----------- | ------------------------------------------------- |
 | `parseUrl`  | Extract a path and an object representing queries |
 | `parsePath` | Extract the path parameters as an object          |
@@ -101,6 +101,12 @@ class MyService {
   }
 }
 ```
+
+| Method          |
+| --------------- |
+| `getBody`       |
+| `getQueries`    |
+| `getPathParams` |
 
 ## Dynamic Response for `onAccessDenied`
 
