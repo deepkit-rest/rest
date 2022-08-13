@@ -424,7 +424,7 @@ book instanceof Book; // true
 book.name === "name"; // true
 ```
 
-By default `RestGenericSerializer` requires the entity constructor to take no parameters, because it's impossible to know what argument to pass. An error will be thrown if `entityClass.length !== 0`. But we can customize how new entities are instantiated by overriding its `createEntity()` method where the purified payload will be passed as a parameter:
+By default `RestGenericSerializer` use DeepKit deserialization to instantiate new entities. We can customize how new entities are instantiated by overriding its `createEntity()` method where the purified payload will be passed as a parameter:
 
 ```ts
 class BookSerializer extends RestGenericSerializer<Book> {
