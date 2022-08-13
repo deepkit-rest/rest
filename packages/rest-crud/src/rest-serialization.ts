@@ -1,5 +1,6 @@
 import { ClassType } from "@deepkit/core";
 import {
+  deserialize,
   NamingStrategy,
   ReflectionClass,
   SerializationOptions,
@@ -100,12 +101,9 @@ export class RestGenericSerializer<Entity>
 
   protected createEntity(data: Partial<Entity>): Entity {
     const entityType = this.context.getEntitySchema().getClassType();
-    if (entityType.length) {
-      const message =
-        "Entity constructor should take no params for generic creation";
-      throw new Error(message);
-    }
-    const entity: Entity = new entityType();
+    const instantiate = () =>
+      deserialize(data, undefined, undefined, undefined, entityType);
+    const entity = instantiate();
     Object.assign(entity, data);
     return entity;
   }
