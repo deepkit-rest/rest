@@ -54,9 +54,9 @@ function adjustRouteConfigGroupOrder(
   routeConfig: RouteConfig,
   injectorContext: InjectorContext,
 ) {
-  if (routeConfig.action.type === "function") return;
   const controllerMeta = injectorContext.get(HttpControllerMeta);
   const actionMeta = injectorContext.get(HttpActionMeta);
+  if (!controllerMeta || !actionMeta) return;
   routeConfig.groups = [
     ...controllerMeta.groups,
     ...actionMeta.groups.filter((g) => !controllerMeta.groups.includes(g)),
