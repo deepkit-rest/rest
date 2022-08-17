@@ -2,7 +2,7 @@ import { AppModule } from "@deepkit/app";
 import { ClassType } from "@deepkit/core";
 import { http, httpClass } from "@deepkit/http";
 import { Database, Query } from "@deepkit/orm";
-import { join } from "path";
+import { join } from "path/posix";
 
 import { RestActionContext, RestActionParameterResolver } from "./rest-action";
 import { RestCoreModuleConfig } from "./rest-core-config";
