@@ -22,15 +22,16 @@ export class HttpRequestParser {
   }
 
   async parseBody(request: HttpRequest): Promise<Record<string, unknown>> {
-    const form = formidable({
-      multiples: true,
-      hashAlgorithm: "sha1",
-      enabledPlugins: ["octetstream", "querystring", "json"],
-    });
-    return new Promise((resolve, reject) => {
+    request.body ??= await new Promise((resolve, reject) => {
+      const form = formidable({
+        multiples: true,
+        hashAlgorithm: "sha1",
+        enabledPlugins: ["octetstream", "querystring", "json"],
+      });
       form.parse(request, (err, fields, files) =>
         err ? reject(err) : resolve({ ...fields, ...files }),
       );
     });
+    return request.body;
   }
 }
