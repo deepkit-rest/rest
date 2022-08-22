@@ -15,7 +15,6 @@ import { HttpExtensionModule } from "@deepkit-rest/http-extension";
 
 import { RestActionContext } from "./rest-action";
 import { RestCoreModule } from "./rest-core";
-import { RestCoreModuleConfig } from "./rest-core-config";
 import { rest } from "./rest-decoration";
 import { RestGuard } from "./rest-guard";
 import { RestResource } from "./rest-resource";
@@ -25,17 +24,12 @@ describe("REST Core", () => {
   let database: Database;
 
   async function setup(
-    config: Partial<RestCoreModuleConfig>,
     controllers: ClassType[],
     providers: ProviderWithScope[] = [],
     modules: AppModule[] = [],
   ) {
     facade = createTestingApp({
-      imports: [
-        new HttpExtensionModule(),
-        new RestCoreModule(config),
-        ...modules,
-      ],
+      imports: [new HttpExtensionModule(), new RestCoreModule(), ...modules],
       controllers,
       providers: [
         {
@@ -74,11 +68,11 @@ describe("REST Core", () => {
         @rest.action("GET", "path")
         route2() {}
       }
-      await setup({ prefix: "prefix" }, [TestingResource]);
+      await setup([TestingResource]);
       const routes = facade.app.get(HttpRouter).getRoutes();
       expect(routes).toMatchObject<Partial<RouteConfig>[]>([
-        { baseUrl: "", path: "prefix/api", httpMethods: ["POST"] },
-        { baseUrl: "", path: "prefix/api/path", httpMethods: ["GET"] },
+        { baseUrl: "", path: "api", httpMethods: ["POST"] },
+        { baseUrl: "", path: "api/path", httpMethods: ["GET"] },
       ]);
     });
 
@@ -88,10 +82,10 @@ describe("REST Core", () => {
         @rest.action("GET")
         route1() {}
       }
-      await setup({ prefix: "prefix" }, [TestingResource]);
+      await setup([TestingResource]);
       const routes = facade.app.get(HttpRouter).getRoutes();
       expect(routes).toMatchObject<Partial<RouteConfig>[]>([
-        { baseUrl: "", path: "prefix/users", httpMethods: ["GET"] },
+        { baseUrl: "", path: "users", httpMethods: ["GET"] },
       ]);
     });
 
@@ -104,14 +98,14 @@ describe("REST Core", () => {
         @http.group("test")
         action2() {}
       }
-      await setup({ prefix: "prefix" }, [MyResource]);
+      await setup([MyResource]);
       const routes = facade.app.get(HttpRouter).getRoutes();
       expect(routes).toHaveLength(2);
       expect(routes).toMatchObject<Partial<RouteConfig>[]>([
-        { baseUrl: "", path: "prefix/api/http", httpMethods: ["GET"] },
+        { baseUrl: "", path: "api/http", httpMethods: ["GET"] },
         {
           baseUrl: "",
-          path: "prefix/api/rest",
+          path: "api/rest",
           httpMethods: ["POST"],
           groups: ["test"],
         },
@@ -132,9 +126,9 @@ describe("REST Core", () => {
         };
       }
     }
-    await setup({ prefix: "prefix" }, [TestingResource]);
+    await setup([TestingResource]);
     await database.persist(new User());
-    const response = await facade.request(HttpRequest.GET("/prefix/api"));
+    const response = await facade.request(HttpRequest.GET("/api"));
     expect(response.statusCode).toBe(200);
     assertion();
   });
@@ -150,13 +144,9 @@ describe("REST Core", () => {
       route() {}
     }
     class Dep {}
-    const promise = setup(
-      { prefix: "prefix" },
-      [MyResource],
-      [{ provide: Dep, scope: "http" }],
-    );
+    const promise = setup([MyResource], [{ provide: Dep, scope: "http" }]);
     await expect(promise).resolves.toBeUndefined();
-    await facade.request(HttpRequest.GET("/prefix/api"));
+    await facade.request(HttpRequest.GET("/api"));
   });
 
   describe("Guard", () => {
@@ -187,7 +177,7 @@ describe("REST Core", () => {
         @http.GET().group("my-group2", "my-group3")
         route() {}
       }
-      await setup({}, [MyController], [], [new MyModule()]);
+      await setup([MyController], [], [new MyModule()]);
       jest.spyOn(MyGuard.prototype, "guard");
       jest.spyOn(MyGuard2.prototype, "guard");
       jest.spyOn(MyGuard3.prototype, "guard");
@@ -204,7 +194,7 @@ describe("REST Core", () => {
         @http.GET()
         route() {}
       }
-      await setup({}, [MyController], [{ provide: MyGuard, scope: "http" }]);
+      await setup([MyController], [{ provide: MyGuard, scope: "http" }]);
       jest.spyOn(MyGuard.prototype, "guard").mockImplementation(() => {
         throw new HttpUnauthorizedError();
       });
@@ -219,7 +209,6 @@ describe("REST Core", () => {
         route() {}
       }
       await setup(
-        { prefix: "prefix" },
         [MyController],
         [
           { provide: MyGuard, scope: "http" },

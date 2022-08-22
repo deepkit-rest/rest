@@ -1,11 +1,10 @@
 import { AppModule } from "@deepkit/app";
 import { ClassType } from "@deepkit/core";
-import { http, httpClass } from "@deepkit/http";
+import { http, httpClass, HttpRouter } from "@deepkit/http";
 import { Database, Query } from "@deepkit/orm";
 import { join } from "path/posix";
 
 import { RestActionContext, RestActionParameterResolver } from "./rest-action";
-import { RestCoreModuleConfig } from "./rest-core-config";
 import { restResource } from "./rest-decoration";
 import {
   RestActionMetaValidated,
@@ -26,8 +25,6 @@ export interface RestResourceRegistryItem {
 }
 
 export class RestResourceInstaller {
-  constructor(private config: RestCoreModuleConfig) {}
-
   setup(type: ResourceClassType): void {
     http.controller()(type);
     const resourceMeta = this.getMetaOrThrow(type).validate();
@@ -43,6 +40,31 @@ export class RestResourceInstaller {
       const isRestAction = routeMeta.methodName in resourceMeta.actions;
       if (isRestAction) return;
       routeMeta.path = join(resourcePath, routeMeta.path);
+    });
+  }
+
+  register(
+    type: ResourceClassType,
+    module: AppModule<any>,
+    router: HttpRouter,
+  ): void {
+    // resources decorated with `@http` will be automatically added to the http
+    // controller registry of `HttpModule`
+    const isRegistered = router
+      .getRoutes()
+      .some(
+        ({ action }) =>
+          action.module === module &&
+          action.type === "controller" &&
+          action.controller === type,
+      );
+    if (isRegistered) return;
+    router.addRouteForController(type, module);
+  }
+
+  registerAll(registry: RestResourceRegistry, router: HttpRouter): void {
+    registry.forEach(({ type, module }) => {
+      this.register(type, module, router);
     });
   }
 
@@ -75,7 +97,6 @@ export class RestResourceInstaller {
 
   private buildResourcePath(resourceMeta: RestResourceMetaValidated): string {
     let path = "";
-    if (this.config.prefix) path = join(path, this.config.prefix);
     path = join(path, resourceMeta.path);
     return path;
   }

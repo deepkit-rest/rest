@@ -9,31 +9,19 @@ import {
 } from "@deepkit-rest/http-extension";
 
 import { RestGuardLauncher } from "./rest-guard";
-import { RestResourceRegistry } from "./rest-resource";
+import { RestResourceInstaller, RestResourceRegistry } from "./rest-resource";
 
 export class RestListener {
   constructor(
-    private registry: RestResourceRegistry,
+    private resourceRegistry: RestResourceRegistry,
     private guardLauncher: RestGuardLauncher,
+    private resourceInstaller: RestResourceInstaller,
     private router: HttpRouter,
   ) {}
 
   @eventDispatcher.listen(onServerMainBootstrap)
-  onServerMainBootstrap(): void {
-    this.registry.forEach(({ type, module }) => {
-      // resources that are decorated with `@http` has already been added to
-      // the http controller registry of `HttpModule`
-      const isRegistered = this.router
-        .getRoutes()
-        .some(
-          ({ action }) =>
-            action.module === module &&
-            action.type === "controller" &&
-            action.controller === type,
-        );
-      if (isRegistered) return;
-      this.router.addRouteForController(type, module);
-    });
+  beforeServerMainBootstrap(): void {
+    this.resourceInstaller.registerAll(this.resourceRegistry, this.router);
   }
 
   @eventDispatcher.listen(httpWorkflow.onAuth, 200)

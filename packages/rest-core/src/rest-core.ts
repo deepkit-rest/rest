@@ -2,7 +2,6 @@ import { AppModule, createModule } from "@deepkit/app";
 import { ClassType } from "@deepkit/core";
 
 import { RestActionContext, RestActionParameterResolver } from "./rest-action";
-import { RestCoreModuleConfig } from "./rest-core-config";
 import { restGuard, restResource } from "./rest-decoration";
 import { RestGuard, RestGuardLauncher, RestGuardRegistry } from "./rest-guard";
 import { RestListener } from "./rest-listener";
@@ -10,7 +9,6 @@ import { RestResourceInstaller, RestResourceRegistry } from "./rest-resource";
 
 export class RestCoreModule extends createModule(
   {
-    config: RestCoreModuleConfig,
     providers: [
       { provide: RestActionContext, scope: "http" },
       RestGuardLauncher,
@@ -21,7 +19,7 @@ export class RestCoreModule extends createModule(
   "restCore",
 ) {
   readonly resourceRegistry = new RestResourceRegistry();
-  readonly resourceInstaller = new RestResourceInstaller(this.config);
+  readonly resourceInstaller = new RestResourceInstaller();
   readonly guardRegistry = new RestGuardRegistry();
 
   override process(): void {
