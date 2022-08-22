@@ -83,4 +83,19 @@ describe("Http Extension", () => {
       expect(response.statusCode).toBe(code);
     }
   });
+
+  test("base url", async () => {
+    @http.controller()
+    class MyController {
+      @http.GET()
+      route() {}
+    }
+    const facade = createTestingApp({
+      imports: [new HttpExtensionModule({ baseUrl: "api" })],
+      controllers: [MyController],
+    });
+    await facade.startServer();
+    const response = await facade.request(HttpRequest.GET("/api"));
+    expect(response.statusCode).toBe(200);
+  });
 });
