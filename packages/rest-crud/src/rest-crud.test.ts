@@ -30,12 +30,13 @@ import {
   RestSingleFieldRetriever,
   RestSingleFieldRetrieverCustomizations,
 } from "./handlers/rest-retrievers";
+import { RestQueryProcessor } from "./handlers/shared";
 import { InCreation } from "./models/rest-creation-schema";
 import { Filterable } from "./models/rest-filter-map";
 import { Orderable } from "./models/rest-order-map";
 import { InUpdate } from "./models/rest-update-schema";
 import { RestCrudModule } from "./rest-crud.module";
-import { RestCrudKernel, RestQueryProcessor } from "./rest-crud-kernel.service";
+import { RestCrudKernel } from "./rest-crud-kernel.service";
 
 describe("REST CRUD", () => {
   let facade: TestingFacade<App<any>>;
