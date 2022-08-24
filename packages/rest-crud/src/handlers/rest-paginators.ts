@@ -4,7 +4,7 @@ import { Maximum, Positive, PositiveNoZero } from "@deepkit/type";
 import { purify } from "@deepkit-rest/common";
 import { HttpRequestParsed } from "@deepkit-rest/http-extension";
 
-import { RestQueryProcessor } from "./rest-crud-kernel";
+import { RestQueryProcessor } from "./shared";
 
 export interface RestPaginationCustomizations {
   paginator?: ClassType<RestEntityPaginator>;

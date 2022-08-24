@@ -4,9 +4,9 @@ import { purify } from "@deepkit-rest/common";
 import { HttpRequestParsed } from "@deepkit-rest/http-extension";
 import { RestActionContext } from "@deepkit-rest/rest-core";
 
-import { RestFilterMapFactory } from "./models/rest-filter-map";
-import { RestOrderMapFactory } from "./models/rest-order-map";
-import { RestQueryProcessor } from "./rest-crud-kernel";
+import { RestFilterMapFactory } from "../models/rest-filter-map";
+import { RestOrderMapFactory } from "../models/rest-order-map";
+import { RestQueryProcessor } from "./shared";
 
 export interface RestFilteringCustomizations {
   filters?: ClassType<RestEntityFilter>[];

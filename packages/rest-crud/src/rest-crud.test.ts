@@ -15,27 +15,27 @@ import {
 import { HttpExtensionModule } from "@deepkit-rest/http-extension";
 import { rest, RestCoreModule, RestResource } from "@deepkit-rest/rest-core";
 
-import { InCreation } from "./models/rest-creation-schema";
-import { Filterable } from "./models/rest-filter-map";
-import { Orderable } from "./models/rest-order-map";
-import { InUpdate } from "./models/rest-update-schema";
-import { RestCrudModule } from "./rest-crud";
-import { RestCrudKernel, RestQueryProcessor } from "./rest-crud-kernel";
 import {
   RestFilteringCustomizations,
   RestGenericFilter,
   RestGenericSorter,
-} from "./rest-filtering";
+} from "./handlers/rest-filters";
 import {
   RestOffsetLimitPaginator,
   RestPageNumberPaginator,
   RestPaginationCustomizations,
-} from "./rest-pagination";
+} from "./handlers/rest-paginators";
 import {
   RestRetrievingCustomizations,
   RestSingleFieldRetriever,
   RestSingleFieldRetrieverCustomizations,
-} from "./rest-retrieving";
+} from "./handlers/rest-retrievers";
+import { InCreation } from "./models/rest-creation-schema";
+import { Filterable } from "./models/rest-filter-map";
+import { Orderable } from "./models/rest-order-map";
+import { InUpdate } from "./models/rest-update-schema";
+import { RestCrudModule } from "./rest-crud.module";
+import { RestCrudKernel, RestQueryProcessor } from "./rest-crud-kernel.service";
 
 describe("REST CRUD", () => {
   let facade: TestingFacade<App<any>>;

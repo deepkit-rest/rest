@@ -12,9 +12,9 @@ import { purify } from "@deepkit-rest/common";
 import { HttpRouteConfig } from "@deepkit-rest/http-extension";
 import deepmerge from "deepmerge";
 
-import { RestCreationSchemaFactory } from "./models/rest-creation-schema";
-import { RestUpdateSchemaFactory } from "./models/rest-update-schema";
-import { RestCrudActionContext } from "./rest-crud-kernel";
+import { RestCreationSchemaFactory } from "../models/rest-creation-schema";
+import { RestUpdateSchemaFactory } from "../models/rest-update-schema";
+import { RestCrudActionContext } from "../rest-crud-action-context.service";
 
 export interface RestSerializationCustomizations<Entity> {
   serializer?: ClassType<RestEntitySerializer<Entity>>;
