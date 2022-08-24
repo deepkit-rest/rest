@@ -7,6 +7,7 @@ import { Database, Query } from "@deepkit/orm";
 import { SQLiteDatabaseAdapter } from "@deepkit/sqlite";
 import {
   AutoIncrement,
+  BackReference,
   Maximum,
   MaxLength,
   PrimaryKey,
@@ -22,6 +23,7 @@ import {
 
 import {
   RestFilteringCustomizations,
+  RestGenericExpander,
   RestGenericFilter,
   RestGenericSorter,
 } from "./handlers/rest-filters";
@@ -37,6 +39,7 @@ import {
 } from "./handlers/rest-retrievers";
 import { RestQueryProcessor } from "./handlers/shared";
 import { InCreation } from "./models/rest-creation-schema";
+import { Expandable } from "./models/rest-expansion-map";
 import { Filterable } from "./models/rest-filter-map";
 import { Orderable } from "./models/rest-order-map";
 import { InUpdate } from "./models/rest-update-schema";
@@ -48,7 +51,7 @@ describe("REST CRUD", () => {
   let database: Database;
 
   async function prepare<Entity>(
-    resource: ClassType<RestResource<Entity>>,
+    resources: ClassType<RestResource<Entity>>[],
     entities: ClassType[] = [],
     providers: ProviderWithScope[] = [],
   ) {
@@ -58,7 +61,7 @@ describe("REST CRUD", () => {
         new RestCoreModule(),
         new RestCrudModule(),
       ],
-      controllers: [resource],
+      controllers: resources,
       providers: [
         {
           provide: Database,
@@ -94,7 +97,7 @@ describe("REST CRUD", () => {
         }
       }
       it("should work", async () => {
-        await prepare(TestingResource, [MyEntity]);
+        await prepare([TestingResource], [MyEntity]);
         await database.persist(new MyEntity());
         const response = await facade.request(HttpRequest.GET("/api"));
         expect(response.statusCode).toBe(200);
@@ -120,7 +123,7 @@ describe("REST CRUD", () => {
         }
 
         beforeEach(async () => {
-          await prepare(TestingResource, [MyEntity]);
+          await prepare([TestingResource], [MyEntity]);
         });
 
         it.each`
@@ -174,7 +177,7 @@ describe("REST CRUD", () => {
         }
 
         beforeEach(async () => {
-          await prepare(TestingResource, [MyEntity]);
+          await prepare([TestingResource], [MyEntity]);
         });
 
         it.each`
@@ -241,7 +244,7 @@ describe("REST CRUD", () => {
         }
 
         beforeEach(async () => {
-          await prepare(TestingResource, [Entity1, Entity2]);
+          await prepare([TestingResource], [Entity1, Entity2]);
         });
 
         it.each`
@@ -290,7 +293,7 @@ describe("REST CRUD", () => {
         }
 
         beforeEach(async () => {
-          await prepare(TestingResource, [TestingEntity]);
+          await prepare([TestingResource], [TestingEntity]);
         });
 
         it.each`
@@ -311,6 +314,70 @@ describe("REST CRUD", () => {
           request["queryPath"] = "order[id]=asdfasdf";
           const response = await facade.request(request);
           expect(response.statusCode).toBe(400);
+        });
+      });
+
+      describe("RestGenericExpander", () => {
+        class User {
+          id: number & PrimaryKey & AutoIncrement = 0;
+          books: Book[] & BackReference & Expandable = [];
+        }
+        @rest.resource(User, "users")
+        class UserResource
+          extends RestGenericResource<User>
+          implements RestFilteringCustomizations
+        {
+          filters = [RestGenericExpander];
+          constructor(private crud: RestCrudKernel<User>) {
+            super();
+          }
+          @rest.action("GET")
+          async list() {
+            return this.crud.list();
+          }
+        }
+
+        class Book {
+          id: number & PrimaryKey & AutoIncrement = 0;
+          constructor(public owner: User & Reference & Expandable) {}
+        }
+        @rest.resource(Book, "books")
+        class BookResource
+          extends RestGenericResource<User>
+          implements RestFilteringCustomizations
+        {
+          filters = [RestGenericExpander];
+          constructor(private crud: RestCrudKernel<User>) {
+            super();
+          }
+          @rest.action("GET")
+          async list() {
+            return this.crud.list();
+          }
+        }
+
+        beforeEach(async () => {
+          await prepare([UserResource, BookResource], [User, Book]);
+        });
+
+        test.each`
+          url         | query                       | expected
+          ${"/users"} | ${undefined}                | ${{ id: 1 }}
+          ${"/users"} | ${"expansion[books]=false"} | ${{ id: 1 }}
+          ${"/users"} | ${"expansion[books]=true"}  | ${{ id: 1, books: [{ id: 1, owner: 1 }] }}
+          ${"/books"} | ${"expansion[owner]=false"} | ${{ id: 1, owner: 1 }}
+          ${"/books"} | ${"expansion[owner]=true"}  | ${{ id: 1, owner: { id: 1 } }}
+        `("query: $query", async ({ url, query, expected }) => {
+          const user = new User();
+          const book = new Book(user);
+          await database.persist(user, book);
+          const request = HttpRequest.GET(url);
+          request["queryPath"] = query;
+          const response = await facade.request(request);
+          expect(response.json).toEqual({
+            total: 1,
+            items: [expected],
+          });
         });
       });
     });
@@ -334,7 +401,7 @@ describe("REST CRUD", () => {
       }
 
       beforeEach(async () => {
-        await prepare(TestingResource, [TestingEntity]);
+        await prepare([TestingResource], [TestingEntity]);
       });
 
       test("basic", async () => {
@@ -368,7 +435,7 @@ describe("REST CRUD", () => {
         }
       }
       it("should work", async () => {
-        await prepare(TestingResource, [MyEntity]);
+        await prepare([TestingResource], [MyEntity]);
         await database.persist(new MyEntity());
         const response = await facade.request(HttpRequest.GET("/api/1"));
         expect(response.statusCode).toBe(200);
@@ -388,7 +455,7 @@ describe("REST CRUD", () => {
             return this.crud.retrieve();
           }
         }
-        await prepare(TestingResource, [MyEntity]);
+        await prepare([TestingResource], [MyEntity]);
         await database.persist(new MyEntity());
         const response = await facade.request(HttpRequest.GET("/api/1"));
         expect(response.json).toMatchObject({ id: 1 });
@@ -409,7 +476,7 @@ describe("REST CRUD", () => {
             return this.crud.retrieve();
           }
         }
-        await prepare(TestingResource, [MyEntity]);
+        await prepare([TestingResource], [MyEntity]);
         await database.persist(new MyEntity());
         const response = await facade.request(HttpRequest.GET("/api/1"));
         expect(response.json).toMatchObject({ id: 1 });
@@ -430,7 +497,7 @@ describe("REST CRUD", () => {
             return this.crud.retrieve();
           }
         }
-        await prepare(TestingResource, [MyEntity]);
+        await prepare([TestingResource], [MyEntity]);
         await database.persist(new MyEntity("name"));
         const response = await facade.request(HttpRequest.GET("/api/name"));
         expect(response.json).toMatchObject({ id: 1 });
@@ -448,7 +515,7 @@ describe("REST CRUD", () => {
             return this.crud.retrieve();
           }
         }
-        await prepare(TestingResource, [MyEntity]);
+        await prepare([TestingResource], [MyEntity]);
         await database.persist(new MyEntity());
         const response = await facade.request(HttpRequest.GET("/api/1"));
         expect(response.statusCode).toBe(500);
@@ -475,7 +542,7 @@ describe("REST CRUD", () => {
 
       it("should work", async () => {
         await prepare(
-          TestingResource,
+          [TestingResource],
           [MyEntity],
           [{ provide: TestingRetriever, scope: "http" }],
         );
@@ -505,7 +572,7 @@ describe("REST CRUD", () => {
       }
 
       beforeEach(async () => {
-        await prepare(TestingResource, [TestingEntity]);
+        await prepare([TestingResource], [TestingEntity]);
         const entity = new TestingEntity();
         entity.name = "test";
         await database.persist(entity);
@@ -552,7 +619,7 @@ describe("REST CRUD", () => {
           return this.crud.delete();
         }
       }
-      await prepare(TestingResource, [MyEntity]);
+      await prepare([TestingResource], [MyEntity]);
       await database.persist(new MyEntity());
       const response = await facade.request(HttpRequest.DELETE("/api/1"));
       expect(response.statusCode).toBe(204);

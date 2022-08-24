@@ -1,6 +1,10 @@
 import { createModule } from "@deepkit/app";
 
-import { RestGenericFilter, RestGenericSorter } from "./handlers/rest-filters";
+import {
+  RestGenericExpander,
+  RestGenericFilter,
+  RestGenericSorter,
+} from "./handlers/rest-filters";
 import {
   RestNoopPaginator,
   RestOffsetLimitPaginator,
@@ -9,6 +13,7 @@ import {
 import { RestSingleFieldRetriever } from "./handlers/rest-retrievers";
 import { RestGenericSerializer } from "./handlers/rest-serializers";
 import { RestCreationSchemaFactory } from "./models/rest-creation-schema";
+import { RestExpansionMapFactory } from "./models/rest-expansion-map";
 import { RestFilterMapFactory } from "./models/rest-filter-map";
 import { RestOrderMapFactory } from "./models/rest-order-map";
 import { RestUpdateSchemaFactory } from "./models/rest-update-schema";
@@ -22,6 +27,7 @@ export class RestCrudModule extends createModule(
       { provide: RestCrudActionContext, scope: "http" },
       RestFilterMapFactory,
       RestOrderMapFactory,
+      RestExpansionMapFactory,
       RestCreationSchemaFactory,
       RestUpdateSchemaFactory,
       { provide: RestNoopPaginator, scope: "http" },
@@ -30,6 +36,7 @@ export class RestCrudModule extends createModule(
       { provide: RestSingleFieldRetriever, scope: "http" },
       { provide: RestGenericFilter, scope: "http" },
       { provide: RestGenericSorter, scope: "http" },
+      { provide: RestGenericExpander, scope: "http" },
       { provide: RestGenericSerializer, scope: "http" },
     ],
     forRoot: true,

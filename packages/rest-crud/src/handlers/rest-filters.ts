@@ -4,6 +4,7 @@ import { purify } from "@deepkit-rest/common";
 import { HttpRequestParsed } from "@deepkit-rest/http-extension";
 import { RestActionContext } from "@deepkit-rest/rest-core";
 
+import { RestExpansionMapFactory } from "../models/rest-expansion-map";
 import { RestFilterMapFactory } from "../models/rest-filter-map";
 import { RestOrderMapFactory } from "../models/rest-order-map";
 import { RestQueryProcessor } from "./shared";
@@ -79,6 +80,34 @@ export class RestGenericSorter implements RestEntityFilter {
     if (orderMap)
       Object.entries(orderMap).forEach(([field, order]) => {
         query = query.orderBy(field as FieldName<Entity>, order as any);
+      });
+
+    return query;
+  }
+}
+
+export class RestGenericExpander implements RestEntityFilter {
+  param = "expansion";
+
+  constructor(
+    protected request: HttpRequestParsed,
+    protected context: RestActionContext,
+    protected expansionMapFactory: RestExpansionMapFactory,
+  ) {}
+
+  processQuery<Entity>(query: Query<Entity>): Query<Entity> {
+    const entityType = this.context.getEntitySchema().getClassType();
+    const expansionMapSchema = this.expansionMapFactory.build(entityType);
+    const expansionMapParam = this.param;
+    const queries = this.request.getQueries();
+    const expansionMap = purify<object>(
+      queries[expansionMapParam] ?? {},
+      expansionMapSchema.type,
+    );
+
+    if (expansionMap)
+      Object.entries(expansionMap).forEach(([field, expand]) => {
+        if (expand) query = query.joinWith(field as FieldName<Entity>);
       });
 
     return query;
