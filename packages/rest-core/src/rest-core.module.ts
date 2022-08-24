@@ -2,14 +2,21 @@ import { AppModule, createModule } from "@deepkit/app";
 import { ClassType } from "@deepkit/core";
 
 import { RestActionContext, RestActionParameterResolver } from "./rest-action";
+import { RestCoreModuleConfig } from "./rest-core.module-config";
 import { restGuard, restResource } from "./rest-decoration";
 import { RestGuard, RestGuardLauncher, RestGuardRegistry } from "./rest-guard";
 import { RestListener } from "./rest-listener";
-import { RestResourceInstaller, RestResourceRegistry } from "./rest-resource";
+import {
+  RestResourceMetaSetup,
+  RestResourceRegistry,
+  RestResourceRouter,
+} from "./rest-resource";
 
 export class RestCoreModule extends createModule(
   {
+    config: RestCoreModuleConfig,
     providers: [
+      RestResourceRouter,
       { provide: RestActionContext, scope: "http" },
       RestGuardLauncher,
     ],
@@ -19,13 +26,13 @@ export class RestCoreModule extends createModule(
   "restCore",
 ) {
   readonly resourceRegistry = new RestResourceRegistry();
-  readonly resourceInstaller = new RestResourceInstaller();
+  readonly resourceMetaSetup = new RestResourceMetaSetup(this.getConfig());
   readonly guardRegistry = new RestGuardRegistry();
 
   override process(): void {
     this.addProvider(
       { provide: RestResourceRegistry, useValue: this.resourceRegistry },
-      { provide: RestResourceInstaller, useValue: this.resourceInstaller },
+      { provide: RestResourceMetaSetup, useValue: this.resourceMetaSetup },
       { provide: RestGuardRegistry, useValue: this.guardRegistry },
     );
   }
@@ -56,6 +63,6 @@ export class RestCoreModule extends createModule(
       });
 
     this.resourceRegistry.add({ module, type: controllerType });
-    this.resourceInstaller.setup(controllerType);
+    this.resourceMetaSetup.setup(controllerType);
   }
 }

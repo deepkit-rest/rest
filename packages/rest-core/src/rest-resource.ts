@@ -5,6 +5,7 @@ import { Database, Query } from "@deepkit/orm";
 import { join } from "path/posix";
 
 import { RestActionContext, RestActionParameterResolver } from "./rest-action";
+import { RestCoreModuleConfig } from "./rest-core.module-config";
 import { restResource } from "./rest-decoration";
 import {
   RestActionMetaValidated,
@@ -24,9 +25,11 @@ export interface RestResourceRegistryItem {
   module: AppModule<any>;
 }
 
-export class RestResourceInstaller {
+export class RestResourceMetaSetup {
+  constructor(private config: RestCoreModuleConfig) {}
+
   setup(type: ResourceClassType): void {
-    http.controller()(type);
+    http.controller(this.config.baseUrl)(type);
     const resourceMeta = this.getMetaOrThrow(type).validate();
     const resourcePath = this.buildResourcePath(resourceMeta);
     Object.keys(resourceMeta.actions).forEach((name) => {
@@ -40,31 +43,6 @@ export class RestResourceInstaller {
       const isRestAction = routeMeta.methodName in resourceMeta.actions;
       if (isRestAction) return;
       routeMeta.path = join(resourcePath, routeMeta.path);
-    });
-  }
-
-  register(
-    type: ResourceClassType,
-    module: AppModule<any>,
-    router: HttpRouter,
-  ): void {
-    // resources decorated with `@http` will be automatically added to the http
-    // controller registry of `HttpModule`
-    const isRegistered = router
-      .getRoutes()
-      .some(
-        ({ action }) =>
-          action.module === module &&
-          action.type === "controller" &&
-          action.controller === type,
-      );
-    if (isRegistered) return;
-    router.addRouteForController(type, module);
-  }
-
-  registerAll(registry: RestResourceRegistry, router: HttpRouter): void {
-    registry.forEach(({ type, module }) => {
-      this.register(type, module, router);
     });
   }
 
@@ -108,6 +86,28 @@ export class RestResourceInstaller {
     let path = resourcePath;
     if (actionMeta.path) path = join(path, actionMeta.path);
     return path;
+  }
+}
+
+export class RestResourceRouter {
+  constructor(private router: HttpRouter) {}
+
+  register(type: ResourceClassType, module: AppModule<any>): void {
+    // resources decorated with `@http` will be automatically added to the http
+    // controller registry of `HttpModule`
+    if (this.isRegistered(type, module)) return;
+    this.router.addRouteForController(type, module);
+  }
+
+  isRegistered(type: ResourceClassType, module: AppModule<any>): boolean {
+    return this.router
+      .getRoutes()
+      .some(
+        ({ action }) =>
+          action.module === module &&
+          action.type === "controller" &&
+          action.controller === type,
+      );
   }
 }
 

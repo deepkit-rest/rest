@@ -14,7 +14,8 @@ import { AutoIncrement, entity, PrimaryKey } from "@deepkit/type";
 import { HttpExtensionModule } from "@deepkit-rest/http-extension";
 
 import { RestActionContext } from "./rest-action";
-import { RestCoreModule } from "./rest-core";
+import { RestCoreModule } from "./rest-core.module";
+import { RestCoreModuleConfig } from "./rest-core.module-config";
 import { rest } from "./rest-decoration";
 import { RestGuard } from "./rest-guard";
 import { RestResource } from "./rest-resource";
@@ -27,9 +28,14 @@ describe("REST Core", () => {
     controllers: ClassType[],
     providers: ProviderWithScope[] = [],
     modules: AppModule[] = [],
+    config?: RestCoreModuleConfig,
   ) {
     facade = createTestingApp({
-      imports: [new HttpExtensionModule(), new RestCoreModule(), ...modules],
+      imports: [
+        new HttpExtensionModule(),
+        new RestCoreModule(config),
+        ...modules,
+      ],
       controllers,
       providers: [
         {
@@ -68,11 +74,11 @@ describe("REST Core", () => {
         @rest.action("GET", "path")
         route2() {}
       }
-      await setup([TestingResource]);
+      await setup([TestingResource], undefined, undefined, { baseUrl: "base" });
       const routes = facade.app.get(HttpRouter).getRoutes();
       expect(routes).toMatchObject<Partial<RouteConfig>[]>([
-        { baseUrl: "", path: "api", httpMethods: ["POST"] },
-        { baseUrl: "", path: "api/path", httpMethods: ["GET"] },
+        { baseUrl: "base", path: "api", httpMethods: ["POST"] },
+        { baseUrl: "base", path: "api/path", httpMethods: ["GET"] },
       ]);
     });
 

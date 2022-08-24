@@ -1,6 +1,6 @@
 import { eventDispatcher } from "@deepkit/event";
 import { onServerMainBootstrap } from "@deepkit/framework";
-import { HttpRouter, httpWorkflow, RouteConfig } from "@deepkit/http";
+import { httpWorkflow, RouteConfig } from "@deepkit/http";
 import { InjectorContext } from "@deepkit/injector";
 import {
   HttpAccessDeniedResponse,
@@ -9,19 +9,20 @@ import {
 } from "@deepkit-rest/http-extension";
 
 import { RestGuardLauncher } from "./rest-guard";
-import { RestResourceInstaller, RestResourceRegistry } from "./rest-resource";
+import { RestResourceRegistry, RestResourceRouter } from "./rest-resource";
 
 export class RestListener {
   constructor(
     private resourceRegistry: RestResourceRegistry,
+    private resourceRouter: RestResourceRouter,
     private guardLauncher: RestGuardLauncher,
-    private resourceInstaller: RestResourceInstaller,
-    private router: HttpRouter,
   ) {}
 
   @eventDispatcher.listen(onServerMainBootstrap)
   beforeServerMainBootstrap(): void {
-    this.resourceInstaller.registerAll(this.resourceRegistry, this.router);
+    this.resourceRegistry.forEach(({ type, module }) => {
+      this.resourceRouter.register(type, module);
+    });
   }
 
   @eventDispatcher.listen(httpWorkflow.onAuth, 200)
