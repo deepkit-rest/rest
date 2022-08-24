@@ -9,7 +9,7 @@ import {
   RouteConfig,
 } from "@deepkit/http";
 import { Inject, ProviderWithScope } from "@deepkit/injector";
-import { Database, MemoryDatabaseAdapter, Query } from "@deepkit/orm";
+import { Database, MemoryDatabaseAdapter } from "@deepkit/orm";
 import { AutoIncrement, entity, PrimaryKey } from "@deepkit/type";
 import { HttpExtensionModule } from "@deepkit-rest/http-extension";
 
@@ -18,7 +18,7 @@ import { RestCoreModule } from "./rest-core.module";
 import { RestCoreModuleConfig } from "./rest-core.module-config";
 import { rest } from "./rest-decoration";
 import { RestGuard } from "./rest-guard";
-import { RestResource } from "./rest-resource";
+import { RestGenericResource } from "./rest-resource";
 
 describe("REST Core", () => {
   let facade: TestingFacade<App<any>>;
@@ -55,20 +55,10 @@ describe("REST Core", () => {
     id: number & PrimaryKey & AutoIncrement = 0;
   }
 
-  class UserRestResource implements RestResource<User> {
-    constructor(private database: Database) {}
-    getDatabase(): Database {
-      return this.database;
-    }
-    getQuery(): Query<User> {
-      return this.database.query(User);
-    }
-  }
-
   describe("Routing", () => {
     test("basic", async () => {
       @rest.resource(User, "api")
-      class TestingResource extends UserRestResource {
+      class TestingResource extends RestGenericResource<User> {
         @rest.action("POST")
         route1() {}
         @rest.action("GET", "path")
@@ -84,7 +74,7 @@ describe("REST Core", () => {
 
     test("inferred resource path", async () => {
       @rest.resource(User)
-      class TestingResource extends UserRestResource {
+      class TestingResource extends RestGenericResource<User> {
         @rest.action("GET")
         route1() {}
       }
@@ -97,7 +87,7 @@ describe("REST Core", () => {
 
     test("@http", async () => {
       @rest.resource(User, "api")
-      class MyResource extends UserRestResource {
+      class MyResource extends RestGenericResource<User> {
         @http.GET("http")
         action1() {}
         @rest.action("POST", "rest")
@@ -122,7 +112,7 @@ describe("REST Core", () => {
   test("action context", async () => {
     let assertion!: () => void;
     @rest.resource(User, "api")
-    class TestingResource extends UserRestResource {
+    class TestingResource extends RestGenericResource<User> {
       private context!: Inject<RestActionContext>;
       @rest.action("GET")
       retrieve(context: RestActionContext) {
@@ -141,11 +131,10 @@ describe("REST Core", () => {
 
   test("http scope injection", async () => {
     @rest.resource(User, "api")
-    class MyResource extends UserRestResource {
-      constructor(private dep: Dep, database: Database) {
-        super(database);
+    class MyResource extends RestGenericResource<User> {
+      constructor(private dep: Dep) {
+        super();
       }
-
       @rest.action("GET")
       route() {}
     }

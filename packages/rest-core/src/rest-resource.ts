@@ -1,6 +1,7 @@
 import { AppModule } from "@deepkit/app";
 import { ClassType } from "@deepkit/core";
 import { http, httpClass, HttpRouter } from "@deepkit/http";
+import { Inject } from "@deepkit/injector";
 import { Database, Query } from "@deepkit/orm";
 import { join } from "path/posix";
 
@@ -16,6 +17,21 @@ import {
 export interface RestResource<Entity> {
   getDatabase(): Database;
   getQuery(): Query<Entity>;
+}
+
+export class RestGenericResource<Entity> implements RestResource<Entity> {
+  protected database!: Inject<Database>;
+  protected actionContext!: Inject<RestActionContext>;
+
+  getDatabase(): Database {
+    return this.database;
+  }
+
+  getQuery(): Query<Entity> {
+    const entitySchema = this.actionContext.getEntitySchema();
+    const entityClassType = entitySchema.getClassType();
+    return this.database.query(entityClassType);
+  }
 }
 
 export class RestResourceRegistry extends Set<RestResourceRegistryItem> {}

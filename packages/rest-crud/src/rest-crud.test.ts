@@ -13,7 +13,12 @@ import {
   Reference,
 } from "@deepkit/type";
 import { HttpExtensionModule } from "@deepkit-rest/http-extension";
-import { rest, RestCoreModule, RestResource } from "@deepkit-rest/rest-core";
+import {
+  rest,
+  RestCoreModule,
+  RestGenericResource,
+  RestResource,
+} from "@deepkit-rest/rest-core";
 
 import {
   RestFilteringCustomizations,
@@ -71,15 +76,8 @@ describe("REST CRUD", () => {
     id: number & AutoIncrement & PrimaryKey = 0;
     constructor(public name: string = "") {}
   }
-  class MyResource implements RestResource<MyEntity> {
-    protected db!: Inject<Database>;
+  class MyResource extends RestGenericResource<MyEntity> {
     protected crud!: Inject<RestCrudKernel<MyEntity>>;
-    getDatabase(): Database {
-      return this.db;
-    }
-    getQuery(): Query<MyEntity> {
-      return this.db.query(MyEntity);
-    }
   }
 
   describe("List", () => {
@@ -229,18 +227,12 @@ describe("REST CRUD", () => {
         }
         @rest.resource(Entity1, "api")
         class TestingResource
-          implements RestResource<Entity1>, RestFilteringCustomizations
+          extends RestGenericResource<Entity1>
+          implements RestFilteringCustomizations
         {
           readonly filters = [RestGenericFilter];
-          constructor(
-            private database: Database,
-            private crud: RestCrudKernel<Entity1>,
-          ) {}
-          getDatabase(): Database {
-            return this.database;
-          }
-          getQuery(): Query<Entity1> {
-            return this.database.query(Entity1);
+          constructor(private crud: RestCrudKernel<Entity1>) {
+            super();
           }
           @rest.action("GET")
           list() {
@@ -283,17 +275,13 @@ describe("REST CRUD", () => {
           id: number & AutoIncrement & PrimaryKey & Orderable = 0;
         }
         @rest.resource(TestingEntity, "api")
-        class TestingResource implements RestFilteringCustomizations {
+        class TestingResource
+          extends RestGenericResource<TestingEntity>
+          implements RestFilteringCustomizations
+        {
           readonly filters = [RestGenericSorter];
-          constructor(
-            private database: Database,
-            private crud: RestCrudKernel<TestingEntity>,
-          ) {}
-          getDatabase(): Database {
-            return this.database;
-          }
-          getQuery(): Query<TestingEntity> {
-            return this.database.query(TestingEntity);
+          constructor(private crud: RestCrudKernel<TestingEntity>) {
+            super();
           }
           @rest.action("GET")
           list() {
@@ -335,16 +323,9 @@ describe("REST CRUD", () => {
         name!: string & InCreation;
       }
       @rest.resource(TestingEntity, "api")
-      class TestingResource implements RestResource<TestingEntity> {
-        constructor(
-          private crud: RestCrudKernel<TestingEntity>,
-          private database: Database,
-        ) {}
-        getDatabase(): Database {
-          return this.database;
-        }
-        getQuery(): Query<TestingEntity> {
-          return this.database.query(TestingEntity);
+      class TestingResource extends RestGenericResource<TestingEntity> {
+        constructor(private crud: RestCrudKernel<TestingEntity>) {
+          super();
         }
         @rest.action("POST")
         create() {
@@ -513,16 +494,9 @@ describe("REST CRUD", () => {
         name!: string & MaxLength<10> & InUpdate;
       }
       @rest.resource(TestingEntity, "api")
-      class TestingResource implements RestResource<TestingEntity> {
-        constructor(
-          private crud: RestCrudKernel<TestingEntity>,
-          private database: Database,
-        ) {}
-        getDatabase(): Database {
-          return this.database;
-        }
-        getQuery(): Query<TestingEntity> {
-          return this.database.query(TestingEntity);
+      class TestingResource extends RestGenericResource<TestingEntity> {
+        constructor(private crud: RestCrudKernel<TestingEntity>) {
+          super();
         }
         @rest.action("PATCH", ":pk")
         update() {
